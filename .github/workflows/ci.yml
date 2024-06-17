@@ -1,0 +1,59 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  LINT:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.7
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4.2.1
+        with:
+          java-version: 17
+          distribution: "temurin"
+          
+      - name: Get Permissions
+        run: chmod +x ./gradlew
+
+      - name: Lint
+        run: ./gradlew lintDebug
+
+      - name: Upload Lint Report
+        uses: actions/upload-artifact@v4.3.3
+        with:
+          name: LintReport.html
+          path: app/build/reports/lint-results-debug.html
+          
+  UNIT-TESTS:
+    needs: [LINT]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.7
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4.2.1
+        with:
+          java-version: 17
+          distribution: "temurin"
+          
+      - name: Get Permissions
+        run: chmod +x ./gradlew
+
+      - name: UnitTest
+        run: ./gradlew test
+
+      - name: Upload UnitTest Report
+        uses: actions/upload-artifact@v4.3.3
+        with:
+          name: UnitTestReport
+          path: app/build/reports/tests/testDebugUnitTest/
+      
