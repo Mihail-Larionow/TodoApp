@@ -19,6 +19,11 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "TodoApp"
+rootProject.name = "ToDoApp"
 include(":app")
- 
+include(":core-data")
+include(":core-ui")
+
+include(":features")
+include(":features:todolistscreen")
+include(":features:todoitemscreen")

@@ -10,6 +10,11 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/core-data" />
+            <option value="$PROJECT_DIR$/core-ui" />
+            <option value="$PROJECT_DIR$/features" />
+            <option value="$PROJECT_DIR$/features/todoitemscreen" />
+            <option value="$PROJECT_DIR$/features/todolistscreen" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="false" />
