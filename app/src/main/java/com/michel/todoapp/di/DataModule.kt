@@ -1,0 +1,17 @@
+package com.michel.todoapp.di
+
+import com.michel.core.date.TodoItemsRepository
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.components.ViewModelComponent
+
+@Module
+@InstallIn(ViewModelComponent::class)
+class DataModule {
+
+    @Provides
+    fun provideTodoItemsRepository(): TodoItemsRepository {
+        return TodoItemsRepository()
+    }
+}
