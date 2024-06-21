@@ -47,6 +47,7 @@ import com.michel.todoapp.extensions.toDateText
 
 @Composable
 internal fun TodoItemScreen(
+    modifier: Modifier = Modifier,
     viewModel: TodoItemViewModel = hiltViewModel(),
     navigate: () -> Unit
 ) {
