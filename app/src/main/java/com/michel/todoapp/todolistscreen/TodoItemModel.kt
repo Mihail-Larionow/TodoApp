@@ -1,74 +1,148 @@
 package com.michel.todoapp.todolistscreen
 
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.material3.Text
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.michel.core.date.models.Priority
 import com.michel.core.date.models.TodoItem
 import com.michel.core.ui.R
+import com.michel.core.ui.theme.TodoAppTheme
 import com.michel.core.ui.utils.ImageCheckBox
+import com.michel.todoapp.extensions.toDateText
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun TodoItemModel(
     todoItem: TodoItem,
-    onClick: (id: String) -> Unit
+    checked: Boolean,
+    onCheckBoxClick: (Boolean) -> Unit,
+    onClick: (String) -> Unit,
+    onLongClick: (String) -> Unit
 ) {
-    Row(
-        Modifier
-            .padding(16.dp)
-            .fillMaxWidth()
-            .clickable {
-                onClick(todoItem.id)
-            }
-    ) {
-        TodoCheckbox(
-            todoPriority = todoItem.priority,
-            modifier = Modifier.size(32.dp)
-        )
-        Spacer(Modifier.width(16.dp))
-        Text(
-            text = todoItem.text,
-            maxLines = 3,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
-        )
-        Spacer(Modifier.width(16.dp))
-        Image(
-            modifier = Modifier.size(32.dp),
-            painter = painterResource(id = com.michel.core.ui.R.drawable.ic_info),
-            contentDescription = "information"
-        )
+    TodoAppTheme{
 
+        Row(
+           modifier = Modifier
+               .fillMaxWidth()
+               .combinedClickable(
+                   onClick = { onClick(todoItem.id) },
+                   onLongClick = { onLongClick(todoItem.id) }
+               )
+               .background(
+                   color = TodoAppTheme.color.backSecondary
+               )
+               .padding(16.dp)
+        ) {
+
+            TodoCheckbox(
+                todoPriority = todoItem.priority,
+                checked = checked,
+                onCheckChanged = {
+                    onCheckBoxClick(it)
+                },
+                modifier = Modifier.size(
+                    size = TodoAppTheme.size.smallIcon
+                )
+            )
+
+            Spacer(
+                modifier = Modifier.width(16.dp)
+            )
+
+            if(!checked) {
+                TodoItemPriority(
+                    priority = todoItem.priority,
+                    modifier = Modifier.size(
+                        size = TodoAppTheme.size.smallIcon
+                    )
+                )
+            }
+
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                if(checked) {
+                    Text(
+                        text = todoItem.text,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
+                        style = TodoAppTheme.typography.body,
+                        color = TodoAppTheme.color.tertiary,
+                        textDecoration = TextDecoration.LineThrough,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                else {
+                    Text(
+                        text = todoItem.text,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
+                        style = TodoAppTheme.typography.body,
+                        color = TodoAppTheme.color.primary,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                val deadline = todoItem.deadline
+                if(deadline != null) {
+                    Spacer(
+                        modifier = Modifier.height(8.dp)
+                    )
+                    Text(
+                        text = deadline.toDateText(),
+                        style = TodoAppTheme.typography.subhead,
+                        color = TodoAppTheme.color.tertiary
+                    )
+                }
+            }
+
+            Spacer(
+                modifier = Modifier.width(16.dp)
+            )
+
+            Icon(
+                painter = painterResource(id = com.michel.core.ui.R.drawable.ic_info),
+                contentDescription = "information",
+                modifier = Modifier.size(
+                    size = TodoAppTheme.size.smallIcon
+                ),
+            )
+
+        }
     }
 }
 
 @Composable
 private fun TodoCheckbox(
     todoPriority: Priority,
+    checked: Boolean,
+    onCheckChanged: (state: Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var checked: Boolean by remember { mutableStateOf(false) }
+
     if(todoPriority == Priority.High){
         ImageCheckBox(
             checked = checked,
             onCheckedChange = {
-                checked = it
+                onCheckChanged(it)
             },
             iconChecked = R.drawable.ic_checked,
             iconUnchecked = R.drawable.ic_unchecked_high,
@@ -79,26 +153,58 @@ private fun TodoCheckbox(
         ImageCheckBox(
             checked = checked,
             onCheckedChange = {
-                checked = it
+                onCheckChanged(it)
             },
             iconChecked = R.drawable.ic_checked,
             iconUnchecked = R.drawable.ic_unchecked,
             modifier = modifier
         )
     }
+
 }
 
-@Preview(showBackground = true)
 @Composable
-fun PreviewTodoItemModel() {
-    val todoItem = TodoItem(
-        id = "1",
-        text = "some text",
-        priority = Priority.Standard,
-        isDone = false
-    )
+private fun TodoItemPriority(
+    modifier: Modifier = Modifier,
+    priority: Priority
+) {
 
-    TodoItemModel(todoItem = todoItem){
-
+    when(priority) {
+        Priority.High -> {
+            Icon(
+                painter = painterResource(
+                    id = R.drawable.ic_high_priority
+                ),
+                contentDescription = stringResource(
+                    id = R.string.priorityIconContentDescription
+                ),
+                tint = TodoAppTheme.color.red,
+                modifier = modifier
+            )
+            Spacer(
+                modifier = Modifier.width(
+                    width = 4.dp
+                )
+            )
+        }
+        Priority.Standard -> { }
+        Priority.Low -> {
+            Icon(
+                painter = painterResource(
+                    id = R.drawable.ic_low_priority
+                ),
+                contentDescription = stringResource(
+                    id = R.string.priorityIconContentDescription
+                ),
+                tint = TodoAppTheme.color.gray,
+                modifier = modifier
+            )
+            Spacer(
+                modifier = Modifier.width(
+                    width = 4.dp
+                )
+            )
+        }
     }
+
 }

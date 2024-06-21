@@ -65,12 +65,14 @@ private val typography = TodoAppTypography(
 )
 
 private val shape = TodoAppShape(
-    container = RoundedCornerShape(8.dp)
+    container = RoundedCornerShape(16.dp)
 )
 
 private val size = TodoAppSize(
     toolBar = 56.dp,
-    textField = 128.dp
+    textField = 128.dp,
+    standardIcon = 28.dp,
+    smallIcon = 20.dp
 )
 
 @Composable
