@@ -39,7 +39,9 @@ data class TodoAppShape(
 
 data class TodoAppSize(
     val toolBar: Dp,
-    val textField: Dp
+    val textField: Dp,
+    val standardIcon: Dp,
+    val smallIcon: Dp
 )
 
 val LocalTodoAppColorScheme = staticCompositionLocalOf {
@@ -81,6 +83,8 @@ val LocalTodoAppShape = staticCompositionLocalOf {
 val LocalTodoAppSize = staticCompositionLocalOf {
     TodoAppSize(
         toolBar = Dp.Unspecified,
-        textField = Dp.Unspecified
+        textField = Dp.Unspecified,
+        standardIcon = Dp.Unspecified,
+        smallIcon = Dp.Unspecified
     )
 }

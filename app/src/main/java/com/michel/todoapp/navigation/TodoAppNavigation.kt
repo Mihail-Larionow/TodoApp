@@ -8,6 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.michel.todoapp.todoitemscreen.TodoItemScreen
 import com.michel.todoapp.todolistscreen.TodoListScreen
+import com.michel.todoapp.todolistscreen.TodoListScreensThree
 
 @Composable
 fun TodoAppNavigation() {
@@ -18,9 +19,6 @@ fun TodoAppNavigation() {
     ) {
         composable(route = Screen.TodoListScreen.route) {
             TodoListScreen(
-                navigate = {
-                    navController.navigate(Screen.TodoItemScreen.route)
-                },
                 onItemClick = { id ->
                     navController.navigate(Screen.TodoItemScreen.withArgs(id))
                 }
@@ -33,8 +31,12 @@ fun TodoAppNavigation() {
                     type = NavType.StringType
                 }
             )
-        ) { entry ->
-            TodoItemScreen(id = entry.arguments?.getString("id"))
+        ) {
+            TodoItemScreen(
+                navigate = {
+                    navController.navigate(Screen.TodoListScreen.route)
+                }
+            )
         }
     }
 }

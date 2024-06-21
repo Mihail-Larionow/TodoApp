@@ -31,7 +31,9 @@ fun ImageCheckBox(
         AnimatedVisibility(
             modifier = modifier,
             visible = checked,
-            exit = shrinkOut(shrinkTowards = Alignment.TopStart) + fadeOut()
+            exit = shrinkOut(
+                shrinkTowards = Alignment.TopStart
+            ) + fadeOut()
         ) {
             Image(
                 modifier = modifier,
