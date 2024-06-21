@@ -1,6 +1,7 @@
 package com.michel.todoapp.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -11,7 +12,9 @@ import com.michel.todoapp.todolistscreen.TodoListScreen
 import com.michel.todoapp.todolistscreen.TodoListScreensThree
 
 @Composable
-fun TodoAppNavigation() {
+fun TodoAppNavigation(
+    modifier: Modifier = Modifier
+) {
     val navController = rememberNavController()
     NavHost(
         navController = navController,
@@ -21,7 +24,8 @@ fun TodoAppNavigation() {
             TodoListScreen(
                 onItemClick = { id ->
                     navController.navigate(Screen.TodoItemScreen.withArgs(id))
-                }
+                },
+                modifier = modifier
             )
         }
         composable(
@@ -35,7 +39,8 @@ fun TodoAppNavigation() {
             TodoItemScreen(
                 navigate = {
                     navController.navigate(Screen.TodoListScreen.route)
-                }
+                },
+                modifier = modifier
             )
         }
     }

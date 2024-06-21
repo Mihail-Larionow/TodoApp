@@ -65,6 +65,7 @@ private val EXPANDED_TOP_BAR_HEIGHT = 200.dp
 
 @Composable
 fun TodoListScreen(
+    modifier: Modifier = Modifier,
     viewModel: TodoListViewModel = hiltViewModel(),
     onItemClick: (String) -> Unit,
 ) {
@@ -90,10 +91,10 @@ fun TodoListScreen(
 
         Box(
             modifier = Modifier
-                .fillMaxSize()
                 .background(
                     color = TodoAppTheme.color.backPrimary
                 )
+                .fillMaxSize()
         ) {
             Scaffold(
 
@@ -258,6 +259,11 @@ private fun Body(
                             end = 16.dp,
                             bottom = 16.dp
                         )
+                )
+                Spacer(
+                    modifier = Modifier.height(
+                        height = 16.dp
+                    )
                 )
             }
         }

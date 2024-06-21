@@ -5,6 +5,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import com.michel.core.ui.theme.TodoAppTheme
 import com.michel.todoapp.navigation.TodoAppNavigation
 import com.michel.todoapp.todolistscreen.TodoListViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -16,7 +20,13 @@ class TodoAppActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            TodoAppNavigation()
+            TodoAppNavigation(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        color = TodoAppTheme.color.backPrimary
+                    )
+            )
         }
     }
 }
