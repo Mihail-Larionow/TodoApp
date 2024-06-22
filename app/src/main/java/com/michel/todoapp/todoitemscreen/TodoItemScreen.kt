@@ -43,114 +43,114 @@ import com.michel.core.date.models.Priority
 import com.michel.core.ui.theme.TodoAppTheme
 import com.michel.core.ui.utils.TodoDivider
 import com.michel.core.ui.utils.TodoDatePicker
+import com.michel.todoapp.extensions.bottomShadow
 import com.michel.todoapp.extensions.toDateText
 
 @Composable
 internal fun TodoItemScreen(
-    modifier: Modifier = Modifier,
     viewModel: TodoItemViewModel = hiltViewModel(),
     navigate: () -> Unit
 ) {
-    
-    TodoAppTheme{
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    color = TodoAppTheme.color.backPrimary
-                )
-        ) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                color = TodoAppTheme.color.backPrimary
+            )
+    ) {
+        var datePickerExpanded by remember { mutableStateOf(false) }
+        val scrollState = rememberScrollState(0)
+        var textField by remember {
+            mutableStateOf(viewModel.screenState.text)
+        }
+        var priorityOption by remember {
+            mutableStateOf(viewModel.screenState.priority)
+        }
+        var hasDeadline by remember {
+            mutableStateOf(viewModel.screenState.hasDeadline)
+        }
+        var deadlineDate by remember {
+            mutableLongStateOf(viewModel.screenState.deadline)
+        }
+        var deadlineDateText by remember {
+            mutableStateOf(deadlineDate.toDateText())
+        }
 
-            var datePickerExpanded by remember { mutableStateOf(false) }
-
-            val scrollState = rememberScrollState(0)
-
-            var textField by remember {
-                mutableStateOf(viewModel.screenState.text)
-            }
-
-            var priorityOption by remember {
-                mutableStateOf(viewModel.screenState.priority)
-            }
-
-            var hasDeadline by remember {
-                mutableStateOf(viewModel.screenState.hasDeadline)
-            }
-
-            var deadlineDate by remember {
-                mutableLongStateOf(viewModel.screenState.deadline)
-            }
-
-            var deadlineDateText by remember {
-                mutableStateOf(deadlineDate.toDateText())
-            }
-
-            Body(
-                scrollState = scrollState,
-                priorityOption = priorityOption,
-                textField = textField,
-                hasDeadline = hasDeadline,
-                deadlineDateText = deadlineDateText,
-                onTextChange = {
-                    textField = it
-                    viewModel.screenState.text = it
-                },
-                onPriorityChange = {
-                    priorityOption = it
-                    viewModel.screenState.priority = it
-                },
-                onDeadlineToggle = {
-                    hasDeadline = it
-                    viewModel.screenState.hasDeadline = it
-                },
-                onDeadlineClick = {
-                    datePickerExpanded = !datePickerExpanded
-                },
-                onDelete = {
+        Body(
+            scrollState = scrollState,
+            priorityOption = priorityOption,
+            textField = textField,
+            hasDeadline = hasDeadline,
+            deadlineDateText = deadlineDateText,
+            onTextChange = {
+                textField = it
+                viewModel.screenState.text = it
+            },
+            onPriorityChange = {
+                priorityOption = it
+                viewModel.screenState.priority = it
+            },
+            onDeadlineToggle = {
+                hasDeadline = it
+                viewModel.screenState.hasDeadline = it
+            },
+            onDeadlineClick = {
+                datePickerExpanded = !datePickerExpanded
+            },
+            onDelete = {
+                if(textField != "") { // Проверка на пустой текст
                     viewModel.delete()
                     navigate()
                 }
-            )
-
-            Header(
-                onCancel = {
+            }
+        )
+        Header(
+            text = textField,
+            onCancel = {
+                navigate()
+            },
+            onAccept = {
+                if(textField != "") { // Проверка на пустой текст
+                    viewModel.save()
                     navigate()
-                },
-                onAccept = {
-                    if(textField != "") { // Проверка на пустой текст
-                        viewModel.save()
-                        navigate()
-                    }
-                },
-                modifier = Modifier
-                    .height(
-                        height = TodoAppTheme.size.toolBar
-                    )
-                    .background(
-                        color = TodoAppTheme.color.backPrimary
-                    )
-            )
-
-            if(datePickerExpanded) TodoDatePicker(
-                date = deadlineDate,
-                onConfirm = {
-                    datePickerExpanded = !datePickerExpanded
-                    deadlineDate = it
-                    viewModel.screenState.deadline = it
-                    deadlineDateText = it.toDateText()
-                },
-                onDismiss = {
-                    datePickerExpanded = !datePickerExpanded
                 }
-            )
-
-        }
+            },
+            modifier = Modifier
+                .height(
+                    height = TodoAppTheme.size.toolBar
+                )
+                .bottomShadow(
+                    shadow = if(scrollState.value > 0) 4.dp else 0.dp
+                )
+                .background(
+                    color = TodoAppTheme.color.backPrimary
+                )
+                .padding(
+                    start = 16.dp,
+                    end = 12.dp,
+                    bottom = 4.dp,
+                    top = 4.dp
+                )
+        )
+        if(datePickerExpanded) TodoDatePicker(
+            date = deadlineDate,
+            onConfirm = {
+                datePickerExpanded = !datePickerExpanded
+                deadlineDate = it
+                viewModel.screenState.deadline = it
+                deadlineDateText = it.toDateText()
+            },
+            onDismiss = {
+                datePickerExpanded = !datePickerExpanded
+            }
+        )
     }
 }
 
 @Composable
 private fun Header(
     modifier: Modifier = Modifier,
+    text: String,
     onCancel: () -> Unit,
     onAccept: () -> Unit
 ) {
@@ -158,7 +158,6 @@ private fun Header(
         .fillMaxWidth()
         .padding(start = 8.dp, end = 16.dp)
     ){
-
         Icon(
             painter = painterResource(
                 id = com.michel.core.ui.R.drawable.ic_exit
@@ -176,11 +175,9 @@ private fun Header(
                     alignment = Alignment.CenterVertically
                 )
         )
-
         Spacer(
             modifier = Modifier.weight(1f)
         )
-
         TextButton(
             onClick = { onAccept() },
             modifier = Modifier.align(
@@ -191,7 +188,11 @@ private fun Header(
                 text = stringResource(
                     id = com.michel.core.ui.R.string.saveUpperCase
                 ),
-                color = TodoAppTheme.color.blue,
+                color = if(text == "") {
+                    TodoAppTheme.color.disable
+                } else {
+                    TodoAppTheme.color.blue
+                },
                 style = TodoAppTheme.typography.button
             )
         }
@@ -212,19 +213,16 @@ private fun Body(
     onDeadlineClick: () -> Unit,
     onDelete: () -> Unit
 ) {
-
     Column(
         modifier = modifier
             .fillMaxWidth()
             .verticalScroll(scrollState)
     ) {
-
         Spacer(
             modifier = Modifier.height(
                 height = TodoAppTheme.size.toolBar
             )
         )
-
         TodoTextField(
             text = textField,
             shape = TodoAppTheme.shape.container,
@@ -236,7 +234,6 @@ private fun Body(
         ) {
             onTextChange(it)
         }
-
         TodoPriority(
             option = priorityOption,
             modifier = Modifier
@@ -244,12 +241,10 @@ private fun Body(
         ) {
             onPriorityChange(it)
         }
-
         TodoDivider(
             modifier = Modifier
                 .padding(all = 16.dp)
         )
-
         TodoDeadline(
             date = deadlineDateText,
             hasDeadline = hasDeadline,
@@ -259,10 +254,9 @@ private fun Body(
                 all = 16.dp
             )
         )
-
         TodoDivider()
-
         DeleteButton(
+            text = textField,
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onDelete() }
@@ -271,7 +265,6 @@ private fun Body(
                 )
         )
     }
-
 }
 
 @Composable
@@ -281,7 +274,6 @@ private fun TodoTextField(
     shape: Shape = RectangleShape,
     onValueChanged: (String) -> Unit
 ) {
-
     OutlinedTextField(
         value = text,
         onValueChange = {
@@ -318,7 +310,6 @@ private fun TodoPriority(
     option: Priority,
     onOptionSelect: (Priority) -> Unit
 ) {
-
     var expanded by remember { mutableStateOf(false) }
 
     val options = listOf(
@@ -348,7 +339,11 @@ private fun TodoPriority(
         )
         Text(
             text = option.text,
-            color = TodoAppTheme.color.tertiary,
+            color = if(option == Priority.High){
+                TodoAppTheme.color.red
+            } else {
+                TodoAppTheme.color.tertiary
+            },
             style = TodoAppTheme.typography.body
         )
         DropdownMenu(
@@ -379,9 +374,7 @@ private fun TodoPriority(
                 )
             }
         }
-
     }
-
 }
 
 @Composable
@@ -392,7 +385,6 @@ private fun TodoDeadline(
     onToggleChecked: (Boolean) -> Unit,
     onDeadlineClick: () -> Unit
 ) {
-
     Row(
         modifier = modifier
     ){
@@ -404,7 +396,6 @@ private fun TodoDeadline(
                 color = TodoAppTheme.color.primary,
                 style = TodoAppTheme.typography.body
             )
-
             if(hasDeadline) {
                 Spacer(
                     modifier = Modifier.height(
@@ -421,11 +412,9 @@ private fun TodoDeadline(
                 )
             }
         }
-
         Spacer(
             modifier = Modifier.weight(1f)
         )
-
         Switch(
             checked = hasDeadline,
             onCheckedChange = { onToggleChecked(it) },
@@ -441,25 +430,27 @@ private fun TodoDeadline(
                 uncheckedTrackColor = TodoAppTheme.color.overlay,
                 uncheckedBorderColor = TodoAppTheme.color.overlay
             ),
-
         )
     }
-
 }
 
 @Composable
 private fun DeleteButton(
     modifier: Modifier = Modifier,
+    text: String
 ) {
     Row(
         modifier = modifier
     ) {
-
         Icon(
             painter = painterResource(
                 id = com.michel.core.ui.R.drawable.ic_delete
             ),
-            tint = TodoAppTheme.color.red,
+            tint = if(text == "") {
+                TodoAppTheme.color.disable
+            } else {
+                TodoAppTheme.color.red
+            },
             contentDescription = stringResource(
                 id = com.michel.core.ui.R.string.deleteContentDescription
             ),
@@ -471,24 +462,25 @@ private fun DeleteButton(
                     alignment = Alignment.CenterVertically
                 )
         )
-
         Spacer(
             modifier = Modifier.width(
                 width = 16.dp
             )
         )
-
         Text(
             text = stringResource(
                 id = com.michel.core.ui.R.string.deleteUpperCase
             ),
-            color = TodoAppTheme.color.red,
+            color = if(text == "") {
+                TodoAppTheme.color.disable
+            } else {
+                TodoAppTheme.color.red
+            },
             style = TodoAppTheme.typography.body,
             modifier = Modifier.align(
                 alignment = Alignment.CenterVertically
             )
         )
-
     }
 }
 

@@ -13,15 +13,11 @@ import javax.inject.Inject
 @HiltViewModel
 class TodoItemViewModel @Inject constructor(
     private val repository: TodoItemsRepository,
-    private val savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val todoItemId = savedStateHandle.get<String>("id") ?: "none"
     private val todoItem: TodoItem = repository.getItem(id = todoItemId)
-
-    init{
-        Log.i("item", "$todoItemId")
-    }
 
     val screenState = ItemScreenState(
         text = todoItem.text,
@@ -30,6 +26,7 @@ class TodoItemViewModel @Inject constructor(
         deadline = todoItem.deadline ?: Date().time,
     )
 
+    // Сохраняет в репозиторий таску
     fun save() {
         val newTodoItem = TodoItem(
             id = todoItemId,
@@ -42,6 +39,7 @@ class TodoItemViewModel @Inject constructor(
         repository.addItem(newTodoItem)
     }
 
+    // Удаляет из репозитория таску
     fun delete() {
         repository.deleteItem(todoItem)
     }

@@ -2,14 +2,8 @@ package com.michel.todoapp.todolistscreen
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandIn
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.animation.shrinkOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.slideIn
-import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalOverscrollConfiguration
 import androidx.compose.foundation.background
@@ -18,7 +12,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -32,7 +25,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -48,120 +40,120 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.michel.core.date.models.TodoItem
 import com.michel.core.ui.theme.TodoAppTheme
 import com.michel.core.ui.utils.ImageCheckBox
 import com.michel.core.ui.utils.SwipeItem
-import com.michel.todoapp.navigation.Screen
+import com.michel.todoapp.extensions.bottomShadow
 
 private val COLLAPSED_TOP_BAR_HEIGHT = 56.dp
 private val EXPANDED_TOP_BAR_HEIGHT = 200.dp
 
+// Экран списка дел
 @Composable
 fun TodoListScreen(
-    modifier: Modifier = Modifier,
     viewModel: TodoListViewModel = hiltViewModel(),
     onItemClick: (String) -> Unit,
 ) {
+    val listState = rememberLazyListState()
 
-    TodoAppTheme{
-        val listState = rememberLazyListState()
+    var hideDoneItems by remember {
+        mutableStateOf(viewModel.screenState.hideDoneItems)
+    }
 
-        var hideDoneItems by remember {
-            mutableStateOf(viewModel.screenState.hideDoneItems)
+    var doneItemsCount by remember {
+        mutableIntStateOf(
+            viewModel.screenState.todoItems.count {
+                it.isDone
+            }
+        )
+    }
+
+    val isCollapsed: Boolean by remember {
+        derivedStateOf {
+            listState.firstVisibleItemIndex > 0
         }
+    }
 
-        var doneItemsCount by remember {
-            mutableIntStateOf(
-                viewModel.screenState.todoItems.count {
-                    it.isDone
-                }
+    Box(
+        modifier = Modifier
+            .background(
+                color = TodoAppTheme.color.backPrimary
             )
-        }
-
-        val isCollapsed: Boolean by remember {
-            derivedStateOf { listState.firstVisibleItemIndex > 0 }
-        }
-
-        Box(
-            modifier = Modifier
-                .background(
-                    color = TodoAppTheme.color.backPrimary
-                )
-                .fillMaxSize()
-        ) {
-            Scaffold(
-
-                topBar = {
-                    CollapsedToolBar(
-                        count = doneItemsCount,
-                        isCollapsed = isCollapsed,
-                        hideDoneItems = hideDoneItems,
-                        onCheckChange = {
-                            hideDoneItems = it
-                            viewModel.screenState.hideDoneItems = it
-                        },
-                        modifier = Modifier.background(
-                            color = TodoAppTheme.color.backPrimary
-                        )
-                    )
-                },
-                modifier = Modifier.fillMaxSize()
-            ) { innerPadding ->
-                Body(
-                    state = listState,
-                    itemList = viewModel.screenState.todoItems,
+            .fillMaxSize()
+    ) {
+        Scaffold(
+            topBar = {
+                CollapsedToolBar(
+                    isCollapsed = isCollapsed,
                     hideDoneItems = hideDoneItems,
-                    doneItemsCount = doneItemsCount,
-                    onVisibilityChanged = {
+                    onCheckChange = {
                         hideDoneItems = it
                         viewModel.screenState.hideDoneItems = it
                     },
-                    onDelete = {
-                        viewModel.deleteItem(item = it)
-                    },
-                    onItemClick = onItemClick,
-                    onItemLongClick = {
-
-                    },
-                    increaseDoneItems = {
-                        doneItemsCount += it
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            color = TodoAppTheme.color.backPrimary
-                        )
-                        .padding(
-                            paddingValues = innerPadding
-                        )
-                        .padding(
-                            start = 12.dp,
-                            end = 12.dp
-                        )
-
-                )
-            }
-            FloatingButton(
-                onClick = {
-                    onItemClick(
-                        (viewModel.screenState.todoItems.size + 1).toString()
+                    modifier = Modifier.background(
+                        color = if(!isCollapsed){
+                            Color.Transparent
+                        } else {
+                            TodoAppTheme.color.backPrimary
+                        }
                     )
-                },
-                modifier = Modifier.align(
-                    Alignment.BottomEnd
                 )
+            },
+            modifier = Modifier.fillMaxSize()
+        ) { innerPadding ->
+            Body(
+                state = listState,
+                itemList = viewModel.screenState.todoItems,
+                hideDoneItems = hideDoneItems,
+                doneItemsCount = doneItemsCount,
+                onVisibilityChanged = {
+                    hideDoneItems = it
+                    viewModel.screenState.hideDoneItems = it
+                },
+                onDelete = {
+                    viewModel.deleteItem(item = it)
+                },
+                onItemClick = onItemClick,
+                onItemLongClick = { }, // Здесь должен был быть дроп даун меню...
+                increaseDoneItems = {
+                    doneItemsCount += it
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        color = TodoAppTheme.color.backPrimary
+                    )
+                    .padding(
+                        paddingValues = innerPadding
+                    )
+                    .padding(
+                        start = 12.dp,
+                        end = 12.dp
+                    )
+
             )
         }
+        FloatingButton(
+            onClick = {
+                onItemClick(
+                    (viewModel.screenState.todoItems.last().id.toInt() + 1).toString()
+                )
+            },
+            modifier = Modifier.align(
+                Alignment.BottomEnd
+            )
+        )
     }
 }
 
+// Основное тело с тасками
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun Body(
@@ -176,17 +168,14 @@ private fun Body(
     onItemLongClick: (String) -> Unit,
     increaseDoneItems: (Int) -> Unit,
 ) {
-
     val todoItems = remember {
-        itemList.toMutableStateList()
+        itemList.reversed().toMutableStateList()
     }
 
     CompositionLocalProvider(LocalOverscrollConfiguration provides null) {
         LazyColumn(
             state = state,
-            modifier = modifier.background(
-                color = TodoAppTheme.color.backSecondary
-            )
+            modifier = modifier.fillMaxSize()
         ) {
             item{
                 ExpandedToolBar(
@@ -248,9 +237,12 @@ private fun Body(
                     style = TodoAppTheme.typography.body,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .background(
+                            color = TodoAppTheme.color.backSecondary
+                        )
                         .clickable {
                             onItemClick(
-                                "${itemList.size + 1}"
+                                "${itemList.last().id.toInt() + 1}"
                             )
                         }
                         .padding(
@@ -259,24 +251,32 @@ private fun Body(
                             end = 16.dp,
                             bottom = 16.dp
                         )
+
                 )
+
+            }
+            item {
                 Spacer(
-                    modifier = Modifier.height(
-                        height = 16.dp
-                    )
+                    modifier = Modifier
+                        .height(
+                            height = 16.dp
+                        )
+                        .background(
+                            color = TodoAppTheme.color.backPrimary
+                        )
                 )
             }
         }
     }
 }
 
-@Preview(showBackground = true)
+// Топ бар, когда он развернут
 @Composable
 private fun ExpandedToolBar(
     modifier: Modifier = Modifier,
-    count: Int = 0,
-    hideDoneItems: Boolean = false,
-    onCheckChange: (check: Boolean) -> Unit = {},
+    count: Int,
+    hideDoneItems: Boolean,
+    onCheckChange: (check: Boolean) -> Unit,
 ) {
     Box(
         modifier = modifier
@@ -285,9 +285,9 @@ private fun ExpandedToolBar(
                 height = EXPANDED_TOP_BAR_HEIGHT - COLLAPSED_TOP_BAR_HEIGHT
             )
             .padding(
-                start = 64.dp,
-                end = 24.dp,
-                bottom = 16.dp
+                start = 56.dp,
+                end = 20.dp,
+                bottom = 20.dp
             )
     ) {
         Column(
@@ -306,18 +306,13 @@ private fun ExpandedToolBar(
             Spacer(
                 modifier = Modifier.height(4.dp)
             )
-            AnimatedVisibility(
-                visible = true,
-                exit = shrinkOut(shrinkTowards = Alignment.TopStart) + fadeOut()
-            ) {
-                Text(
-                    text = stringResource(
-                        id = com.michel.core.ui.R.string.todolist_screen_subtitle
-                    ) + " $count",
-                    style = TodoAppTheme.typography.subhead,
-                    color = TodoAppTheme.color.tertiary,
-                )
-            }
+            Text(
+                text = stringResource(
+                    id = com.michel.core.ui.R.string.todolist_screen_subtitle
+                ) + " $count",
+                style = TodoAppTheme.typography.subhead,
+                color = TodoAppTheme.color.tertiary,
+            )
         }
         VisibilityCheckBox(
             checked = hideDoneItems,
@@ -334,25 +329,36 @@ private fun ExpandedToolBar(
     }
 }
 
-@Preview(showBackground = true)
+// Топ бар, когда он сжат
 @Composable
 private fun CollapsedToolBar(
     modifier: Modifier = Modifier,
-    isCollapsed: Boolean = true,
-    count: Int = 0,
-    hideDoneItems: Boolean = false,
-    onCheckChange: (check: Boolean) -> Unit = {},
+    isCollapsed: Boolean,
+    hideDoneItems: Boolean,
+    onCheckChange: (check: Boolean) -> Unit,
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(COLLAPSED_TOP_BAR_HEIGHT)
-            .padding(16.dp)
+            .bottomShadow(
+                shadow = if(isCollapsed) 4.dp else 0.dp
+            )
+            .background(
+                color = TodoAppTheme.color.backPrimary
+            )
+            .padding(
+                all = 16.dp
+            )
     ) {
         AnimatedVisibility(
             visible = isCollapsed,
-            exit = shrinkVertically(shrinkTowards = Alignment.Bottom),
-            enter = expandVertically(expandFrom = Alignment.Bottom)
+            exit = scaleOut(
+                targetScale = 0.5f,
+            ),
+            enter = scaleIn(
+                initialScale = 0.5f,
+            )
         ) {
             Box(
                 modifier = Modifier.fillMaxWidth()
@@ -383,6 +389,7 @@ private fun CollapsedToolBar(
     }
 }
 
+// Кнопка
 @Composable
 private fun FloatingButton(
     modifier: Modifier = Modifier,
@@ -397,7 +404,11 @@ private fun FloatingButton(
                 shape = CircleShape,
                 containerColor = TodoAppTheme.color.blue,
                 contentColor = TodoAppTheme.color.white,
-                modifier = modifier
+                modifier = modifier.bottomShadow(
+                    shadow = 4.dp,
+                    shape = CircleShape
+                )
+
             ) {
                 Icon(
                     painter = painterResource(
@@ -417,13 +428,13 @@ private fun FloatingButton(
     }
 }
 
+// Чекбокс глаз
 @Composable
 private fun VisibilityCheckBox(
     modifier: Modifier = Modifier,
     checked: Boolean,
     onCheckChange: (Boolean) -> Unit
 ) {
-
     ImageCheckBox(
         checked = checked,
         iconChecked = com.michel.core.ui.R.drawable.ic_visibility_off,
@@ -431,9 +442,11 @@ private fun VisibilityCheckBox(
         onCheckedChange = { onCheckChange(it) },
         modifier = modifier
     )
-
 }
 
+// Хотел реализовать дроп даун меню при долгом клике,
+// но не успел...
+// (это был доп задание)
 @Composable
 private fun ItemDropdownMenu(
     modifier: Modifier = Modifier,
