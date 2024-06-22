@@ -11,10 +11,20 @@ class TodoListViewModel @Inject constructor(
     private val repository: TodoItemsRepository
 ) : ViewModel() {
 
-    val screenState = ListScreenState(
+    private val screenState = ListScreenState(
         hideDoneItems = false,
         todoItems = repository.getAll()
     )
+
+    fun isHidingItems(): Boolean = screenState.hideDoneItems
+
+    fun changeCheckState(state: Boolean) {
+        screenState.hideDoneItems = state
+    }
+
+    fun getItems(): List<TodoItem> {
+        return screenState.todoItems
+    }
 
     // Удаляет из репозитория таску
     fun deleteItem(item: TodoItem){

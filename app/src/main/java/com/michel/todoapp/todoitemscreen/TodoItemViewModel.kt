@@ -1,6 +1,5 @@
 package com.michel.todoapp.todoitemscreen
 
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.michel.core.date.TodoItemsRepository
@@ -19,7 +18,7 @@ class TodoItemViewModel @Inject constructor(
     private val todoItemId = savedStateHandle.get<String>("id") ?: "none"
     private val todoItem: TodoItem = repository.getItem(id = todoItemId)
 
-    val screenState = ItemScreenState(
+    private val screenState = ItemScreenState(
         text = todoItem.text,
         priority = todoItem.priority,
         hasDeadline = todoItem.deadline != null,
@@ -34,7 +33,8 @@ class TodoItemViewModel @Inject constructor(
             priority = screenState.priority,
             deadline = if(screenState.hasDeadline) screenState.deadline else null,
             isDone = todoItem.isDone,
-            dateChanged = Date().time
+            createdAt = todoItem.createdAt,
+            changedAt = Date().time
         )
         repository.addItem(newTodoItem)
     }
@@ -44,6 +44,37 @@ class TodoItemViewModel @Inject constructor(
         repository.deleteItem(todoItem)
     }
 
+    fun getText(): String {
+        return screenState.text
+    }
+
+    fun setText(text: String) {
+        screenState.text = text
+    }
+
+    fun getPriority(): Priority {
+        return screenState.priority
+    }
+
+    fun setPriority(priority: Priority) {
+        screenState.priority = priority
+    }
+
+    fun hasDeadline(): Boolean {
+        return screenState.hasDeadline
+    }
+
+    fun setHasDeadline(state: Boolean) {
+        screenState.hasDeadline = state
+    }
+
+    fun getDeadline(): Long {
+        return screenState.deadline
+    }
+
+    fun setDeadline(date: Long) {
+        screenState.deadline = date
+    }
 }
 
 data class ItemScreenState(
