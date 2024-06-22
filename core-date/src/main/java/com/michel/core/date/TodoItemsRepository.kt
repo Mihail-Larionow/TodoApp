@@ -8,10 +8,6 @@ import java.util.Date
 
 class TodoItemsRepository {
 
-    init {
-        Log.i("app", "Я создался!")
-    }
-
     // Возвращает все таски списком
     fun getAll(): List<TodoItem> {
         return todoItems
@@ -34,7 +30,6 @@ class TodoItemsRepository {
     // Удаляет таску из списка
     fun deleteItem(todoItem: TodoItem) {
         todoItems.remove(todoItem)
-        Log.i("app", "Произошло удоление\n${todoItems.joinToString(" ")}")
     }
 
     // Находит таску по id, либо возвращает пустую таску
@@ -48,40 +43,43 @@ class TodoItemsRepository {
     private val todoItems = mutableListOf(
         TodoItem(
             id = "1",
-            text = "Вставьте текст",
-            priority = Priority.Standard,
-            isDone = false
+            text = "Мега пж",
+            priority = Priority.High,
+            isDone = false,
+            deadline = 1718919593456 + 86400000
         ),
         TodoItem(
             id = "2",
-            text = "Очень очень очень очень очень очень очень очень очень очень очень очень очень очень очень очень очень очень очень длинный текст",
-            priority = Priority.Standard,
-            isDone = false
+            text = "Поставьте максимум прошу",
+            priority = Priority.High,
+            isDone = false,
+            deadline = 1718919593456 + 86400000
         ),
         TodoItem(
             id = "3",
-            text = "Задание с дедлайном",
-            priority = Priority.Standard,
+            text = "Исправить все баги",
+            priority = Priority.High,
             isDone = false,
-            deadline = Date().time
+            deadline = 1718919593456 + 86400000
         ),
         TodoItem(
             id = "4",
-            text = "Что-то неважное",
+            text = "Тысячу раз задебажить это приложение",
             priority = Priority.Low,
-            isDone = false
+            isDone = true,
+            deadline = 1718919593456
         ),
         TodoItem(
             id = "5",
-            text = "Что-то важное",
+            text = "Сделать первое задание",
             priority = Priority.High,
-            isDone = false
+            isDone = true
         ),
         TodoItem(
             id = "6",
-            text = "Выполненное задание",
+            text = "Устроиться работать в пятерочку(",
             priority = Priority.Low,
-            isDone = true
+            isDone = false
         ),
         TodoItem(
             id = "7",
@@ -91,43 +89,40 @@ class TodoItemsRepository {
         ),
         TodoItem(
             id = "8",
-            text = "Устроиться работать в пятерочку(",
+            text = "Выполненное задание",
+            priority = Priority.Low,
+            isDone = true
+        ),
+        TodoItem(
+            id = "9",
+            text = "Что-то важное",
+            priority = Priority.High,
+            isDone = false
+        ),
+        TodoItem(
+            id = "10",
+            text = "Что-то неважное",
             priority = Priority.Low,
             isDone = false
         ),
         TodoItem(
-            id = "9",
-            text = "Сделать первое задание",
-            priority = Priority.High,
-            isDone = true
-        ),
-        TodoItem(
-            id = "10",
-            text = "Тысячу раз задебажить это приложение",
-            priority = Priority.Low,
-            isDone = true,
-            deadline = 1718919593456
-        ),
-        TodoItem(
             id = "11",
-            text = "Исправить все баги",
-            priority = Priority.High,
+            text = "Задание с дедлайном",
+            priority = Priority.Standard,
             isDone = false,
-            deadline = 1718919593456 + 86400000
+            deadline = Date().time
         ),
         TodoItem(
             id = "12",
-            text = "Поставьте максимум прошу",
-            priority = Priority.High,
-            isDone = false,
-            deadline = 1718919593456 + 86400000
+            text = "Очень очень очень очень очень очень очень очень очень очень очень очень очень очень очень очень очень очень очень длинный текст",
+            priority = Priority.Standard,
+            isDone = false
         ),
         TodoItem(
             id = "13",
-            text = "Мега пж",
-            priority = Priority.High,
-            isDone = false,
-            deadline = 1718919593456 + 86400000
+            text = "Вставьте текст",
+            priority = Priority.Standard,
+            isDone = false
         )
     )
 }

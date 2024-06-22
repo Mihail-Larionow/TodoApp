@@ -1,5 +1,6 @@
 package com.michel.core.ui.utils
 
+import androidx.compose.foundation.background
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
@@ -55,7 +56,10 @@ fun TodoDatePicker(
                     style = TodoAppTheme.typography.button
                 )
             }
-        }
+        },
+        colors = DatePickerDefaults.colors(
+            containerColor = TodoAppTheme.color.backSecondary
+        )
     ) {
         DatePicker(
             state = datePickerState,
@@ -65,17 +69,15 @@ fun TodoDatePicker(
                 selectedDayContainerColor = TodoAppTheme.color.blue,
                 todayDateBorderColor = Color.Transparent,
                 dayContentColor = TodoAppTheme.color.primary,
-                titleContentColor = TodoAppTheme.color.white,
-                containerColor = TodoAppTheme.color.backSecondary,
-                headlineContentColor = TodoAppTheme.color.elevated,
+                titleContentColor = TodoAppTheme.color.primary,
+                headlineContentColor = TodoAppTheme.color.primary,
                 weekdayContentColor = TodoAppTheme.color.tertiary,
                 navigationContentColor = TodoAppTheme.color.primary,
                 yearContentColor = TodoAppTheme.color.primary,
                 selectedYearContentColor = TodoAppTheme.color.elevated,
                 selectedYearContainerColor = TodoAppTheme.color.blue,
                 disabledSelectedYearContainerColor = TodoAppTheme.color.red
-            ),
-            modifier = modifier
+            )
         )
     }
 }

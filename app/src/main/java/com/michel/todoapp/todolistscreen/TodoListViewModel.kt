@@ -16,6 +16,7 @@ class TodoListViewModel @Inject constructor(
         todoItems = repository.getAll()
     )
 
+    // Удаляет из репозитория таску
     fun deleteItem(item: TodoItem){
         repository.deleteItem(todoItem = item)
     }

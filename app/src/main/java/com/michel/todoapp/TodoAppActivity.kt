@@ -6,7 +6,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.michel.core.ui.theme.TodoAppTheme
 import com.michel.todoapp.navigation.TodoAppNavigation
@@ -15,18 +17,20 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class TodoAppActivity : ComponentActivity() {
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            TodoAppNavigation(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        color = TodoAppTheme.color.backPrimary
-                    )
-            )
+            TodoAppTheme{
+                Surface(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            color = TodoAppTheme.color.backPrimary
+                        )
+                ) {
+                    TodoAppNavigation()
+                }
+            }
         }
     }
 }
