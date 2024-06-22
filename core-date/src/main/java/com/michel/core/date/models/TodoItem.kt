@@ -1,12 +1,15 @@
 package com.michel.core.date.models
 
+import java.util.Date
+
 data class TodoItem(
     val id: String,
     var text: String,
     var priority: Priority,
     var deadline: Long? = null,
     var isDone: Boolean,
-    var dateChanged: Long? = null
+    val createdAt: Long,
+    var changedAt: Long? = null
 )
 
 sealed class Priority(val text: String) {
@@ -20,6 +23,7 @@ fun emptyTodoItem(): TodoItem {
         id = "",
         text = "",
         priority = Priority.Standard,
-        isDone = false
+        isDone = false,
+        createdAt = Date().time
     )
 }

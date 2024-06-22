@@ -61,16 +61,16 @@ internal fun TodoItemScreen(
         var datePickerExpanded by remember { mutableStateOf(false) }
         val scrollState = rememberScrollState(0)
         var textField by remember {
-            mutableStateOf(viewModel.screenState.text)
+            mutableStateOf(viewModel.getText())
         }
         var priorityOption by remember {
-            mutableStateOf(viewModel.screenState.priority)
+            mutableStateOf(viewModel.getPriority())
         }
         var hasDeadline by remember {
-            mutableStateOf(viewModel.screenState.hasDeadline)
+            mutableStateOf(viewModel.hasDeadline())
         }
         var deadlineDate by remember {
-            mutableLongStateOf(viewModel.screenState.deadline)
+            mutableLongStateOf(viewModel.getDeadline())
         }
         var deadlineDateText by remember {
             mutableStateOf(deadlineDate.toDateText())
@@ -84,15 +84,15 @@ internal fun TodoItemScreen(
             deadlineDateText = deadlineDateText,
             onTextChange = {
                 textField = it
-                viewModel.screenState.text = it
+                viewModel.setText(it)
             },
             onPriorityChange = {
                 priorityOption = it
-                viewModel.screenState.priority = it
+                viewModel.setPriority(it)
             },
             onDeadlineToggle = {
                 hasDeadline = it
-                viewModel.screenState.hasDeadline = it
+                viewModel.setHasDeadline(it)
             },
             onDeadlineClick = {
                 datePickerExpanded = !datePickerExpanded
@@ -137,7 +137,7 @@ internal fun TodoItemScreen(
             onConfirm = {
                 datePickerExpanded = !datePickerExpanded
                 deadlineDate = it
-                viewModel.screenState.deadline = it
+                viewModel.setDeadline(it)
                 deadlineDateText = it.toDateText()
             },
             onDismiss = {

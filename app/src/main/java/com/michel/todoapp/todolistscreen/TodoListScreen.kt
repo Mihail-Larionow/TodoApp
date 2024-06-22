@@ -64,12 +64,12 @@ fun TodoListScreen(
     val listState = rememberLazyListState()
 
     var hideDoneItems by remember {
-        mutableStateOf(viewModel.screenState.hideDoneItems)
+        mutableStateOf(viewModel.isHidingItems())
     }
 
     var doneItemsCount by remember {
         mutableIntStateOf(
-            viewModel.screenState.todoItems.count {
+            viewModel.getItems().count {
                 it.isDone
             }
         )
@@ -95,7 +95,7 @@ fun TodoListScreen(
                     hideDoneItems = hideDoneItems,
                     onCheckChange = {
                         hideDoneItems = it
-                        viewModel.screenState.hideDoneItems = it
+                        viewModel.changeCheckState(it)
                     },
                     modifier = Modifier.background(
                         color = if(!isCollapsed){
@@ -110,12 +110,12 @@ fun TodoListScreen(
         ) { innerPadding ->
             Body(
                 state = listState,
-                itemList = viewModel.screenState.todoItems,
+                itemList = viewModel.getItems(),
                 hideDoneItems = hideDoneItems,
                 doneItemsCount = doneItemsCount,
                 onVisibilityChanged = {
                     hideDoneItems = it
-                    viewModel.screenState.hideDoneItems = it
+                    viewModel.changeCheckState(it)
                 },
                 onDelete = {
                     viewModel.deleteItem(item = it)
@@ -143,7 +143,7 @@ fun TodoListScreen(
         FloatingButton(
             onClick = {
                 onItemClick(
-                    (viewModel.screenState.todoItems.last().id.toInt() + 1).toString()
+                    (viewModel.getItems().last().id.toInt() + 1).toString()
                 )
             },
             modifier = Modifier.align(
