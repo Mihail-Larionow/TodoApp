@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.michel.core.ui.theme.TodoAppTheme
-import com.michel.todoapp.navigation.TodoAppNavigation
+import com.michel.feature.screens.navigation.TodoAppNavigation
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

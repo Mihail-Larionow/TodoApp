@@ -1,4 +1,4 @@
-package com.michel.todoapp.navigation
+package com.michel.feature.screens.navigation
 
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -12,8 +12,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.michel.todoapp.todoitemscreen.TodoItemScreen
-import com.michel.todoapp.todolistscreen.TodoListScreen
+import com.michel.feature.screens.todoitemscreen.TodoItemScreen
+import com.michel.feature.screens.todolistscreen.TodoListScreen
 
 @Composable
 fun TodoAppNavigation() {
@@ -70,7 +70,7 @@ fun TodoAppNavigation() {
             }
         ) {
             TodoListScreen(
-                onItemClick = { id ->
+                navigate = { id ->
                     navController.navigate(Screen.TodoItemScreen.withArgs(id))
                 },
             )

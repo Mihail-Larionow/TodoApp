@@ -1,4 +1,4 @@
-package com.michel.todoapp.todoitemscreen
+package com.michel.feature.screens.todoitemscreen
 
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
@@ -43,12 +43,23 @@ import com.michel.core.data.models.Priority
 import com.michel.core.ui.theme.TodoAppTheme
 import com.michel.core.ui.utils.TodoDivider
 import com.michel.core.ui.utils.TodoDatePicker
-import com.michel.todoapp.extensions.bottomShadow
-import com.michel.todoapp.extensions.toDateText
+import com.michel.feature.screens.extensions.bottomShadow
+import com.michel.feature.screens.extensions.toDateText
 
 @Composable
-internal fun TodoItemScreen(
-    viewModel: TodoItemViewModel = hiltViewModel(),
+internal fun TodoItemScreen(navigate: () -> Unit) {
+
+    val viewModel: TodoItemViewModel = hiltViewModel()
+
+    Content(
+        viewModel = viewModel,
+        navigate = navigate
+    )
+}
+
+@Composable
+private fun Content(
+    viewModel: TodoItemViewModel,
     navigate: () -> Unit
 ) {
     Box(
@@ -254,15 +265,39 @@ private fun Body(
             )
         )
         TodoDivider()
-        DeleteButton(
-            text = textField,
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onDelete() }
                 .padding(
                     all = 16.dp
                 )
-        )
+                .clickable { onDelete() }
+        ) {
+
+            val buttonColor = if(textField == "") {
+                TodoAppTheme.color.disable
+            } else {
+                TodoAppTheme.color.red
+            }
+
+            Icon(
+                painter = painterResource(com.michel.core.ui.R.drawable.ic_delete),
+                tint = buttonColor,
+                contentDescription = stringResource(com.michel.core.ui.R.string.deleteContentDescription),
+                modifier = Modifier
+                    .size(TodoAppTheme.size.standardIcon)
+                    .align(Alignment.CenterVertically)
+            )
+            Spacer(
+                modifier = Modifier.width(16.dp)
+            )
+            Text(
+                text = stringResource(com.michel.core.ui.R.string.deleteUpperCase),
+                color = buttonColor,
+                style = TodoAppTheme.typography.body,
+                modifier = Modifier.align( Alignment.CenterVertically)
+            )
+        }
     }
 }
 
@@ -424,39 +459,3 @@ private fun TodoDeadline(
         )
     }
 }
-
-@Composable
-private fun DeleteButton(
-    modifier: Modifier = Modifier,
-    text: String
-) {
-    Row(
-        modifier = modifier
-    ) {
-
-        val buttonColor = if(text == "") {
-            TodoAppTheme.color.disable
-        } else {
-            TodoAppTheme.color.red
-        }
-
-        Icon(
-            painter = painterResource(com.michel.core.ui.R.drawable.ic_delete),
-            tint = buttonColor,
-            contentDescription = stringResource(com.michel.core.ui.R.string.deleteContentDescription),
-            modifier = Modifier
-                .size(TodoAppTheme.size.standardIcon)
-                .align(Alignment.CenterVertically)
-        )
-        Spacer(
-            modifier = Modifier.width(16.dp)
-        )
-        Text(
-            text = stringResource(com.michel.core.ui.R.string.deleteUpperCase),
-            color = buttonColor,
-            style = TodoAppTheme.typography.body,
-            modifier = Modifier.align( Alignment.CenterVertically)
-        )
-    }
-}
-

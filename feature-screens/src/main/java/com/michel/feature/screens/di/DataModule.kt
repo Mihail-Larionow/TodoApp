@@ -1,4 +1,4 @@
-package com.michel.todoapp.di
+package com.michel.feature.screens.di
 
 import com.michel.core.data.TodoItemsRepository
 import dagger.Module

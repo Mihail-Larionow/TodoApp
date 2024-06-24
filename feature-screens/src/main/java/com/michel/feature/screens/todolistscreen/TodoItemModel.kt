@@ -1,4 +1,4 @@
-package com.michel.todoapp.todolistscreen
+package com.michel.feature.screens.todolistscreen
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -27,7 +27,7 @@ import com.michel.core.data.models.TodoItem
 import com.michel.core.ui.R
 import com.michel.core.ui.theme.TodoAppTheme
 import com.michel.core.ui.utils.ImageCheckbox
-import com.michel.todoapp.extensions.toDateText
+import com.michel.feature.screens.extensions.toDateText
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -176,3 +176,25 @@ private fun TodoPriority(
     }
 }
 
+@Preview(showBackground = true)
+@Composable
+private fun TodoItemModelPreview() {
+    val checked = true
+    val todoItem = TodoItem(
+        id = "1",
+        text = "short text but great idea",
+        priority = Priority.Standard,
+        isDone = true,
+        deadline = 1718919593456,
+        createdAt = 1718919593456,
+        changedAt = 1718919593456
+    )
+
+    TodoItemModel(
+        todoItem = todoItem,
+        checked = checked,
+        onCheckBoxClick = { },
+        onClick = { },
+        onLongClick = { }
+    )
+}

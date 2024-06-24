@@ -1,4 +1,4 @@
-package com.michel.todoapp.extensions
+package com.michel.feature.screens.extensions
 
 import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.ui.Modifier

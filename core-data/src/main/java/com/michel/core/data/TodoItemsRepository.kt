@@ -27,8 +27,9 @@ class TodoItemsRepository {
     }
 
     // Удаляет таску из списка
-    fun deleteItem(todoItem: TodoItem) {
+    fun deleteItem(todoItem: TodoItem): Boolean {
         todoItems.remove(todoItem)
+        return true
     }
 
     // Находит таску по id, либо возвращает пустую таску

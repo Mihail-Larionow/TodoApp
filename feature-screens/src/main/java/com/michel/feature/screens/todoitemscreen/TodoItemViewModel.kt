@@ -1,4 +1,4 @@
-package com.michel.todoapp.todoitemscreen
+package com.michel.feature.screens.todoitemscreen
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel

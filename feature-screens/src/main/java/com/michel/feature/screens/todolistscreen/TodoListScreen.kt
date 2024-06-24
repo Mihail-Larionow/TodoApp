@@ -1,4 +1,4 @@
-package com.michel.todoapp.todolistscreen
+package com.michel.feature.screens.todolistscreen
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -50,14 +50,22 @@ import com.michel.core.data.models.TodoItem
 import com.michel.core.ui.theme.TodoAppTheme
 import com.michel.core.ui.utils.ImageCheckbox
 import com.michel.core.ui.utils.SwipeItem
-import com.michel.todoapp.extensions.bottomShadow
+import com.michel.feature.screens.extensions.bottomShadow
 
 private val COLLAPSED_TOP_BAR_HEIGHT = 56.dp
 private val EXPANDED_TOP_BAR_HEIGHT = 200.dp
 
 // Экран списка дел
 @Composable
-fun TodoListScreen(
+internal fun TodoListScreen(navigate: (String) -> Unit) {
+    val viewModel: TodoListViewModel = hiltViewModel()
+    Content(viewModel = viewModel) {
+        navigate(it)
+    }
+}
+
+@Composable
+private fun Content(
     viewModel: TodoListViewModel = hiltViewModel(),
     onItemClick: (String) -> Unit,
 ) {
