@@ -49,3 +49,17 @@ fun ImageCheckbox(
 
 
 
+@Preview(showBackground = true)
+@Composable
+private fun ImageCheckboxPreview() {
+    val checked = true
+    val checkedIcon = painterResource(R.drawable.ic_checked)
+    val uncheckedIcon = painterResource(R.drawable.ic_unchecked)
+
+    ImageCheckbox(
+        checked = checked,
+        checkedIcon = checkedIcon,
+        uncheckedIcon = uncheckedIcon,
+        onCheckedChange = { }
+    )
+}

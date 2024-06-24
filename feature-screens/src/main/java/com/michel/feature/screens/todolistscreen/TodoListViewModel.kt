@@ -1,4 +1,4 @@
-package com.michel.todoapp.todolistscreen
+package com.michel.feature.screens.todolistscreen
 
 import androidx.lifecycle.ViewModel
 import com.michel.core.data.TodoItemsRepository
@@ -27,9 +27,7 @@ class TodoListViewModel @Inject constructor(
     }
 
     // Удаляет из репозитория таску
-    fun deleteItem(item: TodoItem){
-        repository.deleteItem(todoItem = item)
-    }
+    fun deleteItem(item: TodoItem) = repository.deleteItem(todoItem = item)
 
 }
 

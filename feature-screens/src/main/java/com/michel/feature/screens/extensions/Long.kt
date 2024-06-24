@@ -1,4 +1,4 @@
-package com.michel.todoapp.extensions
+package com.michel.feature.screens.extensions
 
 import android.annotation.SuppressLint
 import java.text.SimpleDateFormat

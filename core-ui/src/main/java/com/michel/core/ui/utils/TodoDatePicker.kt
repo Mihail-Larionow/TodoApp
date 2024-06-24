@@ -82,3 +82,14 @@ fun TodoDatePicker(
     }
 }
 
+@Preview(showBackground = true)
+@Composable
+private fun TodoDatePickerPreview() {
+    val date = 1718919593456
+
+    TodoDatePicker(
+        date = date,
+        onConfirm = { },
+        onDismiss = { }
+    )
+}

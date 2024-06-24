@@ -1,4 +1,4 @@
-package com.michel.core.date
+package com.michel.feature.screens
 
 import org.junit.Test
 
