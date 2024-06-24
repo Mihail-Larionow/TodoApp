@@ -46,9 +46,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.michel.core.date.models.TodoItem
+import com.michel.core.data.models.TodoItem
 import com.michel.core.ui.theme.TodoAppTheme
-import com.michel.core.ui.utils.ImageCheckBox
+import com.michel.core.ui.utils.ImageCheckbox
 import com.michel.core.ui.utils.SwipeItem
 import com.michel.todoapp.extensions.bottomShadow
 
@@ -230,9 +230,7 @@ private fun Body(
 
             item {
                 Text(
-                    text = stringResource(
-                        id = com.michel.core.ui.R.string.new_task
-                    ),
+                    text = stringResource(com.michel.core.ui.R.string.new_task),
                     color = TodoAppTheme.color.tertiary,
                     style = TodoAppTheme.typography.body,
                     modifier = Modifier
@@ -251,16 +249,13 @@ private fun Body(
                             end = 16.dp,
                             bottom = 16.dp
                         )
-
                 )
 
             }
             item {
                 Spacer(
                     modifier = Modifier
-                        .height(
-                            height = 16.dp
-                        )
+                        .height(16.dp)
                         .background(
                             color = TodoAppTheme.color.backPrimary
                         )
@@ -281,9 +276,7 @@ private fun ExpandedToolBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(
-                height = EXPANDED_TOP_BAR_HEIGHT - COLLAPSED_TOP_BAR_HEIGHT
-            )
+            .height(EXPANDED_TOP_BAR_HEIGHT - COLLAPSED_TOP_BAR_HEIGHT)
             .padding(
                 start = 56.dp,
                 end = 20.dp,
@@ -291,14 +284,10 @@ private fun ExpandedToolBar(
             )
     ) {
         Column(
-            modifier = Modifier.align(
-                alignment = Alignment.BottomStart
-            )
+            modifier = Modifier.align(Alignment.BottomStart)
         ) {
             Text(
-                text = stringResource(
-                    id = com.michel.core.ui.R.string.todolist_screen_title
-                ),
+                text = stringResource(com.michel.core.ui.R.string.todolist_screen_title),
                 style = TodoAppTheme.typography.largeTitle,
                 color = TodoAppTheme.color.primary,
                 modifier = Modifier
@@ -307,9 +296,7 @@ private fun ExpandedToolBar(
                 modifier = Modifier.height(4.dp)
             )
             Text(
-                text = stringResource(
-                    id = com.michel.core.ui.R.string.todolist_screen_subtitle
-                ) + " $count",
+                text = stringResource(com.michel.core.ui.R.string.todolist_screen_subtitle) + " $count",
                 style = TodoAppTheme.typography.subhead,
                 color = TodoAppTheme.color.tertiary,
             )
@@ -318,12 +305,8 @@ private fun ExpandedToolBar(
             checked = hideDoneItems,
             onCheckChange = { onCheckChange(it) },
             modifier = Modifier
-                .size(
-                    size = TodoAppTheme.size.standardIcon
-                )
-                .align(
-                    alignment = Alignment.BottomEnd
-                )
+                .size(TodoAppTheme.size.standardIcon)
+                .align(Alignment.BottomEnd)
         )
 
     }
@@ -342,7 +325,7 @@ private fun CollapsedToolBar(
             .fillMaxWidth()
             .height(COLLAPSED_TOP_BAR_HEIGHT)
             .bottomShadow(
-                shadow = if(isCollapsed) 4.dp else 0.dp
+                shadow = if (isCollapsed) 4.dp else 0.dp
             )
             .background(
                 color = TodoAppTheme.color.backPrimary
@@ -364,25 +347,17 @@ private fun CollapsedToolBar(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = stringResource(
-                        id = com.michel.core.ui.R.string.todolist_screen_title
-                    ),
+                    text = stringResource(com.michel.core.ui.R.string.todolist_screen_title),
                     style = TodoAppTheme.typography.title,
                     color = TodoAppTheme.color.primary,
-                    modifier = Modifier.align(
-                        alignment = Alignment.CenterStart
-                    )
+                    modifier = Modifier.align(Alignment.CenterStart)
                 )
                 VisibilityCheckBox(
                     checked = hideDoneItems,
                     onCheckChange = { onCheckChange(it) },
                     modifier = Modifier
-                        .size(
-                            size = TodoAppTheme.size.standardIcon
-                        )
-                        .align(
-                            alignment = Alignment.CenterEnd
-                        )
+                        .size(TodoAppTheme.size.standardIcon)
+                        .align(Alignment.CenterEnd)
                 )
             }
         }
@@ -411,15 +386,9 @@ private fun FloatingButton(
 
             ) {
                 Icon(
-                    painter = painterResource(
-                        id = com.michel.core.ui.R.drawable.ic_add
-                    ),
-                    contentDescription = stringResource(
-                        id = com.michel.core.ui.R.string.floatingButtonContentDescription
-                    ),
-                    modifier = Modifier.size(
-                        size = TodoAppTheme.size.standardIcon
-                    )
+                    painter = painterResource(com.michel.core.ui.R.drawable.ic_add),
+                    contentDescription = stringResource(com.michel.core.ui.R.string.floatingButtonContentDescription),
+                    modifier = Modifier.size(TodoAppTheme.size.standardIcon)
                 )
             }
             Spacer(modifier = Modifier.width(16.dp))
@@ -435,10 +404,13 @@ private fun VisibilityCheckBox(
     checked: Boolean,
     onCheckChange: (Boolean) -> Unit
 ) {
-    ImageCheckBox(
+    val checkedIcon = painterResource(com.michel.core.ui.R.drawable.ic_visibility_off)
+    val uncheckedIcon = painterResource(com.michel.core.ui.R.drawable.ic_visibility_on)
+
+    ImageCheckbox(
         checked = checked,
-        iconChecked = com.michel.core.ui.R.drawable.ic_visibility_off,
-        iconUnchecked = com.michel.core.ui.R.drawable.ic_visibility_on,
+        checkedIcon = checkedIcon,
+        uncheckedIcon = uncheckedIcon,
         onCheckedChange = { onCheckChange(it) },
         modifier = modifier
     )
@@ -455,12 +427,8 @@ private fun ItemDropdownMenu(
     var expanded by remember { mutableStateOf(false) }
 
     val options = listOf(
-        stringResource(
-            id = com.michel.core.ui.R.string.delete
-        ),
-        stringResource(
-            id = com.michel.core.ui.R.string.done
-        )
+        stringResource(com.michel.core.ui.R.string.delete),
+        stringResource(com.michel.core.ui.R.string.done)
     )
 
     DropdownMenu(

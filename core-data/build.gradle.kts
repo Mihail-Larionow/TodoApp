@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.michel.core.date"
+    namespace = "com.michel.core.data"
     compileSdk = 34
 
     defaultConfig {

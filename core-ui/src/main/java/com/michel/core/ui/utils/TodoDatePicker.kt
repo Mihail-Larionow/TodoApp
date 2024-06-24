@@ -1,6 +1,5 @@
 package com.michel.core.ui.utils
 
-import androidx.compose.foundation.background
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
@@ -12,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import com.michel.core.ui.R
 import com.michel.core.ui.theme.TodoAppTheme
 
@@ -81,3 +81,4 @@ fun TodoDatePicker(
         )
     }
 }
+

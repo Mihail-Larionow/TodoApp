@@ -1,6 +1,6 @@
 package com.michel.todoapp.di
 
-import com.michel.core.date.TodoItemsRepository
+import com.michel.core.data.TodoItemsRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -13,6 +13,6 @@ class DataModule {
 
     @Singleton
     @Provides
-    fun provideTodoItemsRepository(): TodoItemsRepository  = TodoItemsRepository()
+    fun provideTodoItemsRepository(): TodoItemsRepository = TodoItemsRepository()
 
 }
