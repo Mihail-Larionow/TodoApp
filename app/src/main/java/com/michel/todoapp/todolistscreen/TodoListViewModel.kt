@@ -1,8 +1,8 @@
 package com.michel.todoapp.todolistscreen
 
 import androidx.lifecycle.ViewModel
-import com.michel.core.date.TodoItemsRepository
-import com.michel.core.date.models.TodoItem
+import com.michel.core.data.TodoItemsRepository
+import com.michel.core.data.models.TodoItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 

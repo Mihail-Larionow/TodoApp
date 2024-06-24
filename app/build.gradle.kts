@@ -61,7 +61,7 @@ dependencies {
 
     implementation(libs.hilt.android)
     implementation(libs.androidx.navigation.compose)
-    implementation(project(":core-date"))
+    implementation(project(":core-data"))
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     kapt(libs.hilt.android.compiler)

@@ -2,9 +2,9 @@ package com.michel.todoapp.todoitemscreen
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import com.michel.core.date.TodoItemsRepository
-import com.michel.core.date.models.Priority
-import com.michel.core.date.models.TodoItem
+import com.michel.core.data.TodoItemsRepository
+import com.michel.core.data.models.Priority
+import com.michel.core.data.models.TodoItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.Date
 import javax.inject.Inject

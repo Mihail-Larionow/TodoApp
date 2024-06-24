@@ -1,8 +1,8 @@
-package com.michel.core.date
+package com.michel.core.data
 
-import com.michel.core.date.models.Priority
-import com.michel.core.date.models.TodoItem
-import com.michel.core.date.models.emptyTodoItem
+import com.michel.core.data.models.Priority
+import com.michel.core.data.models.TodoItem
+import com.michel.core.data.models.emptyTodoItem
 import java.util.Date
 
 class TodoItemsRepository {
