@@ -1,4 +1,4 @@
-package com.michel.core.date.models
+package com.michel.core.data.models
 
 import java.util.Date
 

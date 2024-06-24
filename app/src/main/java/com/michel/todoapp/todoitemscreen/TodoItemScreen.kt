@@ -39,7 +39,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.michel.core.date.models.Priority
+import com.michel.core.data.models.Priority
 import com.michel.core.ui.theme.TodoAppTheme
 import com.michel.core.ui.utils.TodoDivider
 import com.michel.core.ui.utils.TodoDatePicker
@@ -104,6 +104,13 @@ internal fun TodoItemScreen(
                 }
             }
         )
+
+        val headerShadow = if(scrollState.value > 0) {
+            4.dp
+        } else {
+            0.dp
+        }
+
         Header(
             text = textField,
             onCancel = {
@@ -116,11 +123,9 @@ internal fun TodoItemScreen(
                 }
             },
             modifier = Modifier
-                .height(
-                    height = TodoAppTheme.size.toolBar
-                )
+                .height(TodoAppTheme.size.toolBar)
                 .bottomShadow(
-                    shadow = if(scrollState.value > 0) 4.dp else 0.dp
+                    shadow = headerShadow
                 )
                 .background(
                     color = TodoAppTheme.color.backPrimary
@@ -156,43 +161,37 @@ private fun Header(
 ) {
     Row(modifier = modifier
         .fillMaxWidth()
-        .padding(start = 8.dp, end = 16.dp)
+        .padding(
+            start = 8.dp,
+            end = 16.dp
+        )
     ){
         Icon(
-            painter = painterResource(
-                id = com.michel.core.ui.R.drawable.ic_exit
-            ),
-            contentDescription = stringResource(
-                id = com.michel.core.ui.R.string.cancelUpperCase
-            ),
+            painter = painterResource(com.michel.core.ui.R.drawable.ic_exit),
+            contentDescription = stringResource(com.michel.core.ui.R.string.cancelUpperCase),
             tint = TodoAppTheme.color.primary,
             modifier = Modifier
-                .size(
-                    size = TodoAppTheme.size.standardIcon
-                )
+                .size(TodoAppTheme.size.standardIcon)
                 .clickable { onCancel() }
-                .align(
-                    alignment = Alignment.CenterVertically
-                )
+                .align(Alignment.CenterVertically)
         )
         Spacer(
             modifier = Modifier.weight(1f)
         )
+
+        val textColor = if(text == "") {
+            TodoAppTheme.color.disable
+        } else {
+            TodoAppTheme.color.blue
+        }
+
         TextButton(
             onClick = { onAccept() },
-            modifier = Modifier.align(
-                alignment = Alignment.CenterVertically
-            )
+            modifier = Modifier.align(Alignment.CenterVertically)
         ) {
             Text(
-                text = stringResource(
-                    id = com.michel.core.ui.R.string.saveUpperCase
-                ),
-                color = if(text == "") {
-                    TodoAppTheme.color.disable
-                } else {
-                    TodoAppTheme.color.blue
-                },
+                text = stringResource(com.michel.core.ui.R.string.saveUpperCase),
+                color = textColor,
                 style = TodoAppTheme.typography.button
             )
         }
@@ -219,9 +218,7 @@ private fun Body(
             .verticalScroll(scrollState)
     ) {
         Spacer(
-            modifier = Modifier.height(
-                height = TodoAppTheme.size.toolBar
-            )
+            modifier = Modifier.height(TodoAppTheme.size.toolBar)
         )
         TodoTextField(
             text = textField,
@@ -236,14 +233,16 @@ private fun Body(
         }
         TodoPriority(
             option = priorityOption,
-            modifier = Modifier
-                .padding(all = 16.dp)
+            modifier = Modifier.padding(
+                all = 16.dp
+            )
         ) {
             onPriorityChange(it)
         }
         TodoDivider(
-            modifier = Modifier
-                .padding(all = 16.dp)
+            modifier = Modifier.padding(
+                all = 16.dp
+            )
         )
         TodoDeadline(
             date = deadlineDateText,
@@ -292,9 +291,7 @@ private fun TodoTextField(
         ),
         placeholder = {
             Text(
-                text = stringResource(
-                    id = com.michel.core.ui.R.string.placeholder
-                ),
+                text = stringResource(com.michel.core.ui.R.string.placeholder),
                 style = TodoAppTheme.typography.body
             )
         },
@@ -321,29 +318,26 @@ private fun TodoPriority(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clickable {
-                expanded = !expanded
-            }
+            .clickable { expanded = !expanded }
     ) {
         Text(
-            text = stringResource(
-                id = com.michel.core.ui.R.string.priority
-            ),
+            text = stringResource(com.michel.core.ui.R.string.priority),
             color = TodoAppTheme.color.primary,
             style = TodoAppTheme.typography.body
         )
         Spacer(
-            modifier = Modifier.height(
-                height = 4.dp
-            )
+            modifier = Modifier.height(4.dp)
         )
+
+        val textColor = if(option == Priority.High){
+            TodoAppTheme.color.red
+        } else {
+            TodoAppTheme.color.tertiary
+        }
+
         Text(
             text = option.text,
-            color = if(option == Priority.High){
-                TodoAppTheme.color.red
-            } else {
-                TodoAppTheme.color.tertiary
-            },
+            color = textColor,
             style = TodoAppTheme.typography.body
         )
         DropdownMenu(
@@ -355,15 +349,18 @@ private fun TodoPriority(
             )
         ) {
             options.forEach {
+
+                val optionTextColor = if(it == Priority.High) {
+                    TodoAppTheme.color.red
+                } else {
+                    TodoAppTheme.color.primary
+                }
+
                 DropdownMenuItem(
                     text = {
                         Text(
                             text = it.text,
-                            color = if(it == Priority.High) {
-                                TodoAppTheme.color.red
-                            } else {
-                                TodoAppTheme.color.primary
-                            },
+                            color = optionTextColor,
                             style = TodoAppTheme.typography.body
                         )
                     },
@@ -390,25 +387,19 @@ private fun TodoDeadline(
     ){
         Column {
             Text(
-                text = stringResource(
-                    id = com.michel.core.ui.R.string.do_before
-                ),
+                text = stringResource(com.michel.core.ui.R.string.do_before),
                 color = TodoAppTheme.color.primary,
                 style = TodoAppTheme.typography.body
             )
             if(hasDeadline) {
                 Spacer(
-                    modifier = Modifier.height(
-                        height = 4.dp
-                    )
+                    modifier = Modifier.height(4.dp)
                 )
                 Text(
                     text = date,
                     color = TodoAppTheme.color.blue,
                     style = TodoAppTheme.typography.button,
-                    modifier = Modifier.clickable {
-                        onDeadlineClick()
-                    }
+                    modifier = Modifier.clickable { onDeadlineClick() }
                 )
             }
         }
@@ -442,44 +433,29 @@ private fun DeleteButton(
     Row(
         modifier = modifier
     ) {
+
+        val buttonColor = if(text == "") {
+            TodoAppTheme.color.disable
+        } else {
+            TodoAppTheme.color.red
+        }
+
         Icon(
-            painter = painterResource(
-                id = com.michel.core.ui.R.drawable.ic_delete
-            ),
-            tint = if(text == "") {
-                TodoAppTheme.color.disable
-            } else {
-                TodoAppTheme.color.red
-            },
-            contentDescription = stringResource(
-                id = com.michel.core.ui.R.string.deleteContentDescription
-            ),
+            painter = painterResource(com.michel.core.ui.R.drawable.ic_delete),
+            tint = buttonColor,
+            contentDescription = stringResource(com.michel.core.ui.R.string.deleteContentDescription),
             modifier = Modifier
-                .size(
-                    size = TodoAppTheme.size.standardIcon
-                )
-                .align(
-                    alignment = Alignment.CenterVertically
-                )
+                .size(TodoAppTheme.size.standardIcon)
+                .align(Alignment.CenterVertically)
         )
         Spacer(
-            modifier = Modifier.width(
-                width = 16.dp
-            )
+            modifier = Modifier.width(16.dp)
         )
         Text(
-            text = stringResource(
-                id = com.michel.core.ui.R.string.deleteUpperCase
-            ),
-            color = if(text == "") {
-                TodoAppTheme.color.disable
-            } else {
-                TodoAppTheme.color.red
-            },
+            text = stringResource(com.michel.core.ui.R.string.deleteUpperCase),
+            color = buttonColor,
             style = TodoAppTheme.typography.body,
-            modifier = Modifier.align(
-                alignment = Alignment.CenterVertically
-            )
+            modifier = Modifier.align( Alignment.CenterVertically)
         )
     }
 }
