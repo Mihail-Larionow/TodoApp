@@ -41,7 +41,6 @@ fun SwipeItem(
     SwipeToDismissBox(
         state = swipeState,
         backgroundContent = {
-
             val backgroundColor by animateColorAsState(
                 targetValue = when(swipeState.dismissDirection) {
                     SwipeToDismissBoxValue.StartToEnd -> TodoAppTheme.color.green
@@ -58,24 +57,15 @@ fun SwipeItem(
                         color = backgroundColor
                     )
             ) {
-
                 when(swipeState.dismissDirection) {
                     SwipeToDismissBoxValue.StartToEnd -> {
                         Icon(
-                            painter = painterResource(
-                                id = com.michel.core.ui.R.drawable.ic_check
-                            ),
-                            contentDescription = stringResource(
-                                id = com.michel.core.ui.R.string.deleteContentDescription
-                            ),
+                            painter = painterResource(com.michel.core.ui.R.drawable.ic_check),
+                            contentDescription = stringResource(com.michel.core.ui.R.string.deleteContentDescription),
                             tint = TodoAppTheme.color.white,
                             modifier = Modifier
-                                .size(
-                                    size = TodoAppTheme.size.standardIcon
-                                )
-                                .align(
-                                    alignment = Alignment.CenterStart
-                                )
+                                .size(TodoAppTheme.size.standardIcon)
+                                .align(Alignment.CenterStart)
                                 .padding(
                                     start = 16.dp
                                 )
@@ -83,20 +73,12 @@ fun SwipeItem(
                     }
                     SwipeToDismissBoxValue.EndToStart -> {
                         Icon(
-                            painter = painterResource(
-                                id = com.michel.core.ui.R.drawable.ic_delete
-                            ),
-                            contentDescription = stringResource(
-                                id = com.michel.core.ui.R.string.deleteContentDescription
-                            ),
+                            painter = painterResource(com.michel.core.ui.R.drawable.ic_delete),
+                            contentDescription = stringResource(com.michel.core.ui.R.string.deleteContentDescription),
                             tint = TodoAppTheme.color.white,
                             modifier = Modifier
-                                .size(
-                                    size = TodoAppTheme.size.standardIcon
-                                )
-                                .align(
-                                    alignment = Alignment.CenterEnd
-                                )
+                                .size(TodoAppTheme.size.standardIcon)
+                                .align(Alignment.CenterEnd)
                                 .padding(
                                     end = 16.dp
                                 )
@@ -130,5 +112,4 @@ fun SwipeItem(
         }
         SwipeToDismissBoxValue.Settled -> { }
     }
-
 }
