@@ -2,10 +2,18 @@ package com.michel.feature.screens.todoitemscreen
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.michel.core.data.TodoItemsRepository
 import com.michel.core.data.models.Priority
 import com.michel.core.data.models.TodoItem
+import com.michel.core.data.models.emptyTodoItem
+import com.michel.feature.screens.todoitemscreen.utils.ItemScreenEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
 
@@ -16,70 +24,128 @@ class TodoItemViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val todoItemId = savedStateHandle.get<String>("id") ?: "none"
-    private val todoItem: TodoItem = repository.getItem(id = todoItemId)
+    private var todoItem: TodoItem = emptyTodoItem()
 
-    private val screenState = ItemScreenState(
-        text = todoItem.text,
-        priority = todoItem.priority,
-        hasDeadline = todoItem.deadline != null,
-        deadline = todoItem.deadline ?: Date().time,
+    private val _state = MutableStateFlow(
+        ItemScreenState(
+            text = todoItem.text,
+            priority = todoItem.priority,
+            hasDeadline = false,
+            deadline = todoItem.deadline?: Date().time,
+            datePickerExpanded = false,
+            priorityMenuExpanded = false
+        )
     )
 
-    // Сохраняет в репозиторий таску
-    fun save() {
-        val newTodoItem = TodoItem(
-            id = todoItemId,
-            text = screenState.text,
-            priority = screenState.priority,
-            deadline = if(screenState.hasDeadline) screenState.deadline else null,
-            isDone = todoItem.isDone,
-            createdAt = todoItem.createdAt,
-            changedAt = Date().time
-        )
-        repository.addItem(newTodoItem)
+    val state: StateFlow<ItemScreenState> = _state.asStateFlow()
+
+    init { onEvent(ItemScreenEvent.GetItemInfoEvent) }
+
+    internal fun onEvent(event: ItemScreenEvent) {
+        viewModelScope.launch {
+            try{
+                when(event) {
+                    ItemScreenEvent.GetItemInfoEvent -> getInfo()
+                    is ItemScreenEvent.DeleteEvent -> delete()
+                    is ItemScreenEvent.SaveEvent -> save()
+                    is ItemScreenEvent.SetDeadlineDateEvent -> updateDeadline(event.deadline)
+                    is ItemScreenEvent.SetDeadlineState -> updateHasDeadline(event.hasDeadline)
+                    is ItemScreenEvent.SetPriorityEvent -> updatePriority(event.priority)
+                    is ItemScreenEvent.SetTextEvent -> updateText(event.text)
+                    is ItemScreenEvent.SetDatePickerState -> updateDatePickerState(event.isExpanded)
+                    is ItemScreenEvent.SetPriorityMenuState -> updatePriorityMenuState(event.isExpanded)
+                    ItemScreenEvent.ToListScreenEvent -> { }
+                }
+            } catch (e: Exception) {
+
+            }
+        }
     }
 
-    // Удаляет из репозитория таску
-    fun delete() {
-        repository.deleteItem(todoItem)
+    private fun getInfo() {
+        viewModelScope.launch {
+            todoItem = repository.getItem(todoItemId)
+
+            _state.update {
+                it.copy(
+                    text = todoItem.text,
+                    priority = todoItem.priority,
+                    hasDeadline = todoItem.deadline != null,
+                    deadline = todoItem.deadline?: Date().time
+                )
+            }
+        }
     }
 
-    fun getText(): String {
-        return screenState.text
+    // Сохраняет таску в репозиторий
+    private fun save() {
+        viewModelScope.launch {
+            val deadline = if(state.value.hasDeadline){
+                state.value.deadline
+            } else null
+
+            val newTodoItem = TodoItem(
+                id = todoItemId,
+                text = state.value.text,
+                priority = state.value.priority,
+                deadline = deadline,
+                isDone = todoItem.isDone,
+                createdAt = todoItem.createdAt,
+                changedAt = Date().time
+            )
+            repository.addOrUpdateItem(newTodoItem)
+        }
     }
 
-    fun setText(text: String) {
-        screenState.text = text
+    // Удаляет таску из репозитория
+    private fun delete() {
+        viewModelScope.launch {
+            repository.deleteItem(todoItem)
+        }
     }
 
-    fun getPriority(): Priority {
-        return screenState.priority
+    private fun updateText(text: String) {
+        _state.update {
+            it.copy(text = text)
+        }
     }
 
-    fun setPriority(priority: Priority) {
-        screenState.priority = priority
+    private fun updatePriority(priority: Priority) {
+        _state.update {
+            it.copy(priority = priority)
+        }
     }
 
-    fun hasDeadline(): Boolean {
-        return screenState.hasDeadline
+    private fun updateHasDeadline(hasDeadline: Boolean) {
+        _state.update {
+            it.copy(hasDeadline = hasDeadline)
+        }
     }
 
-    fun setHasDeadline(state: Boolean) {
-        screenState.hasDeadline = state
+    private fun updateDeadline(deadline: Long) {
+        _state.update {
+            it.copy(deadline = deadline)
+        }
     }
 
-    fun getDeadline(): Long {
-        return screenState.deadline
+    private fun updatePriorityMenuState(isExpanded: Boolean) {
+        _state.update {
+            it.copy(priorityMenuExpanded = isExpanded)
+        }
     }
 
-    fun setDeadline(date: Long) {
-        screenState.deadline = date
+    private fun updateDatePickerState(isExpanded: Boolean) {
+        _state.update {
+            it.copy(datePickerExpanded = isExpanded)
+        }
     }
 }
 
 data class ItemScreenState(
-    var text: String,
-    var priority: Priority,
-    var hasDeadline: Boolean,
-    var deadline: Long
+    val text: String,
+    val priority: Priority,
+    val hasDeadline: Boolean,
+    val deadline: Long,
+    val priorityMenuExpanded: Boolean,
+    val datePickerExpanded: Boolean
 )
