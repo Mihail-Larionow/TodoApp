@@ -1,154 +1,81 @@
 package com.michel.core.data
 
-import com.michel.core.data.models.Priority
+import com.michel.core.data.mapper.toTodoItem
+import com.michel.core.data.mapper.toTodoItemEntity
 import com.michel.core.data.models.TodoItem
 import com.michel.core.data.models.emptyTodoItem
+import com.michel.core.data.utils.ResourceState
+import com.michel.network.api.BackendApi
+import com.michel.network.api.models.emptyTodoItemEntity
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.update
-import java.util.Date
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class TodoItemsRepository {
+@Singleton
+class TodoItemsRepository @Inject constructor(
+    private val api: BackendApi
+) {
 
     // Возвращает все таски списком
-    fun getAll(): Flow<List<TodoItem>> = todoItems.asSharedFlow()
+    fun getAll(): Flow<ResourceState<List<TodoItem>>> {
+        return flow {
+            val resource = try {
+                ResourceState.Success(
+                    data = api.getAll().map {
+                        it.toTodoItem()
+                    }
+                )
+            } catch (e: Exception) {
+                ResourceState.Failed("Ошибка соединения")
+            }
+            emit(resource)
+        }
+    }
 
     // Добавляет новую таску в список, либо заменяет таску с таким же id
-    fun addOrUpdateItem(todoItem: TodoItem): Boolean {
-        todoItems.update {
-            val newList = todoItems.value.toMutableList()
-            val item = newList.find { todoItem.id == it.id }
-            if(item != null) {
-                item.text = todoItem.text
-                item.priority = todoItem.priority
-                item.isDone = todoItem.isDone
-                item.deadline = todoItem.deadline
-                item.changedAt = todoItem.changedAt
+     fun addOrUpdateItem(todoItem: TodoItem): Flow<ResourceState<Boolean>> {
+        return flow {
+            val result = try {
+                ResourceState.Success(
+                    data = api.addOrUpdateItem(todoItem.toTodoItemEntity())
+                )
+            } catch (e:Exception) {
+                ResourceState.Failed("Не удалось сохранить")
             }
-            else newList.add(todoItem)
-            newList.toList()
+            emit(result)
         }
-        return true
     }
 
     // Удаляет таску из списка
-    fun deleteItem(todoItem: TodoItem): Boolean {
-        todoItems.update {
-            val newList = todoItems.value.toMutableList()
-            newList.remove(todoItem)
-            newList.toList()
+    fun deleteItem(id: String): Flow<ResourceState<Boolean>> {
+        return flow {
+            val result = try {
+                ResourceState.Success(
+                    data = api.deleteItem(id)
+                )
+            } catch (e: Exception) {
+                ResourceState.Failed("Не удалось удалить")
+            }
+            emit(result)
         }
-        return true
     }
 
     // Находит таску по id, либо возвращает пустую таску
-    fun getItem(id: String): TodoItem {
-        return todoItems.value.find {
-            it.id == id
-        } ?: emptyTodoItem()
+    fun getItem(id: String): Flow<ResourceState<TodoItem>> {
+        return flow {
+            val resource = try {
+                val item = api.getItem(id) ?: emptyTodoItemEntity()
+                ResourceState.Success(
+                    data = item.toTodoItem()
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+                ResourceState.Failed(e.message ?: "")
+            }
+            emit(resource)
+        }
     }
 
-    // Хардкод дата
-    private val date: Long = 1
-    private val todoItems = MutableStateFlow(
-        listOf(
-            TodoItem(
-                id = "1",
-                text = "Мега пж",
-                priority = Priority.High,
-                isDone = false,
-                deadline = 1718919593456 + 86400000,
-                createdAt = date
-            ),
-            TodoItem(
-                id = "2",
-                text = "Поставьте максимум прошу",
-                priority = Priority.High,
-                isDone = false,
-                deadline = 1718919593456 + 86400000,
-                createdAt = date
-            ),
-            TodoItem(
-                id = "3",
-                text = "Исправить все баги",
-                priority = Priority.High,
-                isDone = false,
-                deadline = 1718919593456 + 86400000,
-                createdAt = date
-            ),
-            TodoItem(
-                id = "4",
-                text = "Тысячу раз задебажить это приложение",
-                priority = Priority.Low,
-                isDone = true,
-                deadline = 1718919593456,
-                createdAt = date
-            ),
-            TodoItem(
-                id = "5",
-                text = "Сделать первое задание",
-                priority = Priority.High,
-                isDone = true,
-                createdAt = date
-            ),
-            TodoItem(
-                id = "6",
-                text = "Устроиться работать в пятерочку(",
-                priority = Priority.Low,
-                isDone = false,
-                createdAt = date
-            ),
-            TodoItem(
-                id = "7",
-                text = "Устроиться работать в Яндикс)",
-                priority = Priority.High,
-                isDone = false,
-                createdAt = date
-            ),
-            TodoItem(
-                id = "8",
-                text = "Выполненное задание",
-                priority = Priority.Low,
-                isDone = true,
-                createdAt = date
-            ),
-            TodoItem(
-                id = "9",
-                text = "Что-то важное",
-                priority = Priority.High,
-                isDone = false,
-                createdAt = date
-            ),
-            TodoItem(
-                id = "10",
-                text = "Что-то неважное",
-                priority = Priority.Low,
-                isDone = false,
-                createdAt = date
-            ),
-            TodoItem(
-                id = "11",
-                text = "Задание с дедлайном",
-                priority = Priority.Standard,
-                isDone = false,
-                deadline = Date().time,
-                createdAt = date
-            ),
-            TodoItem(
-                id = "12",
-                text = "Очень очень очень очень очень очень очень очень очень очень очень очень очень очень очень очень очень очень очень длинный текст",
-                priority = Priority.Standard,
-                isDone = false,
-                createdAt = date
-            ),
-            TodoItem(
-                id = "13",
-                text = "Вставьте текст",
-                priority = Priority.Standard,
-                isDone = false,
-                createdAt = date
-            )
-        )
-    )
 }

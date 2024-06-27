@@ -89,9 +89,11 @@ private fun CustomDatePickerPreview() {
     val date = 1718919593456
     val datePickerState = rememberDatePickerState(date)
 
-    CustomDatePicker(
-        datePickerState = datePickerState,
-        onConfirm = { },
-        onDismiss = { }
-    )
+    TodoAppTheme{
+        CustomDatePicker(
+          datePickerState = datePickerState,
+          onConfirm = { },
+          onDismiss = { }
+        )
+    }
 }

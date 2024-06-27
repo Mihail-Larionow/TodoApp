@@ -95,7 +95,6 @@ fun SwipeItem(
         content()
     }
 
-    val coroutineScope = rememberCoroutineScope()
     when(swipeState.currentValue) {
         SwipeToDismissBoxValue.StartToEnd -> {
             LaunchedEffect(swipeState) {
@@ -106,7 +105,7 @@ fun SwipeItem(
             }
         }
         SwipeToDismissBoxValue.EndToStart -> {
-            coroutineScope.launch {
+            LaunchedEffect(swipeState) {
                 onRemove()
             }
         }
