@@ -9,10 +9,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.michel.core.ui.R
+import com.michel.core.ui.theme.TodoAppTheme
 
 @Composable
 fun ImageCheckbox(
@@ -56,10 +58,12 @@ private fun CustomCheckboxPreview() {
     val checkedIcon = painterResource(R.drawable.ic_checked)
     val uncheckedIcon = painterResource(R.drawable.ic_unchecked)
 
-    ImageCheckbox(
-        checked = checked,
-        checkedIcon = checkedIcon,
-        uncheckedIcon = uncheckedIcon,
-        onCheckedChange = { }
-    )
+    TodoAppTheme {
+        ImageCheckbox(
+            checked = checked,
+            checkedIcon = checkedIcon,
+            uncheckedIcon = uncheckedIcon,
+            onCheckedChange = { }
+        )
+    }
 }
