@@ -2,7 +2,7 @@ package com.michel.network.api
 
 import android.util.Log
 import com.michel.network.api.dto.PriorityDto
-import com.michel.network.api.dto.TodoItemEntity
+import com.michel.network.api.dto.TodoItemDto
 import kotlinx.coroutines.delay
 import java.io.IOException
 import java.util.Date
@@ -16,7 +16,7 @@ import javax.inject.Singleton
 class BackendApi @Inject constructor() {
 
     // Получить все таски с бекенда
-    suspend fun getAll(): List<TodoItemEntity> {
+    suspend fun getAll(): List<TodoItemDto> {
         delay(2000)
         val rnd = (0..5).random()
         Log.i("backend", "${rnd != 4}: ${todoItems.joinToString(" ")}")
@@ -25,7 +25,7 @@ class BackendApi @Inject constructor() {
     }
 
     // Получить одну таску по айди
-    suspend fun getItem(id: String): TodoItemEntity? {
+    suspend fun getItem(id: String): TodoItemDto? {
         delay(2000)
         val rnd = (0..5).random()
         Log.i("backend", "${rnd != 4}: ${todoItems.find { it.id == id }.toString()}")
@@ -45,7 +45,7 @@ class BackendApi @Inject constructor() {
     }
 
     // Добавить или обновить таску
-    suspend fun addOrUpdateItem(todoItem: TodoItemEntity): Boolean {
+    suspend fun addOrUpdateItem(todoItem: TodoItemDto): Boolean {
         delay(2000)
         val rnd = (0..5).random()
         Log.i("backend", "(${rnd != 4}) item updated: $todoItem")
@@ -67,7 +67,7 @@ class BackendApi @Inject constructor() {
     // Хардкод дата
     private val date: Long = 1
     private val todoItems = mutableListOf(
-        TodoItemEntity(
+        TodoItemDto(
             id = "1",
             text = "Мега пж",
             priorityDto = PriorityDto.High,
@@ -75,7 +75,7 @@ class BackendApi @Inject constructor() {
             deadline = 1718919593456 + 86400000,
             createdAt = date
         ),
-        TodoItemEntity(
+        TodoItemDto(
             id = "2",
             text = "Поставьте максимум прошу",
             priorityDto = PriorityDto.High,
@@ -83,7 +83,7 @@ class BackendApi @Inject constructor() {
             deadline = 1718919593456 + 86400000,
             createdAt = date
         ),
-        TodoItemEntity(
+        TodoItemDto(
             id = "3",
             text = "Исправить все баги",
             priorityDto = PriorityDto.High,
@@ -91,7 +91,7 @@ class BackendApi @Inject constructor() {
             deadline = 1718919593456 + 86400000,
             createdAt = date
         ),
-        TodoItemEntity(
+        TodoItemDto(
             id = "4",
             text = "Тысячу раз задебажить это приложение",
             priorityDto = PriorityDto.Low,
@@ -99,49 +99,49 @@ class BackendApi @Inject constructor() {
             deadline = 1718919593456,
             createdAt = date
         ),
-        TodoItemEntity(
+        TodoItemDto(
             id = "5",
             text = "Сделать первое задание",
             priorityDto = PriorityDto.High,
             isDone = true,
             createdAt = date
         ),
-        TodoItemEntity(
+        TodoItemDto(
             id = "6",
             text = "Устроиться работать в пятерочку(",
             priorityDto = PriorityDto.Low,
             isDone = false,
             createdAt = date
         ),
-        TodoItemEntity(
+        TodoItemDto(
             id = "7",
             text = "Устроиться работать в Яндикс)",
             priorityDto = PriorityDto.High,
             isDone = false,
             createdAt = date
         ),
-        TodoItemEntity(
+        TodoItemDto(
             id = "8",
             text = "Выполненное задание",
             priorityDto = PriorityDto.Low,
             isDone = true,
             createdAt = date
         ),
-        TodoItemEntity(
+        TodoItemDto(
             id = "9",
             text = "Что-то важное",
             priorityDto = PriorityDto.High,
             isDone = false,
             createdAt = date
         ),
-        TodoItemEntity(
+        TodoItemDto(
             id = "10",
             text = "Что-то неважное",
             priorityDto = PriorityDto.Low,
             isDone = false,
             createdAt = date
         ),
-        TodoItemEntity(
+        TodoItemDto(
             id = "11",
             text = "Задание с дедлайном",
             priorityDto = PriorityDto.Standard,
@@ -149,14 +149,14 @@ class BackendApi @Inject constructor() {
             deadline = Date().time,
             createdAt = date
         ),
-        TodoItemEntity(
+        TodoItemDto(
             id = "12",
             text = "Очень очень очень очень очень очень очень очень очень очень очень очень очень очень очень очень очень очень очень длинный текст",
             priorityDto = PriorityDto.Standard,
             isDone = false,
             createdAt = date
         ),
-        TodoItemEntity(
+        TodoItemDto(
             id = "13",
             text = "Вставьте текст",
             priorityDto = PriorityDto.Standard,

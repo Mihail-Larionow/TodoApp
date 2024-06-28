@@ -2,7 +2,7 @@ package com.michel.network.api.dto
 
 import java.util.Date
 
-data class TodoItemEntity(
+data class TodoItemDto(
     val id: String,
     var text: String,
     var priorityDto: PriorityDto,
@@ -18,8 +18,8 @@ sealed class PriorityDto(val text: String) {
     data object Low: PriorityDto("Низкий")
 }
 
-fun emptyTodoItemEntity(): TodoItemEntity {
-    return TodoItemEntity(
+fun emptyTodoItemEntity(): TodoItemDto {
+    return TodoItemDto(
         id = "",
         text = "",
         priorityDto = PriorityDto.Standard,
