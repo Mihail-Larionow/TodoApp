@@ -1,14 +1,17 @@
 package com.michel.feature.screens.todolistscreen
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.michel.core.data.TodoItemsRepository
 import com.michel.core.data.models.TodoItem
-import com.michel.core.data.utils.ResourceState
-import com.michel.feature.screens.todolistscreen.utils.ListScreenEffect
-import com.michel.feature.screens.todolistscreen.utils.ListScreenEvent
-import com.michel.feature.screens.todolistscreen.utils.ListScreenEvent.ToItemScreenEvent
+import com.michel.feature.screens.todolistscreen.utils.ListScreenIntent
+import com.michel.feature.screens.todolistscreen.utils.ListScreenIntent.ToItemScreenIntent
+import com.michel.feature.screens.todolistscreen.utils.ListScreenSideEffect
+import com.michel.feature.screens.todolistscreen.utils.TodoListScreenState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -17,17 +20,18 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 import javax.inject.Inject
 
 @HiltViewModel
 class TodoListScreenViewModel @Inject constructor(
     private val repository: TodoItemsRepository
-): ViewModel() {
+) : ViewModel() {
 
     private var todoItems: MutableList<TodoItem> = mutableListOf()
 
     private val _state = MutableStateFlow(
-        ListScreenState(
+        TodoListScreenState(
             todoItems = todoItems,
             doneItemsHide = false,
             doneItemsCount = 0,
@@ -36,53 +40,59 @@ class TodoListScreenViewModel @Inject constructor(
             errorMessage = ""
         )
     )
-    val state: StateFlow<ListScreenState> = _state.asStateFlow()
+    val state: StateFlow<TodoListScreenState> = _state.asStateFlow()
 
-    private val _effect: MutableSharedFlow<ListScreenEffect> = MutableSharedFlow()
-    val effect: SharedFlow<ListScreenEffect> = _effect.asSharedFlow()
+    private val _effect: MutableSharedFlow<ListScreenSideEffect> = MutableSharedFlow()
+    val effect: SharedFlow<ListScreenSideEffect> = _effect.asSharedFlow()
 
-    init{
-        onEvent(ListScreenEvent.GetItemsEvent)
+    private val scope = viewModelScope + CoroutineExceptionHandler { _, throwable ->
+        Log.i("ui", "${throwable.message}")
     }
 
-    internal fun onEvent(event: ListScreenEvent) {
-        viewModelScope.launch {
-            try{
-                when(event) {
-                    ListScreenEvent.GetItemsEvent -> getItems()
-                    is ListScreenEvent.ChangeVisibilityEvent -> updateVisibility(event.isNotVisible)
-                    is ListScreenEvent.DeleteItemEvent -> deleteItem(event.item)
-                    is ListScreenEvent.UpdateItemEvent -> updateItem(event.item)
-                    is ToItemScreenEvent -> { }
-                }
-            } catch (_: Exception) {
-                _state.update {
-                    it.copy(
-                        failed = true,
-                        errorMessage = "Неизвестная ошибка"
-                    )
-                }
+    init {
+        onEvent(ListScreenIntent.GetItemsIntent)
+    }
+
+    internal fun onEvent(event: ListScreenIntent) {
+        try {
+            when (event) {
+                ListScreenIntent.GetItemsIntent -> getItems()
+                is ListScreenIntent.ChangeVisibilityIntent -> updateVisibility(event.isNotVisible)
+                is ListScreenIntent.DeleteItemIntent -> deleteItem(event.item)
+                is ListScreenIntent.UpdateItemIntent -> updateItem(event.item)
+                is ToItemScreenIntent -> {}
+            }
+        } catch (_: Exception) {
+            _state.update {
+                it.copy(
+                    failed = true,
+                    errorMessage = "Неизвестная ошибка"
+                )
             }
         }
     }
 
-    private fun updateState() {
+    // Обновляет счетчик выполненных тасок
+    private fun updateCounter() {
         val doneItemsCount = todoItems.count { it.isDone }
 
         _state.update {
             it.copy(
                 doneItemsCount = doneItemsCount,
-                todoItems = todoItems
             )
         }
     }
 
+    // Обновляет состояние чекбокса глазика
     private fun updateVisibility(isNotVisible: Boolean) {
         _state.update {
-            it.copy(doneItemsHide = isNotVisible)
+            it.copy(
+                doneItemsHide = isNotVisible
+            )
         }
     }
 
+    // Достает все таски с репозитория
     private fun getItems() {
         _state.update {
             it.copy(
@@ -90,87 +100,86 @@ class TodoListScreenViewModel @Inject constructor(
             )
         }
 
-        viewModelScope.launch {
-            repository.getAll().collect { res ->
-                when(res) {
-                    is ResourceState.Failed -> {
-                        _state.update {
-                            it.copy(
-                                loading = false,
-                                failed = true,
-                                errorMessage = res.errorMessage ?: ""
-                            )
-                        }
+        scope.launch(Dispatchers.IO) {
+            repository.getAll().collect { result ->
+                result.onFailure {
+                    _state.update {
+                        it.copy(
+                            loading = false,
+                            failed = true,
+                            errorMessage = "Проблемы с соединением"
+                        )
                     }
-                    is ResourceState.Success -> {
-                        _state.update {
-                            it.copy(
-                                loading = false,
-                                failed = false
-                            )
-                        }
-                        todoItems = res.data!!.toMutableList()
-                        updateState()
+                }
+                result.onSuccess { data ->
+                    todoItems = data.toMutableList()
+                    _state.update {
+                        it.copy(
+                            loading = false,
+                            failed = false,
+                            todoItems = todoItems
+                        )
                     }
+                    updateCounter()
                 }
             }
         }
     }
 
+    // Обновляет состояние таски
     private fun updateItem(updatedItem: TodoItem) {
         val item = todoItems.find { updatedItem.id == it.id }
-        val itemState = item!!.isDone
+        val lastItemState = item!!.isDone // Так называемый backup
 
         item.isDone = updatedItem.isDone
 
-        updateState()
+        updateCounter()
 
-        viewModelScope.launch {
-            repository.addOrUpdateItem(updatedItem).collect { res ->
-                when(res) {
-                    is ResourceState.Failed -> {
-                        item.isDone = itemState
-                        updateState()
+        scope.launch(Dispatchers.IO) {
+            repository.addOrUpdateItem(updatedItem).collect { result ->
+                result.onFailure {
+                    item.isDone = lastItemState
+                    updateCounter()
 
-                        _effect.emit(
-                            ListScreenEffect.ShowSnackBarEffect(res.errorMessage!!)
-                        )
-                    }
-                    is ResourceState.Success -> { }
+                    _effect.emit(
+                        ListScreenSideEffect.ShowSnackBarSideEffect("Не удалось сохранить")
+                    )
                 }
             }
         }
     }
 
     // Удаляет из репозитория таску
-    private fun deleteItem(item: TodoItem) {
-        todoItems.remove(item)
+    private fun deleteItem(deletedItem: TodoItem) {
+        val lastItemsState = todoItems.toMutableList() // Так называемый backup
+        todoItems.remove(deletedItem)
 
-        updateState()
+        _state.update {
+            it.copy(
+                loading = true,
+                todoItems = todoItems
+            )
+        }
 
-        viewModelScope.launch {
-            repository.deleteItem(item.id).collect { res ->
-                when(res) {
-                    is ResourceState.Failed -> {
-                        todoItems.add(item)
-                        updateState()
+        updateCounter()
 
-                        _effect.emit(
-                            ListScreenEffect.ShowSnackBarEffect(res.errorMessage!!)
-                        )
-                    }
-                    is ResourceState.Success -> { }
+        scope.launch(Dispatchers.IO) {
+            repository.deleteItem(deletedItem.id).collect { result ->
+                result.onFailure {
+                    todoItems = lastItemsState
+                    updateCounter()
+
+                    _effect.emit(
+                        ListScreenSideEffect.ShowSnackBarSideEffect("Не удалось удалить")
+                    )
+                }
+                _state.update {
+                    it.copy(
+                        loading = false,
+                        todoItems = todoItems
+                    )
                 }
             }
         }
     }
 }
-
-data class ListScreenState(
-    val todoItems: List<TodoItem>,
-    val doneItemsHide: Boolean,
-    val doneItemsCount: Int,
-    val failed: Boolean,
-    val loading: Boolean,
-    val errorMessage: String
-)

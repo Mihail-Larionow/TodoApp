@@ -22,5 +22,8 @@
     <string name="saveUpperCase">СОХРАНИТЬ</string>
     <string name="done">Выполнено</string>
     <string name="delete">Удалить</string>
-    <string name="placeholder">Что мне надо сделать...</string>
+    <string name="placeholder">Что мне надо сделать…</string>
+    <string name="delete_problems">Не удалось удалить</string>
+    <string name="save_problems">Не удалось сохранить</string>
+    <string name="connection_problems">Проблемы с соединением</string>
 </resources>

@@ -12,9 +12,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.material3.Text
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
@@ -24,38 +24,38 @@ import androidx.compose.ui.unit.dp
 import com.michel.core.data.models.Priority
 import com.michel.core.data.models.TodoItem
 import com.michel.core.ui.R
-import com.michel.core.ui.theme.TodoAppTheme
 import com.michel.core.ui.custom.ImageCheckbox
+import com.michel.core.ui.theme.TodoAppTheme
 import com.michel.feature.screens.extensions.toDateText
-import com.michel.feature.screens.todolistscreen.utils.ListScreenEvent
+import com.michel.feature.screens.todolistscreen.utils.ListScreenIntent
 
 @Composable
 internal fun TodoItemModel(
     todoItem: TodoItem,
     checked: Boolean,
-    onEvent: (ListScreenEvent) -> Unit
+    onEvent: (ListScreenIntent) -> Unit
 ) {
     Row(
-       modifier = Modifier
-           .fillMaxWidth()
-           .clickable(
-               onClick = {
-                   Log.i("app", todoItem.id)
-                   onEvent(ListScreenEvent.ToItemScreenEvent(todoItem.id))
-               },
-           )
-           .background(
-               color = TodoAppTheme.color.backSecondary
-           )
-           .padding(
-               all = 16.dp
-           )
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                onClick = {
+                    Log.i("app", todoItem.id)
+                    onEvent(ListScreenIntent.ToItemScreenIntent(todoItem.id))
+                },
+            )
+            .background(
+                color = TodoAppTheme.color.backSecondary
+            )
+            .padding(
+                all = 16.dp
+            )
     ) {
         TodoCheckbox(
             todoPriority = todoItem.priority,
             checked = checked,
             onCheckChanged = {
-                onEvent(ListScreenEvent.UpdateItemEvent(todoItem.copy(isDone = it)))
+                onEvent(ListScreenIntent.UpdateItemIntent(todoItem.copy(isDone = it)))
             },
             modifier = Modifier.size(TodoAppTheme.size.smallIcon)
         )
@@ -63,7 +63,7 @@ internal fun TodoItemModel(
             modifier = Modifier.width(16.dp)
         )
 
-        if(!checked) {
+        if (!checked) {
             TodoPriority(
                 priority = todoItem.priority,
                 modifier = Modifier.size(
@@ -75,13 +75,13 @@ internal fun TodoItemModel(
         Column(
             modifier = Modifier.weight(1f)
         ) {
-            val textColor = if(checked) {
+            val textColor = if (checked) {
                 TodoAppTheme.color.tertiary
             } else {
                 TodoAppTheme.color.primary
             }
 
-            val textDecoration = if(checked) {
+            val textDecoration = if (checked) {
                 TextDecoration.LineThrough
             } else {
                 TextDecoration.None
@@ -98,7 +98,7 @@ internal fun TodoItemModel(
 
             val deadline = todoItem.deadline
 
-            if(deadline != null) {
+            if (deadline != null) {
                 Spacer(
                     modifier = Modifier.height(8.dp)
                 )
@@ -130,9 +130,9 @@ private fun TodoCheckbox(
 ) {
 
     val checkedIcon = painterResource(R.drawable.ic_checked)
-    val uncheckedIcon = if(todoPriority == Priority.High){
+    val uncheckedIcon = if (todoPriority == Priority.High) {
         painterResource(R.drawable.ic_unchecked_high)
-    } else{
+    } else {
         painterResource(R.drawable.ic_unchecked)
     }
 
@@ -150,7 +150,7 @@ private fun TodoPriority(
     modifier: Modifier = Modifier,
     priority: Priority
 ) {
-    when(priority) {
+    when (priority) {
         Priority.High -> {
             Icon(
                 painter = painterResource(R.drawable.ic_high_priority),
@@ -162,7 +162,8 @@ private fun TodoPriority(
                 modifier = Modifier.width(4.dp)
             )
         }
-        Priority.Standard -> { }
+
+        Priority.Standard -> {}
         Priority.Low -> {
             Icon(
                 painter = painterResource(R.drawable.ic_low_priority),

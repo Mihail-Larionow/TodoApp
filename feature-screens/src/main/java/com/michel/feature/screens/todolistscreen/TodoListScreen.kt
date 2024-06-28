@@ -1,6 +1,7 @@
 package com.michel.feature.screens.todolistscreen
 
 import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateIntAsState
@@ -8,7 +9,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.LocalOverscrollConfiguration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -35,12 +35,10 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -55,12 +53,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.michel.core.data.models.Priority
 import com.michel.core.data.models.TodoItem
-import com.michel.core.ui.theme.TodoAppTheme
 import com.michel.core.ui.custom.ImageCheckbox
 import com.michel.core.ui.custom.SwipeItem
+import com.michel.core.ui.theme.TodoAppTheme
 import com.michel.feature.screens.extensions.bottomShadow
-import com.michel.feature.screens.todolistscreen.utils.ListScreenEffect
-import com.michel.feature.screens.todolistscreen.utils.ListScreenEvent
+import com.michel.feature.screens.todolistscreen.utils.ListScreenIntent
+import com.michel.feature.screens.todolistscreen.utils.ListScreenSideEffect
+import com.michel.feature.screens.todolistscreen.utils.TodoListScreenState
 
 private val COLLAPSED_TOP_BAR_HEIGHT = 56.dp
 private val EXPANDED_TOP_BAR_HEIGHT = 200.dp
@@ -71,13 +70,12 @@ fun TodoListScreen(navigate: (String) -> Unit) {
     val viewModel: TodoListScreenViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    val coroutineScope = rememberCoroutineScope()
     val snackBarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(coroutineScope) {
-        viewModel.effect.collect{ effect ->
-            when(effect) {
-                is ListScreenEffect.ShowSnackBarEffect -> {
+    LaunchedEffect(Unit) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
+                is ListScreenSideEffect.ShowSnackBarSideEffect -> {
                     snackBarHostState.showSnackbar(effect.message)
                 }
             }
@@ -85,22 +83,20 @@ fun TodoListScreen(navigate: (String) -> Unit) {
     }
 
     Content(
-        screenState = state,
-        snackBarHostState = snackBarHostState
+        screenState = state, snackBarHostState = snackBarHostState
     ) { event ->
-        when(event) {
-            is ListScreenEvent.ToItemScreenEvent -> navigate(event.id)
+        when (event) {
+            is ListScreenIntent.ToItemScreenIntent -> navigate(event.id)
             else -> viewModel.onEvent(event)
         }
     }
-
 }
 
 @Composable
 private fun Content(
-    screenState: ListScreenState,
+    screenState: TodoListScreenState,
     snackBarHostState: SnackbarHostState,
-    onEvent: (ListScreenEvent) -> Unit,
+    onEvent: (ListScreenIntent) -> Unit,
 ) {
     val listState = rememberLazyListState()
 
@@ -114,28 +110,23 @@ private fun Content(
 
     val isTopBarCollapsed: Boolean by remember {
         derivedStateOf {
-            listState.firstVisibleItemIndex > 0 ||
-                    listState.firstVisibleItemScrollOffset > minOffsetCollapsed
+            listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > minOffsetCollapsed
         }
     }
 
     val isTopBarCollapsing: Boolean by remember {
         derivedStateOf {
-            listState.firstVisibleItemIndex > 0 ||
-                    listState.firstVisibleItemScrollOffset > minOffsetCollapsing
+            listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > minOffsetCollapsing
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackBarHostState) },
-        topBar = {
-            CollapsedToolBar(
-                isCollapsed = isTopBarCollapsed,
-                hideDoneItems = screenState.doneItemsHide,
-                onEvent = onEvent,
-            )
-        },
-        modifier = Modifier.fillMaxSize()
+    Scaffold(snackbarHost = { SnackbarHost(snackBarHostState) }, topBar = {
+        CollapsedToolBar(
+            isCollapsed = isTopBarCollapsed,
+            hideDoneItems = screenState.doneItemsHide,
+            onEvent = onEvent,
+        )
+    }, modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
         val paddings = innerPadding
         Box(
@@ -157,24 +148,21 @@ private fun Content(
                         color = TodoAppTheme.color.backPrimary
                     )
                     .padding(
-                        start = 12.dp,
-                        end = 12.dp
+                        start = 12.dp, end = 12.dp
                     )
             )
 
             FloatingButton(
-                enabled = !screenState.loading && !screenState.failed,
-                onClick = {
+                enabled = !screenState.loading && !screenState.failed, onClick = {
                     val id = if (screenState.todoItems.isNotEmpty()) {
                         screenState.todoItems.last().id.toInt() + 1
                     } else {
                         1
                     }
                     onEvent(
-                        ListScreenEvent.ToItemScreenEvent("$id")
+                        ListScreenIntent.ToItemScreenIntent("$id")
                     )
-                },
-                modifier = Modifier.align(
+                }, modifier = Modifier.align(
                     Alignment.BottomEnd
                 )
             )
@@ -202,7 +190,7 @@ private fun Content(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     TextButton(
-                        onClick = { onEvent(ListScreenEvent.GetItemsEvent) },
+                        onClick = { onEvent(ListScreenIntent.GetItemsIntent) },
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     ) {
                         Text(
@@ -215,23 +203,14 @@ private fun Content(
             }
 
             AnimatedVisibility(
-                visible = screenState.loading,
-                modifier = Modifier.align(Alignment.Center)
+                visible = screenState.loading, modifier = Modifier.align(Alignment.Center)
             ) {
-                Column {
-                    CircularProgressIndicator(
-                        color = TodoAppTheme.color.blue,
-                        modifier = Modifier
-                            .size(TodoAppTheme.size.standardIcon)
-                            .align(Alignment.CenterHorizontally)
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Загрузка данных",
-                        color = TodoAppTheme.color.blue,
-                        style = TodoAppTheme.typography.body,
-                    )
-                }
+                CircularProgressIndicator(
+                    color = TodoAppTheme.color.blue,
+                    modifier = Modifier
+                        .size(TodoAppTheme.size.standardIcon)
+                        .align(Alignment.Center)
+                )
             }
         }
     }
@@ -243,123 +222,112 @@ private fun Content(
 private fun Body(
     modifier: Modifier = Modifier,
     listState: LazyListState,
-    screenState: ListScreenState,
+    screenState: TodoListScreenState,
     isTopBarCollapsing: Boolean,
-    onEvent: (ListScreenEvent) -> Unit
+    onEvent: (ListScreenIntent) -> Unit
 ) {
-    CompositionLocalProvider(LocalOverscrollConfiguration provides null) {
-        LazyColumn(
-            state = listState,
-            modifier = modifier.fillMaxSize()
-        ) {
-            item{
-                ExpandedToolBar(
-                    screenState = screenState,
-                    isCollapsing = isTopBarCollapsing,
-                    onEvent = onEvent,
-                    modifier = Modifier.background(
-                        color = TodoAppTheme.color.backPrimary
-                    )
+    LazyColumn(
+        state = listState, modifier = modifier.fillMaxSize()
+    ) {
+        item {
+            ExpandedToolBar(
+                screenState = screenState,
+                isCollapsing = isTopBarCollapsing,
+                onEvent = onEvent,
+                modifier = Modifier.background(
+                    color = TodoAppTheme.color.backPrimary
                 )
-            }
+            )
+        }
 
-            val showList = if(screenState.doneItemsHide) {
-                screenState.todoItems.filter { !it.isDone }
-            } else {
-                screenState.todoItems
-            }
+        val showList = if (screenState.doneItemsHide) {
+            screenState.todoItems.filter { !it.isDone }
+        } else {
+            screenState.todoItems
+        }
 
-            items(
-                items = showList,
-                key = { it.id },
-            ) { item ->
+        items(
+            items = showList.reversed(),
+            key = { it.id },
+        ) { item ->
 
-                SwipeItem(
-                    onRemove = {
-                        onEvent(ListScreenEvent.DeleteItemEvent(item))
-                    },
-                    onDone = {
-                        onEvent(ListScreenEvent.UpdateItemEvent(item.copy(isDone = it)))
-                    },
-                    modifier = Modifier.animateItemPlacement(
-                        animationSpec = tween(300)
-                    )
-                ) {
-                    TodoItemModel(
-                        todoItem = item,
-                        checked = item.isDone,
-                        onEvent = onEvent
-                    )
-                }
-            }
-
-            item {
-                if(!screenState.failed && !screenState.loading) {
-                    Text(
-                        text = stringResource(com.michel.core.ui.R.string.new_task),
-                        color = TodoAppTheme.color.tertiary,
-                        style = TodoAppTheme.typography.body,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(
-                                color = TodoAppTheme.color.backSecondary
-                            )
-                            .clickable {
-                                val id = if (screenState.todoItems.isNotEmpty()) {
-                                    screenState.todoItems.last().id.toInt() + 1
-                                } else {
-                                    1
-                                }
-                                onEvent(
-                                    ListScreenEvent.ToItemScreenEvent("$id")
-                                )
-                            }
-                            .padding(
-                                start = 32.dp + TodoAppTheme.size.standardIcon,
-                                top = 16.dp,
-                                end = 16.dp,
-                                bottom = 16.dp
-                            )
-                            .animateItemPlacement(
-                                animationSpec = tween(300)
-                            )
-                    )
-                }
-            }
-            item {
-                Spacer(
-                    modifier = Modifier
-                        .height(16.dp)
-                        .background(
-                            color = TodoAppTheme.color.backPrimary
-                        )
+            SwipeItem(onDelete = {
+                onEvent(ListScreenIntent.DeleteItemIntent(item))
+            }, onUpdate = {
+                onEvent(ListScreenIntent.UpdateItemIntent(item.copy(isDone = it)))
+            }, modifier = Modifier.animateItemPlacement(
+                animationSpec = tween(300)
+            )
+            ) {
+                TodoItemModel(
+                    todoItem = item, checked = item.isDone, onEvent = onEvent
                 )
             }
         }
+
+        item {
+            if (!screenState.failed) {
+                Text(text = stringResource(com.michel.core.ui.R.string.new_task),
+                    color = TodoAppTheme.color.tertiary,
+                    style = TodoAppTheme.typography.body,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            color = TodoAppTheme.color.backSecondary
+                        )
+                        .clickable {
+                            val id = if (screenState.todoItems.isNotEmpty()) {
+                                screenState.todoItems.last().id.toInt() + 1
+                            } else {
+                                1
+                            }
+                            onEvent(
+                                ListScreenIntent.ToItemScreenIntent("$id")
+                            )
+                        }
+                        .padding(
+                            start = 32.dp + TodoAppTheme.size.standardIcon,
+                            top = 16.dp,
+                            end = 16.dp,
+                            bottom = 16.dp
+                        )
+                        .animateItemPlacement(
+                            animationSpec = tween(300)
+                        ))
+            }
+        }
+
+        item {
+            Spacer(
+                modifier = Modifier
+                    .height(16.dp)
+                    .background(
+                        color = TodoAppTheme.color.backPrimary
+                    )
+            )
+        }
     }
+
 }
 
 // Топ бар, когда он развернут
 @Composable
 private fun ExpandedToolBar(
     modifier: Modifier = Modifier,
-    screenState: ListScreenState,
+    screenState: TodoListScreenState,
     isCollapsing: Boolean,
-    onEvent: (ListScreenEvent.ChangeVisibilityEvent) -> Unit,
+    onEvent: (ListScreenIntent.ChangeVisibilityIntent) -> Unit,
 ) {
     val startPadding by animateDpAsState(
-        targetValue = if(!isCollapsing) 56.dp else 4.dp,
-        label = "Animated start padding"
+        targetValue = if (!isCollapsing) 56.dp else 4.dp, label = "Animated start padding"
     )
 
     val endPadding by animateDpAsState(
-        targetValue = if(!isCollapsing) 20.dp else 4.dp,
-        label = "Animated end padding"
+        targetValue = if (!isCollapsing) 20.dp else 4.dp, label = "Animated end padding"
     )
 
     val fontSize by animateIntAsState(
-        targetValue = if(!isCollapsing) 32 else 20,
-        label = "Animated font size"
+        targetValue = if (!isCollapsing) 32 else 20, label = "Animated font size"
     )
 
     Box(
@@ -367,9 +335,7 @@ private fun ExpandedToolBar(
             .fillMaxWidth()
             .height(EXPANDED_TOP_BAR_HEIGHT)
             .padding(
-                start = startPadding,
-                end = endPadding,
-                bottom = 16.dp
+                start = startPadding, end = endPadding, bottom = 16.dp
             )
     ) {
         Column(
@@ -383,7 +349,8 @@ private fun ExpandedToolBar(
                 modifier = Modifier
             )
             AnimatedVisibility(visible = !isCollapsing) {
-                val countText = stringResource(com.michel.core.ui.R.string.todolist_screen_subtitle) + " ${screenState.doneItemsCount}"
+                val countText =
+                    stringResource(com.michel.core.ui.R.string.todolist_screen_subtitle) + " ${screenState.doneItemsCount}"
                 Text(
                     text = countText,
                     style = TodoAppTheme.typography.subhead,
@@ -395,7 +362,7 @@ private fun ExpandedToolBar(
 
         VisibilityCheckBox(
             checked = screenState.doneItemsHide,
-            onCheckChange = { onEvent(ListScreenEvent.ChangeVisibilityEvent(it)) },
+            onCheckChange = { onEvent(ListScreenIntent.ChangeVisibilityIntent(it)) },
             modifier = Modifier
                 .size(TodoAppTheme.size.standardIcon)
                 .align(Alignment.BottomEnd)
@@ -409,10 +376,10 @@ private fun CollapsedToolBar(
     modifier: Modifier = Modifier,
     isCollapsed: Boolean,
     hideDoneItems: Boolean,
-    onEvent: (ListScreenEvent.ChangeVisibilityEvent) -> Unit,
+    onEvent: (ListScreenIntent.ChangeVisibilityIntent) -> Unit,
 ) {
 
-    val topBarColor = if(!isCollapsed){
+    val topBarColor = if (!isCollapsed) {
         Color.Transparent
     } else {
         TodoAppTheme.color.backPrimary
@@ -434,7 +401,7 @@ private fun CollapsedToolBar(
                 all = 16.dp
             )
     ) {
-        if(isCollapsed) {
+        if (isCollapsed) {
             Box(
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -446,7 +413,7 @@ private fun CollapsedToolBar(
                 )
                 VisibilityCheckBox(
                     checked = hideDoneItems,
-                    onCheckChange = { onEvent(ListScreenEvent.ChangeVisibilityEvent(it)) },
+                    onCheckChange = { onEvent(ListScreenIntent.ChangeVisibilityIntent(it)) },
                     modifier = Modifier
                         .size(TodoAppTheme.size.standardIcon)
                         .align(Alignment.CenterEnd)
@@ -459,22 +426,19 @@ private fun CollapsedToolBar(
 // Кнопка
 @Composable
 private fun FloatingButton(
-    modifier: Modifier = Modifier,
-    enabled: Boolean,
-    onClick: () -> Unit
+    modifier: Modifier = Modifier, enabled: Boolean, onClick: () -> Unit
 ) {
     Column(
         modifier = modifier
-    ){
+    ) {
         Row {
             FloatingActionButton(
-                onClick = { if(enabled) onClick() },
+                onClick = { if (enabled) onClick() },
                 shape = CircleShape,
                 containerColor = TodoAppTheme.color.blue,
                 contentColor = TodoAppTheme.color.white,
                 modifier = modifier.bottomShadow(
-                    shadow = 4.dp,
-                    shape = CircleShape
+                    shadow = 4.dp, shape = CircleShape
                 )
 
             ) {
@@ -493,9 +457,7 @@ private fun FloatingButton(
 // Чекбокс глаз
 @Composable
 private fun VisibilityCheckBox(
-    modifier: Modifier = Modifier,
-    checked: Boolean,
-    onCheckChange: (Boolean) -> Unit
+    modifier: Modifier = Modifier, checked: Boolean, onCheckChange: (Boolean) -> Unit
 ) {
     val checkedIcon = painterResource(com.michel.core.ui.R.drawable.ic_visibility_off)
     val uncheckedIcon = painterResource(com.michel.core.ui.R.drawable.ic_visibility_on)
@@ -533,7 +495,7 @@ private val list = listOf(
     ),
 )
 
-private val state = ListScreenState(
+private val state = TodoListScreenState(
     todoItems = list,
     doneItemsHide = false,
     doneItemsCount = 1,
@@ -545,23 +507,15 @@ private val state = ListScreenState(
 @Preview(showBackground = true)
 @Composable
 private fun TodoListScreenPreviewLight() {
-    TodoAppTheme{
-        Content(
-            screenState = state,
-            snackBarHostState = SnackbarHostState(),
-            onEvent = { }
-        )
+    TodoAppTheme {
+        Content(screenState = state, snackBarHostState = SnackbarHostState(), onEvent = { })
     }
 }
 
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun TodoListScreenPreviewDark() {
-    TodoAppTheme{
-        Content(
-            screenState = state,
-            snackBarHostState = SnackbarHostState(),
-            onEvent = { }
-        )
+    TodoAppTheme {
+        Content(screenState = state, snackBarHostState = SnackbarHostState(), onEvent = { })
     }
 }

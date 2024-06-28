@@ -1,15 +1,13 @@
 package com.michel.core.data
 
-import com.michel.core.data.mapper.toTodoItem
-import com.michel.core.data.mapper.toTodoItemEntity
+import com.michel.core.data.mappers.toTodoItem
+import com.michel.core.data.mappers.toTodoItemEntity
 import com.michel.core.data.models.TodoItem
-import com.michel.core.data.models.emptyTodoItem
-import com.michel.core.data.utils.ResourceState
 import com.michel.network.api.BackendApi
-import com.michel.network.api.models.emptyTodoItemEntity
+import com.michel.network.api.dto.emptyTodoItemEntity
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -19,60 +17,61 @@ class TodoItemsRepository @Inject constructor(
 ) {
 
     // Возвращает все таски списком
-    fun getAll(): Flow<ResourceState<List<TodoItem>>> {
+    fun getAll(): Flow<Result<List<TodoItem>>> {
         return flow {
-            val resource = try {
-                ResourceState.Success(
-                    data = api.getAll().map {
+            val result = try {
+                Result.success(
+                    api.getAll().map {
                         it.toTodoItem()
                     }
                 )
-            } catch (e: Exception) {
-                ResourceState.Failed("Ошибка соединения")
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                Result.failure(exception)
             }
-            emit(resource)
+            emit(result)
         }
     }
 
     // Добавляет новую таску в список, либо заменяет таску с таким же id
-     fun addOrUpdateItem(todoItem: TodoItem): Flow<ResourceState<Boolean>> {
+    fun addOrUpdateItem(todoItem: TodoItem): Flow<Result<Boolean>> {
         return flow {
             val result = try {
-                ResourceState.Success(
-                    data = api.addOrUpdateItem(todoItem.toTodoItemEntity())
-                )
-            } catch (e:Exception) {
-                ResourceState.Failed("Не удалось сохранить")
+                Result.success(api.addOrUpdateItem(todoItem.toTodoItemEntity()))
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                Result.failure(exception)
             }
             emit(result)
         }
     }
 
     // Удаляет таску из списка
-    fun deleteItem(id: String): Flow<ResourceState<Boolean>> {
+    fun deleteItem(id: String): Flow<Result<Boolean>> {
         return flow {
             val result = try {
-                ResourceState.Success(
-                    data = api.deleteItem(id)
-                )
-            } catch (e: Exception) {
-                ResourceState.Failed("Не удалось удалить")
+                Result.success(api.deleteItem(id))
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                Result.failure(exception)
             }
             emit(result)
         }
     }
 
     // Находит таску по id, либо возвращает пустую таску
-    fun getItem(id: String): Flow<ResourceState<TodoItem>> {
+    fun getItem(id: String): Flow<Result<TodoItem>> {
         return flow {
             val resource = try {
                 val item = api.getItem(id) ?: emptyTodoItemEntity()
-                ResourceState.Success(
-                    data = item.toTodoItem()
-                )
-            } catch (e: Exception) {
-                e.printStackTrace()
-                ResourceState.Failed(e.message ?: "")
+                Result.success(item.toTodoItem())
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                Result.failure(exception)
             }
             emit(resource)
         }

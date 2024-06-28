@@ -16,7 +16,6 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,15 +23,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.michel.core.ui.theme.TodoAppTheme
-import kotlinx.coroutines.launch
 
 @SuppressLint("CoroutineCreationDuringComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SwipeItem(
     modifier: Modifier = Modifier,
-    onRemove: () -> Unit,
-    onDone:(Boolean) -> Unit,
+    onDelete: () -> Unit,
+    onUpdate: (Boolean) -> Unit,
     content: @Composable () -> Unit
 ) {
 
@@ -42,7 +40,7 @@ fun SwipeItem(
         state = swipeState,
         backgroundContent = {
             val backgroundColor by animateColorAsState(
-                targetValue = when(swipeState.dismissDirection) {
+                targetValue = when (swipeState.dismissDirection) {
                     SwipeToDismissBoxValue.StartToEnd -> TodoAppTheme.color.green
                     SwipeToDismissBoxValue.EndToStart -> TodoAppTheme.color.red
                     SwipeToDismissBoxValue.Settled -> Color.Transparent
@@ -57,7 +55,7 @@ fun SwipeItem(
                         color = backgroundColor
                     )
             ) {
-                when(swipeState.dismissDirection) {
+                when (swipeState.dismissDirection) {
                     SwipeToDismissBoxValue.StartToEnd -> {
                         Icon(
                             painter = painterResource(com.michel.core.ui.R.drawable.ic_check),
@@ -71,6 +69,7 @@ fun SwipeItem(
                                 )
                         )
                     }
+
                     SwipeToDismissBoxValue.EndToStart -> {
                         Icon(
                             painter = painterResource(com.michel.core.ui.R.drawable.ic_delete),
@@ -84,31 +83,36 @@ fun SwipeItem(
                                 )
                         )
                     }
-                    SwipeToDismissBoxValue.Settled -> { }
+
+                    SwipeToDismissBoxValue.Settled -> {}
                 }
 
             }
         },
-        modifier = modifier
-            .animateContentSize()
+        modifier = modifier.animateContentSize()
     ) {
         content()
     }
 
-    when(swipeState.currentValue) {
+    when (swipeState.currentValue) {
         SwipeToDismissBoxValue.StartToEnd -> {
             LaunchedEffect(swipeState) {
-                onDone(true)
+                onUpdate(true)
                 swipeState.snapTo(
                     targetValue = SwipeToDismissBoxValue.Settled
                 )
             }
         }
+
         SwipeToDismissBoxValue.EndToStart -> {
             LaunchedEffect(swipeState) {
-                onRemove()
+                onDelete()
+                swipeState.snapTo(
+                    targetValue = SwipeToDismissBoxValue.Settled
+                )
             }
         }
-        SwipeToDismissBoxValue.Settled -> { }
+
+        SwipeToDismissBoxValue.Settled -> {}
     }
 }

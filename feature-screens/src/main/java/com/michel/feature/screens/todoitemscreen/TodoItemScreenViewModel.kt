@@ -1,5 +1,6 @@
 package com.michel.feature.screens.todoitemscreen
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,10 +8,12 @@ import com.michel.core.data.TodoItemsRepository
 import com.michel.core.data.models.Priority
 import com.michel.core.data.models.TodoItem
 import com.michel.core.data.models.emptyTodoItem
-import com.michel.core.data.utils.ResourceState
-import com.michel.feature.screens.todoitemscreen.utils.ItemScreenEffect
-import com.michel.feature.screens.todoitemscreen.utils.ItemScreenEvent
+import com.michel.feature.screens.todoitemscreen.utils.ItemScreenIntent
+import com.michel.feature.screens.todoitemscreen.utils.ItemScreenSideEffect
+import com.michel.feature.screens.todoitemscreen.utils.TodoItemScreenState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -19,6 +22,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 import java.util.Date
 import javax.inject.Inject
 
@@ -32,11 +36,11 @@ class TodoItemViewModel @Inject constructor(
     private var todoItem: TodoItem = emptyTodoItem()
 
     private val _state = MutableStateFlow(
-        ItemScreenState(
+        TodoItemScreenState(
             text = todoItem.text,
             priority = todoItem.priority,
             hasDeadline = false,
-            deadline = todoItem.deadline?: Date().time,
+            deadline = todoItem.deadline ?: Date().time,
             datePickerExpanded = false,
             priorityMenuExpanded = false,
             loading = true,
@@ -45,64 +49,72 @@ class TodoItemViewModel @Inject constructor(
         )
     )
 
-    val state: StateFlow<ItemScreenState> = _state.asStateFlow()
+    val state: StateFlow<TodoItemScreenState> = _state.asStateFlow()
 
-    private val _effect: MutableSharedFlow<ItemScreenEffect> = MutableSharedFlow()
-    val effect: SharedFlow<ItemScreenEffect> = _effect.asSharedFlow()
+    private val _effect: MutableSharedFlow<ItemScreenSideEffect> = MutableSharedFlow()
+    val effect: SharedFlow<ItemScreenSideEffect> = _effect.asSharedFlow()
 
-    init { onEvent(ItemScreenEvent.GetItemInfoEvent) }
+    private val scope = viewModelScope + CoroutineExceptionHandler { _, throwable ->
+        Log.i("ui", "${throwable.message}")
+    }
 
-    internal fun onEvent(event: ItemScreenEvent) {
-        viewModelScope.launch {
-            try{
-                when(event) {
-                    ItemScreenEvent.GetItemInfoEvent -> getInfo()
-                    is ItemScreenEvent.DeleteEvent -> delete()
-                    is ItemScreenEvent.SaveEvent -> save()
-                    is ItemScreenEvent.SetDeadlineDateEvent -> updateDeadline(event.deadline)
-                    is ItemScreenEvent.SetDeadlineState -> updateHasDeadline(event.hasDeadline)
-                    is ItemScreenEvent.SetPriorityEvent -> updatePriority(event.priority)
-                    is ItemScreenEvent.SetTextEvent -> updateText(event.text)
-                    is ItemScreenEvent.SetDatePickerState -> updateDatePickerState(event.isExpanded)
-                    is ItemScreenEvent.SetPriorityMenuState -> updatePriorityMenuState(event.isExpanded)
-                    ItemScreenEvent.ToListScreenEvent -> { }
-                }
-            } catch (_: Exception) {
-                _state.update {
-                    it.copy(
-                        failed = true,
-                        errorMessage = "Неизвестная ошибка"
-                    )
-                }
+    init {
+        onEvent(ItemScreenIntent.GetItemInfoIntent)
+    }
+
+    internal fun onEvent(event: ItemScreenIntent) {
+        try {
+            when (event) {
+                ItemScreenIntent.GetItemInfoIntent -> getInfo()
+                is ItemScreenIntent.DeleteIntent -> delete()
+                is ItemScreenIntent.SaveIntent -> save()
+                is ItemScreenIntent.SetDeadlineDateIntent -> updateDeadline(event.deadline)
+                is ItemScreenIntent.SetDeadlineStateIntent -> updateHasDeadline(event.hasDeadline)
+                is ItemScreenIntent.SetPriorityIntent -> updatePriority(event.priority)
+                is ItemScreenIntent.SetTextIntent -> updateText(event.text)
+                is ItemScreenIntent.SetDatePickerStateIntent -> updateDatePickerState(event.isExpanded)
+                is ItemScreenIntent.SetPriorityMenuStateIntent -> updatePriorityMenuState(event.isExpanded)
+                ItemScreenIntent.ToListScreenIntent -> {}
+            }
+        } catch (_: Exception) {
+            _state.update {
+                it.copy(
+                    failed = true,
+                    errorMessage = "Неизвестная ошибка"
+                )
             }
         }
     }
 
     private fun getInfo() {
-        viewModelScope.launch {
-            repository.getItem(todoItemId).collect{ res ->
-                when(res) {
-                    is ResourceState.Failed -> {
-                        _state.update {
-                            it.copy(
-                                loading = false,
-                                failed = true,
-                                errorMessage = res.errorMessage ?: ""
-                            )
-                        }
+        _state.update {
+            it.copy(
+                loading = true
+            )
+        }
+
+        scope.launch(Dispatchers.IO) {
+            repository.getItem(todoItemId).collect { result ->
+                result.onFailure {
+                    _state.update {
+                        it.copy(
+                            loading = false,
+                            failed = true,
+                            errorMessage = "Проблемы с соединением"
+                        )
                     }
-                    is ResourceState.Success -> {
-                        todoItem = res.data!!
-                        _state.update {
-                            it.copy(
-                                loading = false,
-                                failed = false,
-                                text = todoItem.text,
-                                priority = todoItem.priority,
-                                hasDeadline = todoItem.deadline != null,
-                                deadline = todoItem.deadline?: Date().time
-                            )
-                        }
+                }
+                result.onSuccess { data ->
+                    todoItem = data
+                    _state.update {
+                        it.copy(
+                            loading = false,
+                            failed = false,
+                            text = todoItem.text,
+                            priority = todoItem.priority,
+                            hasDeadline = todoItem.deadline != null,
+                            deadline = todoItem.deadline ?: Date().time
+                        )
                     }
                 }
             }
@@ -117,8 +129,8 @@ class TodoItemViewModel @Inject constructor(
             )
         }
 
-        viewModelScope.launch {
-            val deadline = if(state.value.hasDeadline){
+        scope.launch(Dispatchers.IO) {
+            val deadline = if (state.value.hasDeadline) {
                 state.value.deadline
             } else null
 
@@ -132,21 +144,19 @@ class TodoItemViewModel @Inject constructor(
                 changedAt = Date().time
             )
 
-            repository.addOrUpdateItem(newTodoItem).collect { res ->
-                when(res) {
-                    is ResourceState.Failed -> {
-                        _state.update {
-                            it.copy(
-                                loading = false
-                            )
-                        }
-                        _effect.emit(
-                            ItemScreenEffect.ShowSnackBarEffect(res.errorMessage!!)
+            repository.addOrUpdateItem(newTodoItem).collect { result ->
+                result.onFailure {
+                    _state.update {
+                        it.copy(
+                            loading = false
                         )
                     }
-                    is ResourceState.Success -> {
-                        _effect.emit(ItemScreenEffect.LeaveScreenEffect)
-                    }
+                    _effect.emit(
+                        ItemScreenSideEffect.ShowSnackBarSideEffect("Не удалось сохранить")
+                    )
+                }
+                result.onSuccess {
+                    _effect.emit(ItemScreenSideEffect.LeaveScreenSideEffect)
                 }
             }
         }
@@ -160,22 +170,20 @@ class TodoItemViewModel @Inject constructor(
             )
         }
 
-        viewModelScope.launch {
-            repository.deleteItem(todoItem.id).collect { res ->
-                when(res) {
-                    is ResourceState.Failed -> {
-                        _state.update {
-                            it.copy(
-                                loading = false
-                            )
-                        }
-                        _effect.emit(
-                            ItemScreenEffect.ShowSnackBarEffect(res.errorMessage!!)
+        scope.launch(Dispatchers.IO) {
+            repository.deleteItem(todoItem.id).collect { result ->
+                result.onFailure {
+                    _state.update {
+                        it.copy(
+                            loading = false
                         )
                     }
-                    is ResourceState.Success -> {
-                        _effect.emit(ItemScreenEffect.LeaveScreenEffect)
-                    }
+                    _effect.emit(
+                        ItemScreenSideEffect.ShowSnackBarSideEffect("Не удалось удалить")
+                    )
+                }
+                result.onSuccess {
+                    _effect.emit(ItemScreenSideEffect.LeaveScreenSideEffect)
                 }
             }
         }
@@ -217,15 +225,3 @@ class TodoItemViewModel @Inject constructor(
         }
     }
 }
-
-data class ItemScreenState(
-    val text: String,
-    val priority: Priority,
-    val hasDeadline: Boolean,
-    val deadline: Long,
-    val priorityMenuExpanded: Boolean,
-    val datePickerExpanded: Boolean,
-    val loading: Boolean,
-    val failed: Boolean,
-    val errorMessage: String
-)
