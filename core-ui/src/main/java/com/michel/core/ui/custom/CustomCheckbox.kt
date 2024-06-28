@@ -50,7 +50,6 @@ fun ImageCheckbox(
 }
 
 
-
 @Preview(showBackground = true)
 @Composable
 private fun CustomCheckboxPreview() {
