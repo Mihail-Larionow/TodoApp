@@ -3,9 +3,9 @@ package com.michel.core.data.mappers
 import com.michel.core.data.models.Priority
 import com.michel.core.data.models.TodoItem
 import com.michel.network.api.dto.PriorityDto
-import com.michel.network.api.dto.TodoItemEntity
+import com.michel.network.api.dto.TodoItemDto
 
-fun TodoItemEntity.toTodoItem(): TodoItem {
+fun TodoItemDto.toTodoItem(): TodoItem {
     return TodoItem(
         id = this.id,
         text = this.text,
@@ -25,8 +25,8 @@ private fun PriorityDto.toPriority(): Priority {
     }
 }
 
-fun TodoItem.toTodoItemEntity(): TodoItemEntity {
-    return TodoItemEntity(
+fun TodoItem.toTodoItemEntity(): TodoItemDto {
+    return TodoItemDto(
         id = this.id,
         text = this.text,
         isDone = this.isDone,
