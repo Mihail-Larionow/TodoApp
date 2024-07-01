@@ -1,8 +1,8 @@
 package com.michel.core.data.mappers
 
-import com.michel.core.data.models.Priority
+import com.michel.core.data.models.Importance
 import com.michel.core.data.models.TodoItem
-import com.michel.network.api.dto.PriorityDto
+import com.michel.network.api.dto.ImportanceDto
 import com.michel.network.api.dto.TodoItemDto
 
 fun TodoItemDto.toTodoItem(): TodoItem {
@@ -10,18 +10,18 @@ fun TodoItemDto.toTodoItem(): TodoItem {
         id = this.id,
         text = this.text,
         isDone = this.isDone,
-        priority = this.priorityDto.toPriority(),
+        importance = this.importanceDto.toPriority(),
         deadline = this.deadline,
         createdAt = this.createdAt,
         changedAt = this.changedAt
     )
 }
 
-private fun PriorityDto.toPriority(): Priority {
+private fun ImportanceDto.toPriority(): Importance {
     return when (this) {
-        PriorityDto.High -> Priority.High
-        PriorityDto.Low -> Priority.Low
-        PriorityDto.Standard -> Priority.Standard
+        ImportanceDto.High -> Importance.High
+        ImportanceDto.Low -> Importance.Low
+        ImportanceDto.Standard -> Importance.Standard
     }
 }
 
@@ -30,17 +30,17 @@ fun TodoItem.toTodoItemEntity(): TodoItemDto {
         id = this.id,
         text = this.text,
         isDone = this.isDone,
-        priorityDto = this.priority.toPriorityEntity(),
+        importanceDto = this.importance.toPriorityEntity(),
         deadline = this.deadline,
         createdAt = this.createdAt,
         changedAt = this.changedAt
     )
 }
 
-private fun Priority.toPriorityEntity(): PriorityDto {
+private fun Importance.toPriorityEntity(): ImportanceDto {
     return when (this) {
-        Priority.High -> PriorityDto.High
-        Priority.Low -> PriorityDto.Low
-        Priority.Standard -> PriorityDto.Standard
+        Importance.High -> ImportanceDto.High
+        Importance.Low -> ImportanceDto.Low
+        Importance.Standard -> ImportanceDto.Standard
     }
 }
