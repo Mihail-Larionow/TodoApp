@@ -57,14 +57,13 @@ kapt {
 
 dependencies {
 
-    implementation(project(":core-ui"))
-    implementation(project(":core-data"))
-    implementation(project(":feature-screens"))
-
     implementation(libs.hilt.android)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(project(":feature-todoitemscreen"))
+    implementation(project(":feature-todolistscreen"))
+    implementation(project(":core-ui"))
     kapt(libs.hilt.android.compiler)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
