@@ -22,6 +22,7 @@ dependencyResolutionManagement {
 rootProject.name = "TodoApp"
 include(":app")
 include(":core-ui")
-include(":core-data")
-include(":feature-screens")
 include(":network")
+include(":core-data")
+include(":feature-todolistscreen")
+include(":feature-todoitemscreen")

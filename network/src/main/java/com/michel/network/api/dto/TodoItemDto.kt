@@ -4,25 +4,25 @@ import java.util.Date
 
 data class TodoItemDto(
     val id: String,
-    var text: String,
-    var priorityDto: PriorityDto,
-    var deadline: Long? = null,
-    var isDone: Boolean,
+    val text: String,
+    val importanceDto: ImportanceDto,
+    val deadline: Long? = null,
+    val isDone: Boolean,
     val createdAt: Long,
-    var changedAt: Long? = null
+    val changedAt: Long? = null
 )
 
-sealed class PriorityDto(val text: String) {
-    data object High: PriorityDto("!! Высокий")
-    data object Standard: PriorityDto("Нет")
-    data object Low: PriorityDto("Низкий")
+sealed class ImportanceDto {
+    data object High : ImportanceDto()
+    data object Standard : ImportanceDto()
+    data object Low : ImportanceDto()
 }
 
 fun emptyTodoItemEntity(): TodoItemDto {
     return TodoItemDto(
         id = "",
         text = "",
-        priorityDto = PriorityDto.Standard,
+        importanceDto = ImportanceDto.Standard,
         isDone = false,
         createdAt = Date().time
     )
