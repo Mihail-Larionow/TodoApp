@@ -35,7 +35,6 @@ android {
 }
 
 dependencies {
-
     implementation(project(":network"))
 
     kapt(libs.hilt.android.compiler)
