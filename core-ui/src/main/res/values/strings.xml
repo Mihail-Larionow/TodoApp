@@ -19,6 +19,7 @@
     <string name="acceptUpperCase">ГОТОВО</string>
     <string name="cancelUpperCase">ОТМЕНА</string>
     <string name="deleteUpperCase">УДАЛИТЬ</string>
+    <string name="retryUpperCase">ПОВТОРИТЬ</string>
     <string name="saveUpperCase">СОХРАНИТЬ</string>
     <string name="done">Выполнено</string>
     <string name="delete">Удалить</string>
