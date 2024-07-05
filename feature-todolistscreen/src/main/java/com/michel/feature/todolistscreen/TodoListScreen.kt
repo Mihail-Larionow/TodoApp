@@ -2,6 +2,7 @@ package com.michel.feature.todolistscreen
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
@@ -25,7 +26,6 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -123,7 +123,7 @@ private fun Content(
     Scaffold(snackbarHost = { SnackbarHost(snackBarHostState) }, topBar = {
         CollapsedToolBar(
             isCollapsed = isTopBarCollapsed,
-            hideDoneItems = screenState.doneItemsHide,
+            screenState = screenState,
             onEvent = onEvent,
         )
     }, modifier = Modifier.fillMaxSize()
@@ -153,16 +153,9 @@ private fun Content(
             )
 
             FloatingButton(
-                enabled = !screenState.loading && !screenState.failed, onClick = {
-                    val id = if (screenState.todoItems.isNotEmpty()) {
-                        screenState.todoItems.last().id.toInt() + 1
-                    } else {
-                        1
-                    }
-                    onEvent(
-                        ListScreenIntent.ToItemScreenIntent("$id")
-                    )
-                }, modifier = Modifier.align(
+                enabled = screenState.enabled,
+                onClick = { onEvent(ListScreenIntent.ToItemScreenIntent("none")) },
+                modifier = Modifier.align(
                     Alignment.BottomEnd
                 )
             )
@@ -216,7 +209,8 @@ private fun Body(
     onEvent: (ListScreenIntent) -> Unit
 ) {
 
-    CustomPullToRefreshItem(isLoading = screenState.loading,
+    CustomPullToRefreshItem(
+        isRefreshing = screenState.loading,
         onRefresh = { onEvent(ListScreenIntent.GetItemsIntent) },
         content = {
             LazyColumn(
@@ -252,12 +246,23 @@ private fun Body(
                     )
                     ) {
                         TodoItemModel(
-                            todoItem = item, checked = item.isDone, onEvent = onEvent
+                            todoItem = item,
+                            checked = item.isDone,
+                            enabled = screenState.enabled,
+                            onEvent = onEvent
                         )
                     }
                 }
 
                 item {
+                    val buttonColor = animateColorAsState(
+                        targetValue = if (screenState.enabled) {
+                            TodoAppTheme.color.backSecondary
+                        } else {
+                            TodoAppTheme.color.disable
+                        }, label = ""
+                    )
+
                     if (!screenState.failed) {
                         Text(text = stringResource(com.michel.core.ui.R.string.new_task),
                             color = TodoAppTheme.color.tertiary,
@@ -265,18 +270,12 @@ private fun Body(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .background(
-                                    color = TodoAppTheme.color.backSecondary
+                                    color = buttonColor.value
                                 )
-                                .clickable {
-                                    val id = if (screenState.todoItems.isNotEmpty()) {
-                                        screenState.todoItems.last().id.toInt() + 1
-                                    } else {
-                                        1
-                                    }
-                                    onEvent(
-                                        ListScreenIntent.ToItemScreenIntent("$id")
-                                    )
-                                }
+                                .clickable(
+                                    enabled = screenState.enabled,
+                                    onClick = { onEvent(ListScreenIntent.ToItemScreenIntent("none")) }
+                                )
                                 .padding(
                                     start = 32.dp + TodoAppTheme.size.standardIcon,
                                     top = 16.dp,
@@ -285,7 +284,8 @@ private fun Body(
                                 )
                                 .animateItemPlacement(
                                     animationSpec = tween(300)
-                                ))
+                                )
+                        )
                     }
                 }
 
@@ -299,8 +299,7 @@ private fun Body(
                     )
                 }
             }
-        }
-    )
+        })
 }
 
 // Топ бар, когда он развернут
@@ -354,7 +353,7 @@ private fun ExpandedToolBar(
         }
 
         VisibilityCheckBox(
-            checked = screenState.doneItemsHide,
+            screenState = screenState,
             onCheckChange = { onEvent(ListScreenIntent.ChangeVisibilityIntent(it)) },
             modifier = Modifier
                 .size(TodoAppTheme.size.standardIcon)
@@ -368,7 +367,7 @@ private fun ExpandedToolBar(
 private fun CollapsedToolBar(
     modifier: Modifier = Modifier,
     isCollapsed: Boolean,
-    hideDoneItems: Boolean,
+    screenState: TodoListScreenState,
     onEvent: (ListScreenIntent.ChangeVisibilityIntent) -> Unit,
 ) {
 
@@ -405,7 +404,7 @@ private fun CollapsedToolBar(
                     modifier = Modifier.align(Alignment.CenterStart)
                 )
                 VisibilityCheckBox(
-                    checked = hideDoneItems,
+                    screenState = screenState,
                     onCheckChange = { onEvent(ListScreenIntent.ChangeVisibilityIntent(it)) },
                     modifier = Modifier
                         .size(TodoAppTheme.size.standardIcon)
@@ -433,7 +432,6 @@ private fun FloatingButton(
                 modifier = modifier.bottomShadow(
                     shadow = 4.dp, shape = CircleShape
                 )
-
             ) {
                 Icon(
                     painter = painterResource(com.michel.core.ui.R.drawable.ic_add),
@@ -450,71 +448,62 @@ private fun FloatingButton(
 // Чекбокс глаз
 @Composable
 private fun VisibilityCheckBox(
-    modifier: Modifier = Modifier, checked: Boolean, onCheckChange: (Boolean) -> Unit
+    modifier: Modifier = Modifier,
+    screenState: TodoListScreenState,
+    onCheckChange: (Boolean) -> Unit
 ) {
     val checkedIcon = painterResource(com.michel.core.ui.R.drawable.ic_visibility_off)
     val uncheckedIcon = painterResource(com.michel.core.ui.R.drawable.ic_visibility_on)
 
     ImageCheckbox(
-        checked = checked,
+        checked = screenState.doneItemsHide,
         checkedIcon = checkedIcon,
         uncheckedIcon = uncheckedIcon,
         onCheckedChange = { onCheckChange(it) },
+        enabled = screenState.enabled,
         modifier = modifier
     )
 }
 
-private val list = listOf(
-    TodoItem(
-        id = "6",
-        text = "Устроиться работать в пятерочку(",
-        importance = Importance.Low,
-        isDone = false,
-        createdAt = 1
-    ),
-    TodoItem(
-        id = "7",
-        text = "Устроиться работать в Яндикс)",
-        importance = Importance.High,
-        isDone = false,
-        createdAt = 2
-    ),
-    TodoItem(
-        id = "8",
-        text = "Выполненное задание",
-        importance = Importance.Low,
-        isDone = true,
-        createdAt = 3
-    ),
-)
-
-private val state = TodoListScreenState(
-    todoItems = list,
-    doneItemsHide = false,
-    doneItemsCount = 1,
-    failed = false,
-    loading = false,
-    errorMessage = ""
-)
-
 @Preview(showBackground = true)
-@Composable
-private fun TodoListScreenPreviewLight() {
-    TodoAppTheme {
-        Content(
-            screenState = state,
-            snackBarHostState = SnackbarHostState(),
-            onEvent = { })
-    }
-}
-
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun TodoListScreenPreviewDark() {
+private fun TodoListScreenPreview() {
+    val list = listOf(
+        TodoItem(
+            id = "6",
+            text = "Устроиться работать в пятерочку(",
+            importance = Importance.Low,
+            isDone = false,
+            createdAt = 1
+        ),
+        TodoItem(
+            id = "7",
+            text = "Устроиться работать в Яндикс)",
+            importance = Importance.High,
+            isDone = false,
+            createdAt = 2
+        ),
+        TodoItem(
+            id = "8",
+            text = "Выполненное задание",
+            importance = Importance.Low,
+            isDone = true,
+            createdAt = 3
+        ),
+    )
+
+    val state = TodoListScreenState(
+        todoItems = list,
+        doneItemsHide = false,
+        doneItemsCount = 1,
+        failed = false,
+        loading = false,
+        enabled = false,
+        errorMessage = ""
+    )
+
     TodoAppTheme {
-        Content(
-            screenState = state,
-            snackBarHostState = SnackbarHostState(),
-            onEvent = { })
+        Content(screenState = state, snackBarHostState = SnackbarHostState(), onEvent = { })
     }
 }

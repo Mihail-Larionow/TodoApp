@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -69,6 +70,7 @@ private val typography = TodoAppTypography(
     ),
     button = TextStyle(
         fontWeight = FontWeight.Bold,
+        textAlign = TextAlign.Center,
         fontSize = 14.sp
     ),
     body = TextStyle(
@@ -90,6 +92,9 @@ private val size = TodoAppSize(
     smallIcon = 20.dp
 )
 
+/**
+ * Provides application theme (colorScheme, shapes, textStyles, etc)
+ */
 @Composable
 fun TodoAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -128,7 +133,7 @@ object TodoAppTheme {
 
 @Preview
 @Composable
-private fun LightThemePreview(){
+private fun LightThemePreview() {
     Column {
         Text(
             text = "Палитра - светлая тема",
@@ -321,7 +326,7 @@ private fun DarkThemePreview() {
 @Preview(showBackground = true)
 @Composable
 private fun TextStylesPreview() {
-    Column{
+    Column {
         Text(
             text = "Large title - 32sp",
             style = typography.largeTitle,

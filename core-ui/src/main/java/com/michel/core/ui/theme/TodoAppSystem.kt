@@ -7,6 +7,9 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 
+/**
+ * Data class of application color scheme
+ */
 data class TodoAppColorScheme(
     val separator: Color,
     val overlay: Color,
@@ -25,6 +28,9 @@ data class TodoAppColorScheme(
     val elevated: Color
 )
 
+/**
+ * Data class of application text styles
+ */
 data class TodoAppTypography(
     val largeTitle: TextStyle,
     val title: TextStyle,
@@ -33,10 +39,16 @@ data class TodoAppTypography(
     val subhead: TextStyle
 )
 
+/**
+ * Data class of application shapes
+ */
 data class TodoAppShape(
     val container: Shape
 )
 
+/**
+ * Data class of application color scheme
+ */
 data class TodoAppSize(
     val toolBar: Dp,
     val textField: Dp,

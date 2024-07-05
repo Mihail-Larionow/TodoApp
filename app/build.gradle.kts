@@ -1,3 +1,6 @@
+import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -20,6 +23,19 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        val properties = Properties()
+        properties.load(project.rootProject.file("gradle.properties").inputStream())
+
+        val token = properties.getProperty("TODOAPP_TOKEN")
+        val clientId = properties.getProperty("CLIENT_ID")
+        val baseUrl = properties.getProperty("TODOAPP_BASE_URL")
+
+        manifestPlaceholders["YANDEX_CLIENT_ID"] = clientId
+
+        buildConfigField("String", "TODOAPP_TOKEN","\"$token\"")
+        buildConfigField("String", "TODOAPP_BASE_URL","\"$baseUrl\"")
+
     }
 
     buildTypes {
@@ -29,7 +45,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
         }
+    }
+    buildFeatures {
+        buildConfig = true
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -57,13 +77,16 @@ kapt {
 
 dependencies {
 
+    implementation(project(":feature-todoitemscreen"))
+    implementation(project(":feature-todolistscreen"))
+    implementation(project(":feature-authscreen"))
+    implementation(project(":core-ui"))
+
     implementation(libs.hilt.android)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(project(":feature-todoitemscreen"))
-    implementation(project(":feature-todolistscreen"))
-    implementation(project(":core-ui"))
+    implementation(libs.authsdk)
     kapt(libs.hilt.android.compiler)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

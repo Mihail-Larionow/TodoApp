@@ -1,6 +1,7 @@
 package com.michel.feature.todolistscreen
 
 import android.util.Log
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -33,19 +34,29 @@ import com.michel.feature.todolistscreen.utils.ListScreenIntent
 internal fun TodoItemModel(
     todoItem: TodoItem,
     checked: Boolean,
+    enabled: Boolean,
     onEvent: (ListScreenIntent) -> Unit
 ) {
+    val backgroundColor = animateColorAsState(
+        targetValue = if(enabled) {
+            TodoAppTheme.color.backSecondary
+        } else {
+            TodoAppTheme.color.disable
+        }, label = ""
+    )
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(
+                enabled = enabled,
                 onClick = {
                     Log.i("app", todoItem.id)
                     onEvent(ListScreenIntent.ToItemScreenIntent(todoItem.id))
                 },
             )
             .background(
-                color = TodoAppTheme.color.backSecondary
+                color = backgroundColor.value
             )
             .padding(
                 all = 16.dp
@@ -57,6 +68,7 @@ internal fun TodoItemModel(
             onCheckChanged = {
                 onEvent(ListScreenIntent.UpdateItemIntent(todoItem.copy(isDone = it)))
             },
+            enabled = enabled,
             modifier = Modifier.size(TodoAppTheme.size.smallIcon)
         )
         Spacer(
@@ -75,23 +87,25 @@ internal fun TodoItemModel(
         Column(
             modifier = Modifier.weight(1f)
         ) {
-            val textColor = if (checked) {
-                TodoAppTheme.color.tertiary
-            } else {
-                TodoAppTheme.color.primary
-            }
-
+            val textColor = animateColorAsState(
+                targetValue = if (checked || !enabled) {
+                    TodoAppTheme.color.tertiary
+                } else {
+                    TodoAppTheme.color.primary
+                }, label = ""
+            )
             val textDecoration = if (checked) {
                 TextDecoration.LineThrough
             } else {
                 TextDecoration.None
             }
+
             Text(
                 text = todoItem.text,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
                 style = TodoAppTheme.typography.body,
-                color = textColor,
+                color = textColor.value,
                 textDecoration = textDecoration,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -126,6 +140,7 @@ private fun TodoCheckbox(
     todoImportance: Importance,
     checked: Boolean,
     onCheckChanged: (Boolean) -> Unit,
+    enabled: Boolean,
     modifier: Modifier = Modifier
 ) {
 
@@ -141,6 +156,7 @@ private fun TodoCheckbox(
         onCheckedChange = { onCheckChanged(it) },
         checkedIcon = checkedIcon,
         uncheckedIcon = uncheckedIcon,
+        enabled = enabled,
         modifier = modifier
     )
 }
@@ -182,6 +198,7 @@ private fun TodoPriority(
 @Composable
 private fun TodoItemModelPreview() {
     val checked = true
+    val enabled = false
     val todoItem = TodoItem(
         id = "1",
         text = "short text but great idea",
@@ -192,9 +209,12 @@ private fun TodoItemModelPreview() {
         changedAt = 1718919593456
     )
 
-    TodoItemModel(
-        todoItem = todoItem,
-        checked = checked,
-        onEvent = { }
-    )
+    TodoAppTheme{
+        TodoItemModel(
+            todoItem = todoItem,
+            checked = checked,
+            enabled = enabled,
+            onEvent = { }
+        )
+    }
 }
