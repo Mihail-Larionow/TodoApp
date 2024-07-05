@@ -11,6 +11,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.michel.core.ui.theme.TodoAppTheme
 
+/**
+ * Custom divider function
+ */
 @Preview(showBackground = true)
 @Composable
 fun TodoDivider(

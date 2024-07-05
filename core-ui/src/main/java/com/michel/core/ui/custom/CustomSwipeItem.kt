@@ -24,6 +24,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.michel.core.ui.theme.TodoAppTheme
 
+/**
+ * Composable function that start do something after swipe
+ */
 @SuppressLint("CoroutineCreationDuringComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,7 +36,6 @@ fun SwipeItem(
     onUpdate: (Boolean) -> Unit,
     content: @Composable () -> Unit
 ) {
-
     val swipeState = rememberSwipeToDismissBoxState()
 
     SwipeToDismissBox(
@@ -116,3 +118,5 @@ fun SwipeItem(
         SwipeToDismissBoxValue.Settled -> {}
     }
 }
+
+

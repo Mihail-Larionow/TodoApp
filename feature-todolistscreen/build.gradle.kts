@@ -53,6 +53,7 @@ dependencies {
     implementation(project(":core-ui"))
     implementation(project(":core-data"))
 
+    implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.hilt.android)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)

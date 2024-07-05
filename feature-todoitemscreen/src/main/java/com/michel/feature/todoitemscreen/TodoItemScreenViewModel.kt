@@ -4,10 +4,11 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.michel.core.data.interactor.TodoItemsInteractor
 import com.michel.core.data.models.Importance
 import com.michel.core.data.models.TodoItem
 import com.michel.core.data.models.emptyTodoItem
-import com.michel.core.data.repository.IRepository
+import com.michel.core.ui.extensions.toDateText
 import com.michel.feature.todoitemscreen.utils.ItemScreenIntent
 import com.michel.feature.todoitemscreen.utils.ItemScreenSideEffect
 import com.michel.feature.todoitemscreen.utils.TodoItemScreenState
@@ -27,8 +28,8 @@ import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
-class TodoItemViewModel @Inject constructor(
-    private val repository: IRepository,
+class TodoItemScreenViewModel @Inject constructor(
+    private val interactor: TodoItemsInteractor,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -41,10 +42,12 @@ class TodoItemViewModel @Inject constructor(
             importance = todoItem.importance,
             hasDeadline = false,
             deadline = todoItem.deadline ?: Date().time,
+            deadlineDateText = (todoItem.deadline ?: Date().time).toDateText(),
             datePickerExpanded = false,
             priorityMenuExpanded = false,
-            loading = true,
+            loading = todoItemId != "none",
             failed = false,
+            enabled = todoItemId == "none",
             errorMessage = ""
         )
     )
@@ -56,10 +59,6 @@ class TodoItemViewModel @Inject constructor(
 
     private val scope = viewModelScope + CoroutineExceptionHandler { _, throwable ->
         Log.i("ui", "${throwable.message}")
-    }
-
-    init {
-        onEvent(ItemScreenIntent.GetItemInfoIntent)
     }
 
     internal fun onEvent(event: ItemScreenIntent) {
@@ -80,6 +79,7 @@ class TodoItemViewModel @Inject constructor(
             _state.update {
                 it.copy(
                     failed = true,
+                    enabled = false,
                     errorMessage = "Неизвестная ошибка"
                 )
             }
@@ -89,33 +89,35 @@ class TodoItemViewModel @Inject constructor(
     private fun getInfo() {
         _state.update {
             it.copy(
-                loading = true
+                loading = true,
+                enabled = false
             )
         }
 
         scope.launch(Dispatchers.IO) {
-            repository.getItem(todoItemId).collect { result ->
-                result.onFailure {
-                    _state.update {
-                        it.copy(
-                            loading = false,
-                            failed = true,
-                            errorMessage = "Проблемы с соединением"
-                        )
-                    }
+            val result = interactor.loadTodoItem(todoItemId)
+            result.onFailure {
+                _state.update {
+                    it.copy(
+                        loading = false,
+                        enabled = false,
+                        failed = true,
+                        errorMessage = "Проблемы с соединением"
+                    )
                 }
-                result.onSuccess { data ->
-                    todoItem = data
-                    _state.update {
-                        it.copy(
-                            loading = false,
-                            failed = false,
-                            text = todoItem.text,
-                            importance = todoItem.importance,
-                            hasDeadline = todoItem.deadline != null,
-                            deadline = todoItem.deadline ?: Date().time
-                        )
-                    }
+            }
+            result.onSuccess { data ->
+                todoItem = data
+                _state.update {
+                    it.copy(
+                        loading = false,
+                        enabled = true,
+                        failed = false,
+                        text = todoItem.text,
+                        importance = todoItem.importance,
+                        hasDeadline = todoItem.deadline != null,
+                        deadline = todoItem.deadline ?: Date().time
+                    )
                 }
             }
         }
@@ -125,7 +127,8 @@ class TodoItemViewModel @Inject constructor(
     private fun save() {
         _state.update {
             it.copy(
-                loading = true
+                loading = true,
+                enabled = false
             )
         }
 
@@ -144,20 +147,10 @@ class TodoItemViewModel @Inject constructor(
                 changedAt = Date().time
             )
 
-            repository.addOrUpdateItem(newTodoItem).collect { result ->
-                result.onFailure {
-                    _state.update {
-                        it.copy(
-                            loading = false
-                        )
-                    }
-                    _effect.emit(
-                        ItemScreenSideEffect.ShowSnackBarSideEffect("Не удалось сохранить")
-                    )
-                }
-                result.onSuccess {
-                    _effect.emit(ItemScreenSideEffect.LeaveScreenSideEffect)
-                }
+            if (todoItemId != "none") {
+                updateTodoItem(newTodoItem)
+            } else {
+                addTodoItem(newTodoItem)
             }
         }
     }
@@ -166,26 +159,25 @@ class TodoItemViewModel @Inject constructor(
     private fun delete() {
         _state.update {
             it.copy(
-                loading = true
+                loading = true,
+                enabled = false
             )
         }
 
         scope.launch(Dispatchers.IO) {
-            repository.deleteItem(todoItem.id).collect { result ->
-                result.onFailure {
-                    _state.update {
-                        it.copy(
-                            loading = false
-                        )
-                    }
-                    _effect.emit(
-                        ItemScreenSideEffect.ShowSnackBarSideEffect("Не удалось удалить")
+            val result = interactor.deleteTodoItem(todoItem)
+            result.onFailure {
+                _state.update {
+                    it.copy(
+                        loading = false,
+                        enabled = true
                     )
                 }
-                result.onSuccess {
-                    _effect.emit(ItemScreenSideEffect.LeaveScreenSideEffect)
-                }
+                _effect.emit(
+                    ItemScreenSideEffect.ShowSnackBarSideEffect("Не удалось удалить")
+                )
             }
+            _effect.emit(ItemScreenSideEffect.LeaveScreenSideEffect)
         }
     }
 
@@ -223,5 +215,37 @@ class TodoItemViewModel @Inject constructor(
         _state.update {
             it.copy(datePickerExpanded = isExpanded)
         }
+    }
+
+    private suspend fun addTodoItem(todoItem: TodoItem) {
+        val result = interactor.addTodoItem(todoItem)
+        result.onFailure {
+            _state.update {
+                it.copy(
+                    loading = false,
+                    enabled = true
+                )
+            }
+            _effect.emit(
+                ItemScreenSideEffect.ShowSnackBarSideEffect("Не удалось сохранить")
+            )
+        }
+        _effect.emit(ItemScreenSideEffect.LeaveScreenSideEffect)
+    }
+
+    private suspend fun updateTodoItem(todoItem: TodoItem) {
+        val result = interactor.updateTodoItem(todoItem)
+        result.onFailure {
+            _state.update {
+                it.copy(
+                    loading = false,
+                    enabled = true
+                )
+            }
+            _effect.emit(
+                ItemScreenSideEffect.ShowSnackBarSideEffect("Не удалось сохранить")
+            )
+        }
+        _effect.emit(ItemScreenSideEffect.LeaveScreenSideEffect)
     }
 }

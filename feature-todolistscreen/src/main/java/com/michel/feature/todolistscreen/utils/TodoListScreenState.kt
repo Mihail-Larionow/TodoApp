@@ -8,5 +8,6 @@ data class TodoListScreenState(
     val doneItemsCount: Int,
     val failed: Boolean,
     val loading: Boolean,
+    val enabled: Boolean,
     val errorMessage: String
 )

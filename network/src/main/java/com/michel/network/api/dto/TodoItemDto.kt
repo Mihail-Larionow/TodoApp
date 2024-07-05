@@ -5,25 +5,21 @@ import java.util.Date
 data class TodoItemDto(
     val id: String,
     val text: String,
-    val importanceDto: ImportanceDto,
+    val importance: String,
     val deadline: Long? = null,
-    val isDone: Boolean,
-    val createdAt: Long,
-    val changedAt: Long? = null
+    val done: Boolean,
+    val color: String? = null,
+    val changed_at: Long? = null,
+    val created_at: Long,
+    val last_updated_by: String = "device-id"
 )
 
-sealed class ImportanceDto {
-    data object High : ImportanceDto()
-    data object Standard : ImportanceDto()
-    data object Low : ImportanceDto()
-}
-
-fun emptyTodoItemEntity(): TodoItemDto {
+fun emptyTodoItemDto(): TodoItemDto {
     return TodoItemDto(
         id = "",
         text = "",
-        importanceDto = ImportanceDto.Standard,
-        isDone = false,
-        createdAt = Date().time
+        importance = "basic",
+        done = false,
+        created_at = Date().time
     )
 }

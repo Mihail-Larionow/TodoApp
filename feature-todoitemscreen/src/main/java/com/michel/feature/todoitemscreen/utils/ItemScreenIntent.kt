@@ -2,6 +2,9 @@ package com.michel.feature.todoitemscreen.utils
 
 import com.michel.core.data.models.Importance
 
+/**
+ * Intent types of item screen
+ */
 internal sealed interface ItemScreenIntent {
     data object GetItemInfoIntent : ItemScreenIntent
     data object DeleteIntent : ItemScreenIntent
