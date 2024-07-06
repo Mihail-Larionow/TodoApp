@@ -209,6 +209,7 @@ internal class TodoListScreenViewModel @Inject constructor(
                 updateCounter()
                 showSnackBar("Синхронизация не удалась")
             }
+            result.onSuccess { _state.update { it.copy(enabled = true, failed = false) } }
         }
     }
 
@@ -223,7 +224,7 @@ internal class TodoListScreenViewModel @Inject constructor(
     private suspend fun handleConnectionChanges(state: Boolean) {
         Log.i("ui", "changed")
         if (state && !wasConnected) {
-            loadItems()
+            updateItems(todoItems)
             wasConnected = true
             showSnackBar("Соединение установлено")
         } else if (!state && wasConnected) {
