@@ -36,14 +36,17 @@ import kotlinx.coroutines.plus
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
+/**
+ * ViewModel for items list screen
+ */
 @HiltViewModel
 internal class TodoListScreenViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val interactor: TodoItemsInteractor
 ) : ViewModel() {
 
-    private var wasConnected = true
     private val connectivityReceiver = ConnectivityReceiver()
+    private var wasConnected = true
 
     private var todoItems: MutableList<TodoItem> = mutableListOf()
 
@@ -58,10 +61,10 @@ internal class TodoListScreenViewModel @Inject constructor(
             errorMessage = ""
         )
     )
-    val state: StateFlow<TodoListScreenState> = _state.asStateFlow()
+    internal val state: StateFlow<TodoListScreenState> = _state.asStateFlow()
 
     private val _effect: MutableSharedFlow<ListScreenSideEffect> = MutableSharedFlow()
-    val effect: SharedFlow<ListScreenSideEffect> = _effect.asSharedFlow()
+    internal val effect: SharedFlow<ListScreenSideEffect> = _effect.asSharedFlow()
 
     private val scope = viewModelScope + CoroutineExceptionHandler { _, throwable ->
         Log.i("ui", "${throwable.message}")
@@ -73,18 +76,18 @@ internal class TodoListScreenViewModel @Inject constructor(
         startDataObserving()
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        stopConnectionObserving(context)
+    }
+
+    //
     internal fun onEvent(event: ListScreenIntent) {
         try {
             handleEvent(event)
         } catch (_: Exception) {
-            onFailure()
+            onGetAllFail("Неизвестная ошибка")
         }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        stopConnectionObserving(context)
-        Log.i("ui", "stopped")
     }
 
     // Запуск WorkManager
@@ -104,9 +107,6 @@ internal class TodoListScreenViewModel @Inject constructor(
                 PeriodicWorkRequest.MIN_PERIODIC_INTERVAL_MILLIS,
                 TimeUnit.MILLISECONDS
             )
-            .addTag(
-                "TodoAppWork" + System.currentTimeMillis()
-            )
             .build()
 
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
@@ -116,39 +116,33 @@ internal class TodoListScreenViewModel @Inject constructor(
         )
     }
 
+    // Запуск отслеживания интернет соединения
     private fun startConnectionObserving(context: Context) {
         val filter = IntentFilter("android.net.conn.CONNECTIVITY_CHANGE")
         context.registerReceiver(connectivityReceiver, filter)
-
-        scope.launch(Dispatchers.IO) {
-            collectConnection()
-        }
+        scope.launch(Dispatchers.IO) { collectConnection() }
     }
 
+    // Запуск отслеживания данных
     private fun startDataObserving() {
-        scope.launch(Dispatchers.IO) {
-            collectData()
-        }
+        scope.launch(Dispatchers.IO) { collectData() }
     }
 
+    // Остановка отслеживания интернет соединения
     private fun stopConnectionObserving(context: Context) {
         context.unregisterReceiver(connectivityReceiver)
     }
 
-    //
+    // Подписка на изменение интернета
     private suspend fun collectConnection() {
-        connectivityReceiver.connection.collect {
-            handleConnectionChanges(it)
-        }
+        connectivityReceiver.connection.collect { handleConnectionChanges(it) }
     }
 
-    // Подписывается на получение данных
+    // Подписка на получение данных
     private suspend fun collectData() {
         interactor.todoItemsList.collect { list ->
             todoItems = list.toMutableList()
-            _state.update {
-                it.copy(todoItems = todoItems)
-            }
+            _state.update { it.copy(todoItems = todoItems) }
             updateCounter()
         }
     }
@@ -156,20 +150,12 @@ internal class TodoListScreenViewModel @Inject constructor(
     // Обновляет счетчик выполненных тасок
     private fun updateCounter() {
         val doneItemsCount = todoItems.count { it.isDone }
-        _state.update {
-            it.copy(
-                doneItemsCount = doneItemsCount,
-            )
-        }
+        _state.update { it.copy(doneItemsCount = doneItemsCount) }
     }
 
     // Обновляет состояние чекбокса глазика
     private fun updateVisibility(isNotVisible: Boolean) {
-        _state.update {
-            it.copy(
-                doneItemsHide = isNotVisible
-            )
-        }
+        _state.update { it.copy(doneItemsHide = isNotVisible) }
     }
 
     // Достает все таски
@@ -184,79 +170,34 @@ internal class TodoListScreenViewModel @Inject constructor(
 
         scope.launch(Dispatchers.IO) {
             val result = interactor.loadTodoItems()
-            result.onFailure {
-                _state.update {
-                    it.copy(
-                        loading = false,
-                        enabled = true,
-                        failed = true,
-                        errorMessage = "Проблемы с соединением"
-                    )
-                }
-            }
-            result.onSuccess {
-                _state.update {
-                    it.copy(
-                        loading = false,
-                        enabled = true,
-                        failed = false,
-                    )
-                }
-                updateCounter()
-            }
+            result.onFailure { onGetAllFail("Не удалось получить данные") }
+            result.onSuccess { onGetAllSuccess() }
         }
     }
 
     // Обновляет состояние таски
     private fun updateItem(updatedItem: TodoItem) {
-        _state.update {
-            it.copy(
-                enabled = false,
-            )
-        }
-
+        _state.update { it.copy(enabled = false) }
         scope.launch(Dispatchers.IO) {
             val result = interactor.updateTodoItem(updatedItem)
-
             updateCounter()
-
             result.onFailure {
-                updateCounter()
-                _effect.emit(
-                    ListScreenSideEffect.ShowSnackBarSideEffect("Не удалось сохранить")
-                )
+                showSnackBar("Не удалось сохранить на сервере")
             }
-            _state.update {
-                it.copy(
-                    enabled = true,
-                )
-            }
+            _state.update { it.copy(enabled = true) }
         }
     }
 
     // Удаляет таску
     private fun deleteItem(deletedItem: TodoItem) {
-        _state.update {
-            it.copy(
-                enabled = false,
-            )
-        }
-
+        _state.update { it.copy(enabled = false) }
         updateCounter()
-
         scope.launch(Dispatchers.IO) {
             val result = interactor.deleteTodoItem(deletedItem)
             result.onFailure {
-                updateCounter()
-                _effect.emit(
-                    ListScreenSideEffect.ShowSnackBarSideEffect("Не удалось удалить")
-                )
+                showSnackBar("Не удалось удалить на сервере")
             }
-            _state.update {
-                it.copy(
-                    enabled = true,
-                )
-            }
+            _state.update { it.copy(enabled = true) }
         }
     }
 
@@ -266,23 +207,28 @@ internal class TodoListScreenViewModel @Inject constructor(
             val result = interactor.updateAllTodoItems(items)
             result.onFailure {
                 updateCounter()
-                _effect.emit(
-                    ListScreenSideEffect.ShowSnackBarSideEffect("Синхронизация не удалась")
-                )
+                showSnackBar("Синхронизация не удалась")
             }
+        }
+    }
+
+    // Перейти на экрана TodoItem с id
+    private fun leaveScreen(itemId: String) {
+        scope.launch(Dispatchers.IO) {
+            _effect.emit(ListScreenSideEffect.LeaveScreenSideEffect(itemId))
         }
     }
 
     // Обрабатывает изменение интернет соединения
     private suspend fun handleConnectionChanges(state: Boolean) {
         Log.i("ui", "changed")
-        if(state && !wasConnected) {
+        if (state && !wasConnected) {
             loadItems()
             wasConnected = true
-            _effect.emit(ListScreenSideEffect.ShowSnackBarSideEffect("Подключен"))
-        } else if(!state && wasConnected) {
+            showSnackBar("Соединение установлено")
+        } else if (!state && wasConnected) {
             wasConnected = false
-            _effect.emit(ListScreenSideEffect.ShowSnackBarSideEffect("Отключен"))
+            showSnackBar("Соединение потеряно")
         }
     }
 
@@ -294,18 +240,36 @@ internal class TodoListScreenViewModel @Inject constructor(
             is ListScreenIntent.DeleteItemIntent -> deleteItem(event.item)
             is ListScreenIntent.UpdateItemIntent -> updateItem(event.item)
             is ListScreenIntent.UpdateItemsIntent -> updateItems(event.items)
-            is ToItemScreenIntent -> {}
+            is ToItemScreenIntent -> leaveScreen(event.id)
         }
     }
 
-    // Обработка ошбики
-    private fun onFailure() {
+    private suspend fun showSnackBar(message: String) {
+        _effect.emit(ListScreenSideEffect.ShowSnackBarSideEffect(message))
+    }
+
+    // Обработка ошбики при получении списка
+    private fun onGetAllFail(message: String) {
         _state.update {
             it.copy(
+                loading = false,
                 failed = true,
                 enabled = false,
-                errorMessage = "Неизвестная ошибка"
+                errorMessage = message
             )
         }
     }
+
+    // Обработка удачного получения списка
+    private fun onGetAllSuccess() {
+        _state.update {
+            it.copy(
+                loading = false,
+                enabled = true,
+                failed = false
+            )
+        }
+        updateCounter()
+    }
+
 }

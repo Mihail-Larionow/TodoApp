@@ -19,9 +19,9 @@ import com.michel.core.ui.theme.TodoAppTheme
 @Composable
 fun CustomPullToRefreshItem(
     modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
+    content: @Composable () -> Unit
 ) {
     val pullToRefreshState = rememberPullToRefreshState()
     Box(

@@ -1,6 +1,7 @@
 package com.michel.feature.todolistscreen
 
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,10 +27,13 @@ import com.michel.core.data.models.Importance
 import com.michel.core.data.models.TodoItem
 import com.michel.core.ui.R
 import com.michel.core.ui.custom.ImageCheckbox
-import com.michel.core.ui.theme.TodoAppTheme
 import com.michel.core.ui.extensions.toDateText
+import com.michel.core.ui.theme.TodoAppTheme
 import com.michel.feature.todolistscreen.utils.ListScreenIntent
 
+/**
+ * UI model of TodoItem
+ */
 @Composable
 internal fun TodoItemModel(
     todoItem: TodoItem,
@@ -38,7 +42,7 @@ internal fun TodoItemModel(
     onEvent: (ListScreenIntent) -> Unit
 ) {
     val backgroundColor = animateColorAsState(
-        targetValue = if(enabled) {
+        targetValue = if (enabled) {
             TodoAppTheme.color.backSecondary
         } else {
             TodoAppTheme.color.disable
@@ -51,86 +55,99 @@ internal fun TodoItemModel(
             .clickable(
                 enabled = enabled,
                 onClick = {
-                    Log.i("app", todoItem.id)
+                    Log.i("ui", todoItem.id)
                     onEvent(ListScreenIntent.ToItemScreenIntent(todoItem.id))
                 },
             )
-            .background(
-                color = backgroundColor.value
-            )
-            .padding(
-                all = 16.dp
-            )
+            .background(color = backgroundColor.value)
+            .padding(all = 16.dp)
     ) {
         TodoCheckbox(
             todoImportance = todoItem.importance,
             checked = checked,
+            enabled = enabled,
             onCheckChanged = {
                 onEvent(ListScreenIntent.UpdateItemIntent(todoItem.copy(isDone = it)))
             },
-            enabled = enabled,
             modifier = Modifier.size(TodoAppTheme.size.smallIcon)
         )
-        Spacer(
-            modifier = Modifier.width(16.dp)
+        Spacer(modifier = Modifier.width(12.dp))
+        AnimatedImportance(
+            visible = !checked,
+            importance = todoItem.importance,
+            modifier = Modifier.size(size = TodoAppTheme.size.smallIcon)
         )
-
-        if (!checked) {
-            TodoPriority(
-                importance = todoItem.importance,
-                modifier = Modifier.size(
-                    size = TodoAppTheme.size.smallIcon
-                )
-            )
-        }
-
-        Column(
+        Spacer(modifier = Modifier.width(4.dp))
+        TodoText(
+            todoItem = todoItem,
+            checked = checked,
+            enabled = enabled,
             modifier = Modifier.weight(1f)
-        ) {
-            val textColor = animateColorAsState(
-                targetValue = if (checked || !enabled) {
-                    TodoAppTheme.color.tertiary
-                } else {
-                    TodoAppTheme.color.primary
-                }, label = ""
-            )
-            val textDecoration = if (checked) {
-                TextDecoration.LineThrough
-            } else {
-                TextDecoration.None
-            }
-
-            Text(
-                text = todoItem.text,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis,
-                style = TodoAppTheme.typography.body,
-                color = textColor.value,
-                textDecoration = textDecoration,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            val deadline = todoItem.deadline
-
-            if (deadline != null) {
-                Spacer(
-                    modifier = Modifier.height(8.dp)
-                )
-                Text(
-                    text = deadline.toDateText(),
-                    style = TodoAppTheme.typography.subhead,
-                    color = TodoAppTheme.color.tertiary
-                )
-            }
-        }
-        Spacer(
-            modifier = Modifier.width(16.dp)
         )
+        Spacer(modifier = Modifier.width(16.dp))
         Icon(
             painter = painterResource(R.drawable.ic_info),
             contentDescription = stringResource(R.string.infoIconContentDescription),
             tint = TodoAppTheme.color.tertiary,
             modifier = Modifier.size(TodoAppTheme.size.smallIcon),
+        )
+    }
+}
+
+@Composable
+private fun TodoText(
+    modifier: Modifier = Modifier,
+    todoItem: TodoItem,
+    checked: Boolean,
+    enabled: Boolean
+) {
+    Column(
+        modifier = modifier
+    ) {
+        val textColor = animateColorAsState(
+            targetValue = if (checked || !enabled) {
+                TodoAppTheme.color.tertiary
+            } else {
+                TodoAppTheme.color.primary
+            }, label = ""
+        )
+
+        val textDecoration = if (checked) {
+            TextDecoration.LineThrough
+        } else {
+            TextDecoration.None
+        }
+
+        Text(
+            text = todoItem.text,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
+            style = TodoAppTheme.typography.body,
+            color = textColor.value,
+            textDecoration = textDecoration,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        AnimatedDeadline(
+            visible = todoItem.deadline != null,
+            deadline = todoItem.deadline.toDateText()
+        )
+    }
+}
+
+@Composable
+private fun AnimatedDeadline(
+    visible: Boolean,
+    deadline: String
+) {
+    AnimatedVisibility(visible = visible) {
+        Spacer(
+            modifier = Modifier.height(8.dp)
+        )
+        Text(
+            text = deadline,
+            style = TodoAppTheme.typography.subhead,
+            color = TodoAppTheme.color.tertiary
         )
     }
 }
@@ -143,14 +160,12 @@ private fun TodoCheckbox(
     enabled: Boolean,
     modifier: Modifier = Modifier
 ) {
-
     val checkedIcon = painterResource(R.drawable.ic_checked)
     val uncheckedIcon = if (todoImportance == Importance.High) {
         painterResource(R.drawable.ic_unchecked_high)
     } else {
         painterResource(R.drawable.ic_unchecked)
     }
-
     ImageCheckbox(
         checked = checked,
         onCheckedChange = { onCheckChanged(it) },
@@ -162,54 +177,66 @@ private fun TodoCheckbox(
 }
 
 @Composable
-private fun TodoPriority(
+private fun AnimatedImportance(
     modifier: Modifier = Modifier,
+    visible: Boolean,
     importance: Importance
 ) {
-    when (importance) {
-        Importance.High -> {
-            Icon(
-                painter = painterResource(R.drawable.ic_high_priority),
-                contentDescription = stringResource(R.string.priorityIconContentDescription),
-                tint = TodoAppTheme.color.red,
-                modifier = modifier
-            )
-            Spacer(
-                modifier = Modifier.width(4.dp)
-            )
-        }
-
-        Importance.Standard -> {}
-        Importance.Low -> {
-            Icon(
-                painter = painterResource(R.drawable.ic_low_priority),
-                contentDescription = stringResource(R.string.priorityIconContentDescription),
-                tint = TodoAppTheme.color.gray,
-                modifier = modifier
-            )
-            Spacer(
-                modifier = Modifier.width(4.dp)
-            )
+    AnimatedVisibility(visible = visible) {
+        when (importance) {
+            Importance.High -> HighImportance(modifier = modifier)
+            Importance.Standard -> {}
+            Importance.Low -> LowImportance(modifier = modifier)
         }
     }
+}
+
+@Composable
+private fun HighImportance(
+    modifier: Modifier = Modifier
+) {
+    Icon(
+        painter = painterResource(R.drawable.ic_high_priority),
+        contentDescription = stringResource(R.string.priorityIconContentDescription),
+        tint = TodoAppTheme.color.red,
+        modifier = modifier
+    )
+    Spacer(
+        modifier = Modifier.width(4.dp)
+    )
+}
+
+@Composable
+private fun LowImportance(
+    modifier: Modifier = Modifier
+) {
+    Icon(
+        painter = painterResource(R.drawable.ic_low_priority),
+        contentDescription = stringResource(R.string.priorityIconContentDescription),
+        tint = TodoAppTheme.color.gray,
+        modifier = modifier
+    )
+    Spacer(
+        modifier = Modifier.width(4.dp)
+    )
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun TodoItemModelPreview() {
-    val checked = true
-    val enabled = false
+    val checked = false
+    val enabled = true
     val todoItem = TodoItem(
         id = "1",
         text = "short text but great idea",
-        importance = Importance.Standard,
-        isDone = true,
+        importance = Importance.High,
+        isDone = checked,
         deadline = 1718919593456,
         createdAt = 1718919593456,
         changedAt = 1718919593456
     )
 
-    TodoAppTheme{
+    TodoAppTheme {
         TodoItemModel(
             todoItem = todoItem,
             checked = checked,

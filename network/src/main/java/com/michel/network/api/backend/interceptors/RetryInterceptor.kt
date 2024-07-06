@@ -4,7 +4,9 @@ import android.util.Log
 import okhttp3.Interceptor
 import okhttp3.Response
 
-const val MAX_COUNT_OF_RETRIES = 2
+/**
+ * Retries request on error (didn't work)
+ */
 internal class RetryInterceptor: Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         try{
