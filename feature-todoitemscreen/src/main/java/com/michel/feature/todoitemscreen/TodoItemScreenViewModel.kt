@@ -186,7 +186,7 @@ internal class TodoItemScreenViewModel @Inject constructor(
 
     // Обработка ошибки
     private suspend fun onFail(message: String) {
-        _state.update { it.copy(loading = false, enabled = true) }
+        _state.update { it.copy(loading = false, enabled = false) }
         _effect.emit(ItemScreenSideEffect.ShowSnackBarSideEffect(message))
     }
 

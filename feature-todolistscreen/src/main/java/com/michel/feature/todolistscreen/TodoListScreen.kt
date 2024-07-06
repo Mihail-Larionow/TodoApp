@@ -153,7 +153,7 @@ private fun Content(
                 .padding(end = 16.dp, bottom = 16.dp)
         )
         AnimatedVisibility(
-            visible = !screenState.loading && screenState.failed,
+            visible = !screenState.loading && screenState.failed && screenState.todoItems.isEmpty(),
             enter = scaleIn(),
             exit = scaleOut(),
             modifier = Modifier.align(Alignment.Center)
@@ -486,8 +486,8 @@ private suspend fun collectSideEffects(
 ) {
     viewModel.effect.collect { effect ->
         when (effect) {
-            is ListScreenSideEffect.ShowSnackBarSideEffect -> snackBarHostState.showSnackbar(effect.message)
             is ListScreenSideEffect.LeaveScreenSideEffect -> navigate(effect.id)
+            is ListScreenSideEffect.ShowSnackBarSideEffect -> snackBarHostState.showSnackbar(effect.message)
         }
     }
 }
