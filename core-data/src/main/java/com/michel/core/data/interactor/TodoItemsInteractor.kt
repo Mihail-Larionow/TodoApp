@@ -25,7 +25,6 @@ class TodoItemsInteractor @Inject constructor(
     suspend fun loadTodoItems(): Result<List<TodoItem>> {
         return try {
             val items = remote.getAll()
-            local.clearTable()
             items.forEach { local.addOrUpdate(it) }
             Result.success(items)
         } catch (exception: CancellationException) {
