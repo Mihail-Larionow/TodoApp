@@ -2,21 +2,20 @@ package com.michel.network.api.backend
 
 import android.util.Log
 import com.michel.network.api.backend.interceptors.HeaderInterceptor
-import com.michel.network.api.backend.interceptors.RetryInterceptor
 import com.michel.network.api.backend.retrofit.RetrofitApi
-import com.michel.network.api.dto.ElementDto
-import com.michel.network.api.dto.ElementListDto
+import com.michel.network.api.dto.SingleTodoItemDto
+import com.michel.network.api.dto.ListOfElementsDto
 import com.michel.network.api.dto.TodoItemDto
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import okio.Timeout
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Named
-import kotlin.time.Duration.Companion.milliseconds
 
+/**
+ * Implements logic to work with a server
+ */
 class TodoItemsApi @Inject constructor(
     @Named("URL") private val baseUrl: String
 ) {
@@ -46,7 +45,6 @@ class TodoItemsApi @Inject constructor(
     // Получить все таски с бекенда
     suspend fun getAll(): List<TodoItemDto> {
         val result = api.getItemsList()
-        Log.i("backend", "$result")
         revision = result.revision
         return result.list
     }
@@ -54,7 +52,6 @@ class TodoItemsApi @Inject constructor(
     // Получить одну таску по айди
     suspend fun getItem(id: String): TodoItemDto {
         val result = api.getItem(id)
-        Log.i("backend", "$result")
         revision = result.revision
         return result.element
     }
@@ -70,7 +67,7 @@ class TodoItemsApi @Inject constructor(
     // Обновить таску
     suspend fun updateItem(todoItem: TodoItemDto): TodoItemDto {
         val result = api.updateItem(
-            element = ElementDto(todoItem),
+            element = SingleTodoItemDto(todoItem),
             id = todoItem.id,
             revision = revision
         )
@@ -81,7 +78,7 @@ class TodoItemsApi @Inject constructor(
 
     // Добавить таску
     suspend fun addItem(todoItem: TodoItemDto): TodoItemDto {
-        val result = api.addItem(element = ElementDto(todoItem), revision = revision)
+        val result = api.addItem(element = SingleTodoItemDto(todoItem), revision = revision)
         Log.i("backend", "$result")
         revision = result.revision
         return result.element
@@ -89,7 +86,7 @@ class TodoItemsApi @Inject constructor(
 
     // Добавить таску
     suspend fun updateAll(todoItems: List<TodoItemDto>): List<TodoItemDto> {
-        val list = ElementListDto(todoItems)
+        val list = ListOfElementsDto(todoItems)
         val result = api.updateItemsList(list = list, revision = revision)
         Log.i("backend", "$result")
         revision = result.revision

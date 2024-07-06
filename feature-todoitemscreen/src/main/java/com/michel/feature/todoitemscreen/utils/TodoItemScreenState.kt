@@ -16,5 +16,6 @@ data class TodoItemScreenState(
     val loading: Boolean,
     val failed: Boolean,
     val enabled: Boolean,
-    val errorMessage: String
+    val errorMessage: String,
+    val deleteButtonEnabled: Boolean
 )

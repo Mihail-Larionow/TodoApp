@@ -1,7 +1,8 @@
 package com.michel.network.api.dto
 
-import java.util.Date
-
+/**
+ * Data class TodoItem to work with a server
+ */
 data class TodoItemDto(
     val id: String,
     val text: String,
@@ -13,13 +14,3 @@ data class TodoItemDto(
     val created_at: Long,
     val last_updated_by: String = "device-id"
 )
-
-fun emptyTodoItemDto(): TodoItemDto {
-    return TodoItemDto(
-        id = "",
-        text = "",
-        importance = "basic",
-        done = false,
-        created_at = Date().time
-    )
-}

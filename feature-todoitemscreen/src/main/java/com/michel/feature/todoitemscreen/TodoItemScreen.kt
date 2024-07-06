@@ -1,14 +1,10 @@
 package com.michel.feature.todoitemscreen
 
 import android.content.res.Configuration
-import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,8 +24,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -37,9 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
@@ -51,7 +43,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.michel.core.data.models.Importance
 import com.michel.core.ui.custom.CustomDatePicker
-import com.michel.core.ui.custom.CustomPullToRefreshItem
+import com.michel.core.ui.custom.CustomSwitch
 import com.michel.core.ui.custom.CustomTextField
 import com.michel.core.ui.custom.TodoDivider
 import com.michel.core.ui.extensions.bottomShadow
@@ -64,13 +56,14 @@ import java.util.Date
 
 private val TOP_BAR_HEIGHT = 56.dp
 
+/**
+ * Contains UI implementation of item screen
+ */
 @Composable
 fun TodoItemScreen(navigate: () -> Unit) {
-
     val viewModel: TodoItemScreenViewModel = hiltViewModel()
-    val screenState by viewModel.state.collectAsStateWithLifecycle()
-
     val snackBarHostState = remember { SnackbarHostState() }
+    val screenState by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         collectSideEffects(
@@ -133,7 +126,8 @@ private fun Content(
     Body(
         listState = listState,
         screenState = screenState,
-        onEvent = onEvent
+        onEvent = onEvent,
+        modifier = modifier
     )
 
     AnimatedVisibility(visible = screenState.failed) {
@@ -196,18 +190,16 @@ private fun Header(
 
 @Composable
 private fun Body(
+    modifier: Modifier = Modifier,
     listState: LazyListState,
     screenState: TodoItemScreenState,
     onEvent: (ItemScreenIntent) -> Unit
 ) {
-
     LazyColumn(
         state = listState,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
-            .background(
-                color = TodoAppTheme.color.backPrimary
-            )
+            .background(color = TodoAppTheme.color.backPrimary)
     ) {
         item {
             CustomTextField(
@@ -217,74 +209,32 @@ private fun Body(
                 onValueChanged = { onEvent(ItemScreenIntent.SetTextIntent(it)) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(
-                        all = 16.dp
-                    )
+                    .padding(all = 16.dp)
             )
         }
         item {
-            PriorityField(
+            ImportanceField(
                 screenState = screenState,
                 onEvent = onEvent,
                 modifier = Modifier.padding(
                     all = 16.dp
                 )
             )
-            TodoDivider(
-                modifier = Modifier.padding(
-                    all = 16.dp
-                )
-            )
+            TodoDivider(modifier = Modifier.padding(all = 16.dp))
         }
-
         item {
             DeadlineField(
-                date = screenState.deadlineDateText,
                 screenState = screenState,
                 onEvent = onEvent,
-                modifier = Modifier.padding(
-                    all = 16.dp
-                )
+                modifier = Modifier.padding(all = 16.dp)
             )
             TodoDivider()
         }
-
         item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(
-                        enabled = screenState.text != "" && screenState.enabled,
-                        onClick = { onEvent(ItemScreenIntent.DeleteIntent) }
-                    )
-                    .padding(
-                        all = 16.dp
-                    )
-            ) {
-                val buttonColor = if (screenState.text == "" || !screenState.enabled) {
-                    TodoAppTheme.color.disable
-                } else {
-                    TodoAppTheme.color.red
-                }
-
-                Icon(
-                    painter = painterResource(com.michel.core.ui.R.drawable.ic_delete),
-                    tint = buttonColor,
-                    contentDescription = stringResource(com.michel.core.ui.R.string.deleteContentDescription),
-                    modifier = Modifier
-                        .size(TodoAppTheme.size.standardIcon)
-                        .align(Alignment.CenterVertically)
-                )
-                Spacer(
-                    modifier = Modifier.width(16.dp)
-                )
-                Text(
-                    text = stringResource(com.michel.core.ui.R.string.deleteUpperCase),
-                    color = buttonColor,
-                    style = TodoAppTheme.typography.button,
-                    modifier = Modifier.align(Alignment.CenterVertically)
-                )
-            }
+            DeleteButton(
+                screenState = screenState,
+                onClick = onEvent
+            )
         }
     }
 }
@@ -346,7 +296,7 @@ private fun TodoDatePicker(
 }
 
 @Composable
-private fun PriorityField(
+private fun ImportanceField(
     modifier: Modifier = Modifier,
     screenState: TodoItemScreenState,
     onEvent: (ItemScreenIntent) -> Unit
@@ -356,7 +306,6 @@ private fun PriorityField(
         Importance.Low,
         Importance.High
     )
-
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -372,7 +321,6 @@ private fun PriorityField(
                 TodoAppTheme.color.disable
             }, label = ""
         )
-
         Text(
             text = stringResource(com.michel.core.ui.R.string.priority),
             color = headColor.value,
@@ -381,7 +329,6 @@ private fun PriorityField(
         Spacer(
             modifier = Modifier.height(4.dp)
         )
-
         val importanceColor = animateColorAsState(
             targetValue = if (!screenState.enabled) {
                 TodoAppTheme.color.disable
@@ -391,7 +338,6 @@ private fun PriorityField(
                 TodoAppTheme.color.tertiary
             }, label = ""
         )
-
         Text(
             text = screenState.importance.text,
             color = importanceColor.value,
@@ -405,97 +351,153 @@ private fun PriorityField(
                 color = TodoAppTheme.color.elevated
             )
         ) {
-            options.forEach {
-
-                val optionTextColor = if (it == Importance.High) {
-                    TodoAppTheme.color.red
-                } else {
-                    TodoAppTheme.color.primary
-                }
-
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            text = it.text,
-                            color = optionTextColor,
-                            style = TodoAppTheme.typography.body
-                        )
-                    },
-                    onClick = {
-                        onEvent(ItemScreenIntent.SetPriorityIntent(it))
-                        onEvent(ItemScreenIntent.SetPriorityMenuStateIntent(false))
-                    }
-                )
-            }
+            ImportanceItems(
+                options = options,
+                onEvent = onEvent
+            )
         }
+    }
+}
+
+@Composable
+private fun ImportanceItems(
+    options: List<Importance>,
+    onEvent: (ItemScreenIntent) -> Unit
+) {
+    options.forEach {
+        val optionTextColor = if (it == Importance.High) {
+            TodoAppTheme.color.red
+        } else {
+            TodoAppTheme.color.primary
+        }
+
+        DropdownMenuItem(
+            text = {
+                Text(
+                    text = it.text,
+                    color = optionTextColor,
+                    style = TodoAppTheme.typography.body
+                )
+            },
+            onClick = {
+                onEvent(ItemScreenIntent.SetPriorityIntent(it))
+                onEvent(ItemScreenIntent.SetPriorityMenuStateIntent(false))
+            }
+        )
     }
 }
 
 @Composable
 private fun DeadlineField(
     modifier: Modifier = Modifier,
-    date: String,
     screenState: TodoItemScreenState,
     onEvent: (ItemScreenIntent) -> Unit
 ) {
     Row(
         modifier = modifier
     ) {
-        val headColor = animateColorAsState(
-            targetValue = if (screenState.enabled) {
-                TodoAppTheme.color.primary
-            } else {
-                TodoAppTheme.color.disable
-            }, label = ""
+        DeadlineColumn(
+            screenState = screenState,
+            onEvent = onEvent
         )
-        val subheadColor = animateColorAsState(
-            targetValue = if (screenState.enabled) {
-                TodoAppTheme.color.blue
-            } else {
-                TodoAppTheme.color.disable
-            }, label = ""
-        )
-
-
-        Column {
-            Text(
-                text = stringResource(com.michel.core.ui.R.string.do_before),
-                color = headColor.value,
-                style = TodoAppTheme.typography.body
-            )
-            if (screenState.hasDeadline) {
-                Spacer(
-                    modifier = Modifier.height(4.dp)
-                )
-                Text(
-                    text = date,
-                    color = subheadColor.value,
-                    style = TodoAppTheme.typography.subhead,
-                    modifier = Modifier.clickable {
-                        onEvent(ItemScreenIntent.SetDatePickerStateIntent(true))
-                    }
-                )
-            }
-        }
         Spacer(
             modifier = Modifier.weight(1f)
         )
-        Switch(
-            checked = screenState.hasDeadline,
+        CustomSwitch(
+            hasDeadline = screenState.hasDeadline,
             enabled = screenState.enabled,
-            onCheckedChange = { onEvent(ItemScreenIntent.SetDeadlineStateIntent(it)) },
-            colors = SwitchDefaults.colors(
-                checkedIconColor = TodoAppTheme.color.blue,
-                checkedThumbColor = TodoAppTheme.color.blue,
-                checkedTrackColor = TodoAppTheme.color.blue.copy(
-                    alpha = 0.5f
-                ),
-                checkedBorderColor = TodoAppTheme.color.blue,
-                uncheckedIconColor = TodoAppTheme.color.elevated,
-                uncheckedThumbColor = TodoAppTheme.color.elevated,
-                uncheckedTrackColor = TodoAppTheme.color.overlay,
-                uncheckedBorderColor = TodoAppTheme.color.overlay
-            ),
+            onCheckChange = { onEvent(ItemScreenIntent.SetDeadlineStateIntent(it)) }
+        )
+    }
+}
+
+@Composable
+private fun DeadlineColumn(
+    screenState: TodoItemScreenState,
+    onEvent: (ItemScreenIntent) -> Unit
+) {
+    val headColor = animateColorAsState(
+        targetValue = if (screenState.enabled) {
+            TodoAppTheme.color.primary
+        } else {
+            TodoAppTheme.color.disable
+        }, label = ""
+    )
+    Column {
+        Text(
+            text = stringResource(com.michel.core.ui.R.string.do_before),
+            color = headColor.value,
+            style = TodoAppTheme.typography.body
+        )
+        AnimatedDeadlineText(
+            screenState = screenState,
+            onEvent = onEvent
+        )
+    }
+}
+
+@Composable
+private fun AnimatedDeadlineText(
+    screenState: TodoItemScreenState,
+    onEvent: (ItemScreenIntent) -> Unit
+) {
+    val subheadColor = animateColorAsState(
+        targetValue = if (screenState.enabled) {
+            TodoAppTheme.color.blue
+        } else {
+            TodoAppTheme.color.disable
+        }, label = ""
+    )
+    AnimatedVisibility(visible = screenState.hasDeadline) {
+        Spacer(
+            modifier = Modifier.height(4.dp)
+        )
+        Text(
+            text = screenState.deadlineDateText,
+            color = subheadColor.value,
+            style = TodoAppTheme.typography.subhead,
+            modifier = Modifier.clickable(
+                enabled = screenState.enabled,
+                onClick = { onEvent(ItemScreenIntent.SetDatePickerStateIntent(true)) }
+            )
+        )
+    }
+}
+
+@Composable
+private fun DeleteButton(
+    screenState: TodoItemScreenState,
+    onClick: (ItemScreenIntent) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                enabled = screenState.text != "" && screenState.enabled && screenState.deleteButtonEnabled,
+                onClick = { onClick(ItemScreenIntent.DeleteIntent) }
+            )
+            .padding(all = 16.dp)
+    ) {
+        val buttonColor =
+            if (screenState.text == "" || !screenState.enabled || !screenState.deleteButtonEnabled) {
+                TodoAppTheme.color.disable
+            } else {
+                TodoAppTheme.color.red
+            }
+        Icon(
+            painter = painterResource(com.michel.core.ui.R.drawable.ic_delete),
+            tint = buttonColor,
+            contentDescription = stringResource(com.michel.core.ui.R.string.deleteContentDescription),
+            modifier = Modifier
+                .size(TodoAppTheme.size.standardIcon)
+                .align(Alignment.CenterVertically)
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(
+            text = stringResource(com.michel.core.ui.R.string.deleteUpperCase),
+            color = buttonColor,
+            style = TodoAppTheme.typography.button,
+            modifier = Modifier.align(Alignment.CenterVertically)
         )
     }
 }
@@ -530,6 +532,7 @@ private fun TodoItemScreenPreview() {
         loading = false,
         failed = false,
         enabled = false,
+        deleteButtonEnabled = true,
         errorMessage = ""
     )
     TodoAppTheme {
