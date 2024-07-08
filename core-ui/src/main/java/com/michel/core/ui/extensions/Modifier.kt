@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 
+// Добавляет тень снизу под элементом
 fun Modifier.bottomShadow(
     shadow: Dp,
     shape: Shape = RectangleShape

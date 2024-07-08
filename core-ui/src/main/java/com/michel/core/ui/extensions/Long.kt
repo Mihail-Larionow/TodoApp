@@ -7,6 +7,8 @@ import java.util.Locale
 @SuppressLint("SimpleDateFormat")
 val formatter = SimpleDateFormat("dd MMM yyyy", Locale("ru"))
 
-fun Long.toDateText(): String {
-    return formatter.format(this)
+// Форматирует дату в текст
+fun Long?.toDateText(): String {
+    return if(this != null) formatter.format(this)
+    else ""
 }

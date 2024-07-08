@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -10,10 +12,16 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        minSdk = 21
+        minSdk = 24
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
+
+        val properties = Properties()
+        properties.load(project.rootProject.file("gradle.properties").inputStream())
+        val baseUrl = properties.getProperty("TODOAPP_BASE_URL")
+
+        buildConfigField("String", "TODOAPP_BASE_URL","\"$baseUrl\"")
     }
 
     buildTypes {
@@ -36,7 +44,10 @@ android {
 
 dependencies {
     implementation(project(":network"))
+    implementation(project(":database"))
 
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.hilt.common)
     kapt(libs.hilt.android.compiler)
     implementation(libs.hilt.android)
     implementation(libs.androidx.core.ktx)

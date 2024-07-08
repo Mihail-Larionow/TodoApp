@@ -2,45 +2,76 @@ package com.michel.core.data.mappers
 
 import com.michel.core.data.models.Importance
 import com.michel.core.data.models.TodoItem
-import com.michel.network.api.dto.ImportanceDto
+import com.michel.database.data.TodoItemEntity
 import com.michel.network.api.dto.TodoItemDto
 
+// Преобразовывает TodoItemDto в TodoItem
 fun TodoItemDto.toTodoItem(): TodoItem {
     return TodoItem(
         id = this.id,
         text = this.text,
-        isDone = this.isDone,
-        importance = this.importanceDto.toPriority(),
+        isDone = this.done,
+        importance = this.importance.toImportance(),
         deadline = this.deadline,
-        createdAt = this.createdAt,
-        changedAt = this.changedAt
+        createdAt = this.created_at,
+        changedAt = this.changed_at
     )
 }
 
-private fun ImportanceDto.toPriority(): Importance {
-    return when (this) {
-        ImportanceDto.High -> Importance.High
-        ImportanceDto.Low -> Importance.Low
-        ImportanceDto.Standard -> Importance.Standard
-    }
-}
-
-fun TodoItem.toTodoItemEntity(): TodoItemDto {
-    return TodoItemDto(
+// Преобразовывает TodoItemEntity в TodoItem
+fun TodoItemEntity.toTodoItem(): TodoItem {
+    return TodoItem(
         id = this.id,
         text = this.text,
         isDone = this.isDone,
-        importanceDto = this.importance.toPriorityEntity(),
+        importance = this.importance.toImportance(),
         deadline = this.deadline,
-        createdAt = this.createdAt,
-        changedAt = this.changedAt
+        changedAt = this.changedAt,
+        createdAt = this.createdAt
     )
 }
 
-private fun Importance.toPriorityEntity(): ImportanceDto {
+// Преобразовывает TodoItem в TodoItemDto
+fun TodoItem.toTodoItemDto(): TodoItemDto {
+    return TodoItemDto(
+        id = this.id,
+        text = this.text,
+        done = this.isDone,
+        importance = this.importance.toImportanceEntity(),
+        deadline = this.deadline,
+        changed_at = this.changedAt,
+        created_at = this.createdAt
+    )
+}
+
+// Преобразовывает TodoItem в TodoItemEntity
+fun TodoItem.toTodoItemEntity(): TodoItemEntity {
+    return TodoItemEntity(
+        id = this.id,
+        text = this.text,
+        isDone = this.isDone,
+        importance = this.importance.toImportanceEntity(),
+        deadline = this.deadline,
+        changedAt = this.changedAt,
+        createdAt = this.createdAt
+    )
+}
+
+// Преобразовывает строковый importance в Importance
+private fun String.toImportance(): Importance {
     return when (this) {
-        Importance.High -> ImportanceDto.High
-        Importance.Low -> ImportanceDto.Low
-        Importance.Standard -> ImportanceDto.Standard
+        "important" -> Importance.High
+        "low" -> Importance.Low
+        else -> Importance.Standard
     }
 }
+
+// Преобразовывает Importance в строковый importance
+private fun Importance.toImportanceEntity(): String {
+    return when (this) {
+        Importance.High -> "important"
+        Importance.Low -> "low"
+        Importance.Standard -> "basic"
+    }
+}
+

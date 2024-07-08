@@ -13,6 +13,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.michel.core.ui.R
 import com.michel.core.ui.theme.TodoAppTheme
 
+/**
+ * Custom text field function with lovely colors
+ */
 @Composable
 fun CustomTextField(
     modifier: Modifier = Modifier,
@@ -41,9 +44,7 @@ fun CustomTextField(
             disabledTextColor = TodoAppTheme.color.tertiary,
             errorTextColor = TodoAppTheme.color.red
         ),
-        onValueChange = {
-            onValueChanged(it)
-        },
+        onValueChange = { onValueChanged(it) },
         placeholder = {
             Text(
                 text = stringResource(com.michel.core.ui.R.string.placeholder),

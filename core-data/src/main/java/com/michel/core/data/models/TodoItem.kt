@@ -2,6 +2,9 @@ package com.michel.core.data.models
 
 import java.util.Date
 
+/**
+ *  Data class TodoItem
+ */
 data class TodoItem(
     val id: String,
     val text: String,
@@ -12,12 +15,7 @@ data class TodoItem(
     val changedAt: Long? = null
 )
 
-sealed class Importance(val text: String) {
-    data object High: Importance("!! Высокий")
-    data object Standard: Importance("Нет")
-    data object Low: Importance("Низкий")
-}
-
+// Возвращает, так сказать, пустой TodoItem
 fun emptyTodoItem(): TodoItem {
     return TodoItem(
         id = "",

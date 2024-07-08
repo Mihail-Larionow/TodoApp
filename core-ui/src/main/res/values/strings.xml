@@ -19,6 +19,7 @@
     <string name="acceptUpperCase">ГОТОВО</string>
     <string name="cancelUpperCase">ОТМЕНА</string>
     <string name="deleteUpperCase">УДАЛИТЬ</string>
+    <string name="retryUpperCase">ПОВТОРИТЬ</string>
     <string name="saveUpperCase">СОХРАНИТЬ</string>
     <string name="done">Выполнено</string>
     <string name="delete">Удалить</string>
@@ -26,4 +27,9 @@
     <string name="delete_problems">Не удалось удалить</string>
     <string name="save_problems">Не удалось сохранить</string>
     <string name="connection_problems">Проблемы с соединением</string>
+    <string name="with_gradle_token">Войти со своим\nтокеном</string>
+    <string name="with_yandex_passport">Войти через\nЯндекс.ID</string>
+    <string name="or">или</string>
+    <string name="checked">включено</string>
+    <string name="unchecked">выключено</string>
 </resources>

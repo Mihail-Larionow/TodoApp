@@ -4,10 +4,11 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.michel.core.data.interactor.TodoItemsInteractor
 import com.michel.core.data.models.Importance
 import com.michel.core.data.models.TodoItem
 import com.michel.core.data.models.emptyTodoItem
-import com.michel.core.data.repository.IRepository
+import com.michel.core.ui.extensions.toDateText
 import com.michel.feature.todoitemscreen.utils.ItemScreenIntent
 import com.michel.feature.todoitemscreen.utils.ItemScreenSideEffect
 import com.michel.feature.todoitemscreen.utils.TodoItemScreenState
@@ -26,9 +27,12 @@ import kotlinx.coroutines.plus
 import java.util.Date
 import javax.inject.Inject
 
+/**
+ * ViewModel for item screen
+ */
 @HiltViewModel
-class TodoItemViewModel @Inject constructor(
-    private val repository: IRepository,
+internal class TodoItemScreenViewModel @Inject constructor(
+    private val interactor: TodoItemsInteractor,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -41,94 +45,46 @@ class TodoItemViewModel @Inject constructor(
             importance = todoItem.importance,
             hasDeadline = false,
             deadline = todoItem.deadline ?: Date().time,
+            deadlineDateText = (todoItem.deadline ?: Date().time).toDateText(),
             datePickerExpanded = false,
             priorityMenuExpanded = false,
-            loading = true,
+            loading = todoItemId != "none",
             failed = false,
-            errorMessage = ""
+            enabled = todoItemId == "none",
+            errorMessage = "Проблемы с соединением",
+            deleteButtonEnabled = todoItemId != "none"
         )
     )
-
-    val state: StateFlow<TodoItemScreenState> = _state.asStateFlow()
+    internal val state: StateFlow<TodoItemScreenState> = _state.asStateFlow()
 
     private val _effect: MutableSharedFlow<ItemScreenSideEffect> = MutableSharedFlow()
-    val effect: SharedFlow<ItemScreenSideEffect> = _effect.asSharedFlow()
+    internal val effect: SharedFlow<ItemScreenSideEffect> = _effect.asSharedFlow()
 
     private val scope = viewModelScope + CoroutineExceptionHandler { _, throwable ->
         Log.i("ui", "${throwable.message}")
     }
 
     init {
-        onEvent(ItemScreenIntent.GetItemInfoIntent)
+        if (state.value.loading) onEvent(ItemScreenIntent.GetItemInfoIntent)
     }
 
     internal fun onEvent(event: ItemScreenIntent) {
-        try {
-            when (event) {
-                ItemScreenIntent.GetItemInfoIntent -> getInfo()
-                is ItemScreenIntent.DeleteIntent -> delete()
-                is ItemScreenIntent.SaveIntent -> save()
-                is ItemScreenIntent.SetDeadlineDateIntent -> updateDeadline(event.deadline)
-                is ItemScreenIntent.SetDeadlineStateIntent -> updateHasDeadline(event.hasDeadline)
-                is ItemScreenIntent.SetPriorityIntent -> updatePriority(event.importance)
-                is ItemScreenIntent.SetTextIntent -> updateText(event.text)
-                is ItemScreenIntent.SetDatePickerStateIntent -> updateDatePickerState(event.isExpanded)
-                is ItemScreenIntent.SetPriorityMenuStateIntent -> updatePriorityMenuState(event.isExpanded)
-                ItemScreenIntent.ToListScreenIntent -> {}
-            }
-        } catch (_: Exception) {
-            _state.update {
-                it.copy(
-                    failed = true,
-                    errorMessage = "Неизвестная ошибка"
-                )
-            }
-        }
+        try { handleEvent(event) } catch (_: Exception) { }
     }
 
+    // Получение информации о TodoItem
     private fun getInfo() {
-        _state.update {
-            it.copy(
-                loading = true
-            )
-        }
-
+        _state.update { it.copy(loading = true, enabled = false) }
         scope.launch(Dispatchers.IO) {
-            repository.getItem(todoItemId).collect { result ->
-                result.onFailure {
-                    _state.update {
-                        it.copy(
-                            loading = false,
-                            failed = true,
-                            errorMessage = "Проблемы с соединением"
-                        )
-                    }
-                }
-                result.onSuccess { data ->
-                    todoItem = data
-                    _state.update {
-                        it.copy(
-                            loading = false,
-                            failed = false,
-                            text = todoItem.text,
-                            importance = todoItem.importance,
-                            hasDeadline = todoItem.deadline != null,
-                            deadline = todoItem.deadline ?: Date().time
-                        )
-                    }
-                }
-            }
+            val result = interactor.loadTodoItem(todoItemId)
+            result.onFailure { onFail(state.value.errorMessage) }
+            result.onSuccess { updateInfo(it) }
         }
     }
 
     // Сохраняет таску в репозиторий
     private fun save() {
-        _state.update {
-            it.copy(
-                loading = true
-            )
-        }
-
+        _state.update { it.copy(enabled = false) }
         scope.launch(Dispatchers.IO) {
             val deadline = if (state.value.hasDeadline) {
                 state.value.deadline
@@ -144,84 +100,110 @@ class TodoItemViewModel @Inject constructor(
                 changedAt = Date().time
             )
 
-            repository.addOrUpdateItem(newTodoItem).collect { result ->
-                result.onFailure {
-                    _state.update {
-                        it.copy(
-                            loading = false
-                        )
-                    }
-                    _effect.emit(
-                        ItemScreenSideEffect.ShowSnackBarSideEffect("Не удалось сохранить")
-                    )
-                }
-                result.onSuccess {
-                    _effect.emit(ItemScreenSideEffect.LeaveScreenSideEffect)
-                }
+            if (todoItemId != "none") {
+                updateTodoItem(newTodoItem)
+            } else {
+                addTodoItem(newTodoItem)
             }
         }
+    }
+
+    // Добавление TodoItem
+    private suspend fun addTodoItem(todoItem: TodoItem) {
+        val result = interactor.addTodoItem(todoItem)
+        result.onFailure { onFail("Не удалось сохранить на сервере") }
+        _effect.emit(ItemScreenSideEffect.LeaveScreenSideEffect)
+    }
+
+    // Обновление TodoItem
+    private suspend fun updateTodoItem(todoItem: TodoItem) {
+        val result = interactor.updateTodoItem(todoItem)
+        result.onFailure { onFail("Не удалось сохранить на сервере") }
+        _effect.emit(ItemScreenSideEffect.LeaveScreenSideEffect)
     }
 
     // Удаляет таску из репозитория
     private fun delete() {
-        _state.update {
-            it.copy(
-                loading = true
-            )
-        }
-
+        _state.update { it.copy(enabled = false) }
         scope.launch(Dispatchers.IO) {
-            repository.deleteItem(todoItem.id).collect { result ->
-                result.onFailure {
-                    _state.update {
-                        it.copy(
-                            loading = false
-                        )
-                    }
-                    _effect.emit(
-                        ItemScreenSideEffect.ShowSnackBarSideEffect("Не удалось удалить")
-                    )
-                }
-                result.onSuccess {
-                    _effect.emit(ItemScreenSideEffect.LeaveScreenSideEffect)
-                }
-            }
+            val result = interactor.deleteTodoItem(todoItem)
+            result.onFailure { onFail("Не удалось удалить на сервере") }
+            _effect.emit(ItemScreenSideEffect.LeaveScreenSideEffect)
+        }
+    }
+
+    // Переход на главный экран
+    private fun leaveScreen() {
+        scope.launch(Dispatchers.IO) {
+            _effect.emit(ItemScreenSideEffect.LeaveScreenSideEffect)
         }
     }
 
     private fun updateText(text: String) {
-        _state.update {
-            it.copy(text = text)
-        }
+        _state.update { it.copy(text = text) }
     }
 
     private fun updatePriority(importance: Importance) {
-        _state.update {
-            it.copy(importance = importance)
-        }
+        _state.update { it.copy(importance = importance) }
     }
 
     private fun updateHasDeadline(hasDeadline: Boolean) {
-        _state.update {
-            it.copy(hasDeadline = hasDeadline)
-        }
+        _state.update { it.copy(hasDeadline = hasDeadline) }
     }
 
     private fun updateDeadline(deadline: Long) {
         _state.update {
-            it.copy(deadline = deadline)
+            it.copy(
+                deadline = deadline,
+                deadlineDateText = deadline.toDateText()
+            )
         }
     }
 
     private fun updatePriorityMenuState(isExpanded: Boolean) {
-        _state.update {
-            it.copy(priorityMenuExpanded = isExpanded)
-        }
+        _state.update { it.copy(priorityMenuExpanded = isExpanded) }
     }
 
     private fun updateDatePickerState(isExpanded: Boolean) {
-        _state.update {
-            it.copy(datePickerExpanded = isExpanded)
+        _state.update { it.copy(datePickerExpanded = isExpanded) }
+    }
+
+    // Обработка поступившего интента
+    private fun handleEvent(event: ItemScreenIntent) {
+        when (event) {
+            ItemScreenIntent.GetItemInfoIntent -> getInfo()
+            is ItemScreenIntent.DeleteIntent -> delete()
+            is ItemScreenIntent.SaveIntent -> save()
+            is ItemScreenIntent.SetDeadlineDateIntent -> updateDeadline(event.deadline)
+            is ItemScreenIntent.SetDeadlineStateIntent -> updateHasDeadline(event.hasDeadline)
+            is ItemScreenIntent.SetPriorityIntent -> updatePriority(event.importance)
+            is ItemScreenIntent.SetTextIntent -> updateText(event.text)
+            is ItemScreenIntent.SetDatePickerStateIntent -> updateDatePickerState(event.isExpanded)
+            is ItemScreenIntent.SetPriorityMenuStateIntent -> updatePriorityMenuState(event.isExpanded)
+            ItemScreenIntent.ToListScreenIntent -> leaveScreen()
         }
     }
+
+    // Обработка ошибки
+    private suspend fun onFail(message: String) {
+        _state.update { it.copy(loading = false, enabled = false) }
+        _effect.emit(ItemScreenSideEffect.ShowSnackBarSideEffect(message))
+    }
+
+    // Обновление информации TodoItem
+    private fun updateInfo(data: TodoItem) {
+        todoItem = data
+        _state.update {
+            it.copy(
+                loading = false,
+                enabled = true,
+                failed = false,
+                text = todoItem.text,
+                importance = todoItem.importance,
+                hasDeadline = todoItem.deadline != null,
+                deadline = todoItem.deadline ?: Date().time
+            )
+        }
+    }
+
 }
