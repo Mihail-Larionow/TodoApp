@@ -12,17 +12,22 @@ import kotlinx.coroutines.flow.Flow
  */
 @Dao
 interface TodoItemDao {
+
+    @Query("SELECT * FROM todo_item_table")
+    fun getAllItems(): Flow<List<TodoItemEntity>>
+
+    @Query("SELECT * FROM todo_item_table WHERE id = :itemId LIMIT 1")
+    suspend fun getItem(itemId: String): TodoItemEntity
+
     @Upsert
     suspend fun upsertItem(entity: TodoItemEntity)
 
     @Delete
     suspend fun deleteItem(entity: TodoItemEntity)
 
-    @Query("SELECT * FROM todo_item_table")
-    fun getAll(): Flow<List<TodoItemEntity>>
-
     @Query("DELETE FROM todo_item_table")
-    suspend fun clear()
+    suspend fun deleteAllItems()
+
 }
 
 

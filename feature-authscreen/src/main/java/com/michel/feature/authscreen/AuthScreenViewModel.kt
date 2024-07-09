@@ -1,21 +1,16 @@
 package com.michel.feature.authscreen
 
 import android.util.Log
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.michel.core.data.repository.TokenRepository
+import com.michel.core.ui.viewmodel.ScreenIntent
+import com.michel.core.ui.viewmodel.ViewModelBase
+import com.michel.feature.authscreen.utils.AuthScreenEffect
 import com.michel.feature.authscreen.utils.AuthScreenIntent
-import com.michel.feature.authscreen.utils.AuthScreenSideEffect
 import com.michel.feature.authscreen.utils.AuthScreenState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import javax.inject.Inject
@@ -26,23 +21,16 @@ import javax.inject.Named
  */
 @HiltViewModel
 internal class AuthScreenViewModel @Inject constructor(
-    @Named("TOKEN") private val gradleToken: String,
-    private val tokenRepository: TokenRepository
-) : ViewModel() {
-
-    private val _state =
-        MutableStateFlow(AuthScreenState(hasGradleToken = gradleToken != "{YOUR TOKEN}"))
-    val state: StateFlow<AuthScreenState> = _state.asStateFlow()
-
-    private val _effect: MutableSharedFlow<AuthScreenSideEffect> = MutableSharedFlow()
-    val effect: SharedFlow<AuthScreenSideEffect> = _effect.asSharedFlow()
+    private val tokenRepository: TokenRepository,
+    @Named("TOKEN_OAUTH") private val gradleToken: String,
+) : ViewModelBase<AuthScreenState, AuthScreenIntent, AuthScreenEffect>(AuthScreenState()) {
 
     private val scope = viewModelScope + CoroutineExceptionHandler { _, throwable ->
         Log.i("ui", "${throwable.message}")
     }
 
     // Обрабатывает приходящие интенты
-    fun onEvent(intent: AuthScreenIntent) {
+    override fun handleIntent(intent: ScreenIntent) {
         when (intent) {
             AuthScreenIntent.StartAuthIntent -> startAuth()
             AuthScreenIntent.SaveGradleTokenIntent -> saveGradleToken()
@@ -54,9 +42,7 @@ internal class AuthScreenViewModel @Inject constructor(
 
     // Начинает авторизацию
     private fun startAuth() {
-        scope.launch(Dispatchers.IO) {
-            _effect.emit(AuthScreenSideEffect.StartAuthSideEffect)
-        }
+        setEffect { AuthScreenEffect.StartAuthEffect }
     }
 
     // Сохраняет токен из gradle.properties
@@ -68,22 +54,18 @@ internal class AuthScreenViewModel @Inject constructor(
     private fun saveToken(token: String) {
         scope.launch(Dispatchers.IO) {
             tokenRepository.saveToken(token)
-            _effect.emit(AuthScreenSideEffect.LeaveScreenSideEffect)
+            setEffect { AuthScreenEffect.LeaveScreenEffect }
         }
     }
 
     // Запускает сайд эффект, чтобы вывести снекбар об отмененной авторизации
     private fun onAuthCancelled() {
-        scope.launch(Dispatchers.IO) {
-            _effect.emit(AuthScreenSideEffect.ShowSnackBarSideEffect("Отмена авторизации"))
-        }
+        setEffect { AuthScreenEffect.ShowSnackBarEffect("Отмена авторизации") }
     }
 
     // Запускает сайд эффект, чтобы вывести снекбар о неудачной авторизации
     private fun onAuthFailed() {
-        scope.launch(Dispatchers.IO) {
-            _effect.emit(AuthScreenSideEffect.ShowSnackBarSideEffect("Ошибка во время авторизации"))
-        }
+        setEffect { AuthScreenEffect.ShowSnackBarEffect("Ошибка во время авторизации") }
     }
 
 }

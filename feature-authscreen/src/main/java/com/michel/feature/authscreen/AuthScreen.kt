@@ -29,7 +29,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.michel.core.ui.theme.TodoAppTheme
 import com.michel.feature.authscreen.utils.AuthScreenIntent
-import com.michel.feature.authscreen.utils.AuthScreenSideEffect
+import com.michel.feature.authscreen.utils.AuthScreenEffect
 import com.michel.feature.authscreen.utils.AuthScreenState
 import com.yandex.authsdk.YandexAuthLoginOptions
 import com.yandex.authsdk.YandexAuthOptions
@@ -52,7 +52,7 @@ fun AuthScreen(
     val authLauncher = rememberLauncherForActivityResult(contract = sdk.contract) { result ->
         handleResult(
             result = result,
-            onEvent = { viewModel.onEvent(it) }
+            onEvent = viewModel::handleIntent
         )
     }
 
@@ -72,7 +72,7 @@ fun AuthScreen(
         val padding = innerPadding
         Content(
             screenState = screenState,
-            onEvent = { viewModel.onEvent(it) }
+            onEvent = viewModel::handleIntent
         )
     }
 }
@@ -159,9 +159,9 @@ private suspend fun collectSideEffects(
     val loginOptions = YandexAuthLoginOptions()
     viewModel.effect.collect { effect ->
         when (effect) {
-            is AuthScreenSideEffect.ShowSnackBarSideEffect -> snackBarHostState.showSnackbar(effect.message)
-            AuthScreenSideEffect.StartAuthSideEffect -> authLauncher.launch(loginOptions)
-            AuthScreenSideEffect.LeaveScreenSideEffect -> navigate()
+            is AuthScreenEffect.ShowSnackBarEffect -> snackBarHostState.showSnackbar(effect.message)
+            AuthScreenEffect.StartAuthEffect -> authLauncher.launch(loginOptions)
+            AuthScreenEffect.LeaveScreenEffect -> navigate()
         }
     }
 }

@@ -1,9 +1,8 @@
 package com.michel.network.api.backend.retrofit
 
-import com.michel.network.api.dto.SingleTodoItemDto
-import com.michel.network.api.dto.ListOfElementsDto
-import com.michel.network.api.dto.SingleElementResponse
-import com.michel.network.api.dto.ListOfElementsResponse
+import com.michel.network.api.wrappers.ItemWrapper
+import com.michel.network.api.wrappers.ListWrapper
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -19,36 +18,36 @@ import retrofit2.http.Path
 internal interface RetrofitApi {
 
     @GET("list")
-    suspend fun getItemsList(): ListOfElementsResponse
+    suspend fun getItemsList(): Response<ListWrapper>
 
     @GET("list/{id}")
     suspend fun getItem(
         @Path("id") id: String
-    ): SingleElementResponse
+    ): Response<ItemWrapper>
 
     @POST("list")
     suspend fun addItem(
         @Header("X-Last-Known-Revision") revision: Int,
-        @Body element: SingleTodoItemDto
-    ): SingleElementResponse
+        @Body element: ItemWrapper
+    ): Response<ItemWrapper>
 
     @PATCH("list")
     suspend fun updateItemsList(
         @Header("X-Last-Known-Revision") revision: Int,
-        @Body list: ListOfElementsDto
-    ): ListOfElementsResponse
+        @Body list: ListWrapper
+    ): Response<ListWrapper>
 
     @PUT("list/{id}")
     suspend fun updateItem(
         @Header("X-Last-Known-Revision") revision: Int,
-        @Body element: SingleTodoItemDto,
+        @Body element: ItemWrapper,
         @Path("id") id: String
-    ): SingleElementResponse
+    ): Response<ItemWrapper>
 
     @DELETE("list/{id}")
     suspend fun deleteItem(
         @Header("X-Last-Known-Revision") revision: Int,
         @Path("id") id: String
-    ): SingleElementResponse
+    ): Response<ItemWrapper>
 
 }

@@ -14,10 +14,14 @@ import javax.inject.Singleton
 class LocalTodoItemsRepository(private val db: TodoItemsDatabase) {
 
     // Возвращает флоу со списком тасок
-    val todoItems = db.todoItemDao.getAll().map { list ->
+    val todoItems = db.todoItemDao.getAllItems().map { list ->
         list.map {
             it.toTodoItem()
         }
+    }
+
+    suspend fun getItem(itemId: String): TodoItem {
+        return db.todoItemDao.getItem(itemId).toTodoItem()
     }
 
     // Добавляет или изменяет таску
@@ -31,8 +35,8 @@ class LocalTodoItemsRepository(private val db: TodoItemsDatabase) {
     }
 
     // Очищает таблицу
-    suspend fun clearTable() {
-        db.todoItemDao.clear()
+    suspend fun deleteAll() {
+        db.todoItemDao.deleteAllItems()
     }
 
 }

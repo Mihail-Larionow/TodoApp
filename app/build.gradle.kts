@@ -24,17 +24,21 @@ android {
             useSupportLibrary = true
         }
 
-        val properties = Properties()
-        properties.load(project.rootProject.file("gradle.properties").inputStream())
-
-        val token = properties.getProperty("TODOAPP_TOKEN")
-        val clientId = properties.getProperty("CLIENT_ID")
-        val baseUrl = properties.getProperty("TODOAPP_BASE_URL")
-
+        // May be replaced by String (ex. val clientId = "your_client_id")
+        val clientId = project.properties["CLIENT_ID"].toString()
         manifestPlaceholders["YANDEX_CLIENT_ID"] = clientId
 
-        buildConfigField("String", "TODOAPP_TOKEN","\"$token\"")
-        buildConfigField("String", "TODOAPP_BASE_URL","\"$baseUrl\"")
+        // May be replaced by String (ex. val clientId = "your_bearer_token")
+        val tokenBearer = project.properties["TOKEN_BEARER"].toString()
+        buildConfigField("String", "TOKEN_BEARER", tokenBearer)
+
+        // May be replaced by String (ex. val tokenOAuth = "your_oauth_token")
+        val tokenOAuth = project.properties["TOKEN_OAUTH"].toString()
+        buildConfigField("String", "TOKEN_OAUTH", tokenOAuth)
+
+        // May be replaced by String (ex. val baseUrl = "https://www.google.com/")
+        val baseUrl = project.properties["BASE_URL"].toString()
+        buildConfigField("String", "BASE_URL", baseUrl)
 
     }
 
@@ -87,6 +91,7 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.authsdk)
+    implementation(libs.androidx.work.runtime.ktx)
     kapt(libs.hilt.android.compiler)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

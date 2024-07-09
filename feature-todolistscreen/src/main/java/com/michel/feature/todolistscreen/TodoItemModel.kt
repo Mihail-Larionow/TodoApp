@@ -161,16 +161,23 @@ private fun TodoCheckbox(
     modifier: Modifier = Modifier
 ) {
     val checkedIcon = painterResource(R.drawable.ic_checked)
-    val uncheckedIcon = if (todoImportance == Importance.High) {
-        painterResource(R.drawable.ic_unchecked_high)
+    val uncheckedIcon = painterResource(R.drawable.ic_unchecked)
+
+
+    val unCheckedTint = if(todoImportance == Importance.High) {
+        TodoAppTheme.color.red
     } else {
-        painterResource(R.drawable.ic_unchecked)
+        TodoAppTheme.color.tertiary
     }
+
     ImageCheckbox(
         checked = checked,
         onCheckedChange = { onCheckChanged(it) },
         checkedIcon = checkedIcon,
+        checkedTint = TodoAppTheme.color.green,
         uncheckedIcon = uncheckedIcon,
+        uncheckedTint = unCheckedTint,
+        disabledTint = TodoAppTheme.color.disable,
         enabled = enabled,
         modifier = modifier
     )
@@ -185,7 +192,7 @@ private fun AnimatedImportance(
     AnimatedVisibility(visible = visible) {
         when (importance) {
             Importance.High -> HighImportance(modifier = modifier)
-            Importance.Standard -> {}
+            Importance.Basic -> {}
             Importance.Low -> LowImportance(modifier = modifier)
         }
     }

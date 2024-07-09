@@ -54,9 +54,9 @@ import com.michel.core.ui.custom.ImageCheckbox
 import com.michel.core.ui.custom.SwipeItem
 import com.michel.core.ui.extensions.bottomShadow
 import com.michel.core.ui.theme.TodoAppTheme
+import com.michel.feature.todolistscreen.utils.ListScreenEffect
 import com.michel.feature.todolistscreen.utils.ListScreenIntent
-import com.michel.feature.todolistscreen.utils.ListScreenSideEffect
-import com.michel.feature.todolistscreen.utils.TodoListScreenState
+import com.michel.feature.todolistscreen.utils.ListScreenState
 
 private val COLLAPSED_TOP_BAR_HEIGHT = 56.dp
 private val EXPANDED_TOP_BAR_HEIGHT = 200.dp
@@ -104,7 +104,7 @@ fun TodoListScreen(navigate: (String) -> Unit) {
         CollapsedToolBar(
             isCollapsed = isTopBarCollapsed,
             screenState = screenState,
-            onEvent = { viewModel.onEvent(it) },
+            onEvent = viewModel::handleIntent,
         )
     }, modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
@@ -113,14 +113,14 @@ fun TodoListScreen(navigate: (String) -> Unit) {
             screenState = screenState,
             listState = listState,
             isCollapsing = isTopBarCollapsing,
-            onEvent = { viewModel.onEvent(it) }
+            onEvent = viewModel::handleIntent
         )
     }
 }
 
 @Composable
 private fun Content(
-    screenState: TodoListScreenState,
+    screenState: ListScreenState,
     listState: LazyListState,
     isCollapsing: Boolean,
     onEvent: (ListScreenIntent) -> Unit,
@@ -131,7 +131,7 @@ private fun Content(
             .background(color = TodoAppTheme.color.backPrimary)
     ) {
         CustomPullToRefreshItem(
-            isRefreshing = screenState.loading,
+            isRefreshing = screenState.isLoading,
             onRefresh = { onEvent(ListScreenIntent.GetItemsIntent) }
         ) {
             Body(
@@ -153,7 +153,7 @@ private fun Content(
                 .padding(end = 16.dp, bottom = 16.dp)
         )
         AnimatedVisibility(
-            visible = !screenState.loading && screenState.failed && screenState.todoItems.isEmpty(),
+            visible = !screenState.isLoading && screenState.failed && screenState.todoItems.isEmpty(),
             enter = scaleIn(),
             exit = scaleOut(),
             modifier = Modifier.align(Alignment.Center)
@@ -172,7 +172,7 @@ private fun Content(
 private fun Body(
     modifier: Modifier = Modifier,
     listState: LazyListState,
-    screenState: TodoListScreenState,
+    screenState: ListScreenState,
     isTopBarCollapsing: Boolean,
     onEvent: (ListScreenIntent) -> Unit
 ) {
@@ -229,7 +229,7 @@ private fun Body(
 private fun TodoListItem(
     modifier: Modifier = Modifier,
     todoItem: TodoItem,
-    screenState: TodoListScreenState,
+    screenState: ListScreenState,
     onEvent: (ListScreenIntent) -> Unit
 ) {
     SwipeItem(
@@ -249,7 +249,7 @@ private fun TodoListItem(
 @Composable
 private fun NewButton(
     modifier: Modifier = Modifier,
-    screenState: TodoListScreenState,
+    screenState: ListScreenState,
     onEvent: (ListScreenIntent) -> Unit
 ) {
     val buttonColor = animateColorAsState(
@@ -284,7 +284,7 @@ private fun NewButton(
 
 @Composable
 private fun ErrorContent(
-    screenState: TodoListScreenState,
+    screenState: ListScreenState,
     onEvent: (ListScreenIntent) -> Unit
 ) {
     Column {
@@ -320,7 +320,7 @@ private fun ErrorContent(
 @Composable
 private fun ExpandedToolBar(
     modifier: Modifier = Modifier,
-    screenState: TodoListScreenState,
+    screenState: ListScreenState,
     isCollapsing: Boolean,
     onEvent: (ListScreenIntent.ChangeVisibilityIntent) -> Unit,
 ) {
@@ -395,7 +395,7 @@ private fun TodoText(
 private fun CollapsedToolBar(
     modifier: Modifier = Modifier,
     isCollapsed: Boolean,
-    screenState: TodoListScreenState,
+    screenState: ListScreenState,
     onEvent: (ListScreenIntent.ChangeVisibilityIntent) -> Unit,
 ) {
     val topBarColor = if (!isCollapsed) {
@@ -462,7 +462,7 @@ private fun FloatingButton(
 @Composable
 private fun VisibilityCheckBox(
     modifier: Modifier = Modifier,
-    screenState: TodoListScreenState,
+    screenState: ListScreenState,
     onCheckChange: (Boolean) -> Unit
 ) {
     val checkedIcon = painterResource(com.michel.core.ui.R.drawable.ic_visibility_off)
@@ -471,7 +471,10 @@ private fun VisibilityCheckBox(
     ImageCheckbox(
         checked = screenState.doneItemsHide,
         checkedIcon = checkedIcon,
+        checkedTint = TodoAppTheme.color.blue,
         uncheckedIcon = uncheckedIcon,
+        uncheckedTint = TodoAppTheme.color.blue,
+        disabledTint = TodoAppTheme.color.disable,
         onCheckedChange = { onCheckChange(it) },
         enabled = screenState.enabled,
         modifier = modifier
@@ -486,8 +489,8 @@ private suspend fun collectSideEffects(
 ) {
     viewModel.effect.collect { effect ->
         when (effect) {
-            is ListScreenSideEffect.LeaveScreenSideEffect -> navigate(effect.id)
-            is ListScreenSideEffect.ShowSnackBarSideEffect -> snackBarHostState.showSnackbar(effect.message)
+            is ListScreenEffect.LeaveScreenEffect -> navigate(effect.id)
+            is ListScreenEffect.ShowSnackBarEffect -> snackBarHostState.showSnackbar(effect.message)
         }
     }
 }
@@ -520,12 +523,12 @@ private fun TodoListScreenPreview() {
         ),
     )
 
-    val state = TodoListScreenState(
+    val state = ListScreenState(
         todoItems = list,
         doneItemsHide = false,
         doneItemsCount = 1,
         failed = false,
-        loading = false,
+        isLoading = false,
         enabled = false,
         errorMessage = ""
     )

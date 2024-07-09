@@ -1,11 +1,12 @@
 package com.michel.feature.todolistscreen.utils
 
 import com.michel.core.data.models.TodoItem
+import com.michel.core.ui.viewmodel.ScreenIntent
 
 /**
  * Intent types of items list screen
  */
-internal sealed interface ListScreenIntent {
+internal sealed interface ListScreenIntent : ScreenIntent {
     data object GetItemsIntent : ListScreenIntent
     data class DeleteItemIntent(val item: TodoItem) : ListScreenIntent
     data class ChangeVisibilityIntent(val isNotVisible: Boolean) : ListScreenIntent

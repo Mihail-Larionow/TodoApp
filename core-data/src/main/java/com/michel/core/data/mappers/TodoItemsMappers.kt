@@ -10,11 +10,11 @@ fun TodoItemDto.toTodoItem(): TodoItem {
     return TodoItem(
         id = this.id,
         text = this.text,
-        isDone = this.done,
+        isDone = this.isDone,
         importance = this.importance.toImportance(),
         deadline = this.deadline,
-        createdAt = this.created_at,
-        changedAt = this.changed_at
+        createdAt = this.createdAt,
+        changedAt = this.changedAt
     )
 }
 
@@ -36,11 +36,11 @@ fun TodoItem.toTodoItemDto(): TodoItemDto {
     return TodoItemDto(
         id = this.id,
         text = this.text,
-        done = this.isDone,
+        isDone = this.isDone,
         importance = this.importance.toImportanceEntity(),
         deadline = this.deadline,
-        changed_at = this.changedAt,
-        created_at = this.createdAt
+        changedAt = this.changedAt,
+        createdAt = this.createdAt
     )
 }
 
@@ -62,7 +62,7 @@ private fun String.toImportance(): Importance {
     return when (this) {
         "important" -> Importance.High
         "low" -> Importance.Low
-        else -> Importance.Standard
+        else -> Importance.Basic
     }
 }
 
@@ -71,7 +71,7 @@ private fun Importance.toImportanceEntity(): String {
     return when (this) {
         Importance.High -> "important"
         Importance.Low -> "low"
-        Importance.Standard -> "basic"
+        Importance.Basic -> "basic"
     }
 }
 

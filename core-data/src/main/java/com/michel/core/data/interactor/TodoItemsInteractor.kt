@@ -1,9 +1,15 @@
 package com.michel.core.data.interactor
 
+import android.util.Log
 import com.michel.core.data.models.TodoItem
 import com.michel.core.data.repository.LocalTodoItemsRepository
 import com.michel.core.data.repository.RemoteTodoItemsRepository
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -17,8 +23,29 @@ class TodoItemsInteractor @Inject constructor(
     private val remote: RemoteTodoItemsRepository,
     private val local: LocalTodoItemsRepository
 ) {
+
+    private val dispatchers = Dispatchers.IO
+    private val job = SupervisorJob()
+    private val handler = CoroutineExceptionHandler { _, throwable ->
+        Log.i("ui", "${throwable.message}")
+    }
+
+    private val scope = CoroutineScope(dispatchers + job + handler)
+
     // Флоу список тасок, которые находятся в локальной бд
     val todoItemsList: Flow<List<TodoItem>> = local.todoItems
+
+    suspend fun synchronizeData(): Result<List<TodoItem>>  {
+        return try {
+            val items = remote.getAll()
+            items.forEach { local.addOrUpdate(it) }
+            Result.success(items)
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            Result.failure(exception)
+        }
+    }
 
     // Загружает таски из интернета в локальную бд (перед этим очищая ее)
     // Зачем очистка? Ну чтобы синхронизировать таски на устройстве с сервером
@@ -37,8 +64,7 @@ class TodoItemsInteractor @Inject constructor(
     // Загружает одну таску из интернета в локальную бд
     suspend fun loadTodoItem(todoItemId: String): Result<TodoItem> {
         return try {
-            val item = remote.getItem(todoItemId)
-            local.addOrUpdate(item)
+            val item = local.getItem(todoItemId)
             Result.success(item)
         } catch (exception: CancellationException) {
             throw exception
