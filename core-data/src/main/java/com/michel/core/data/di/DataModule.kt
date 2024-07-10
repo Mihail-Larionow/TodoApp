@@ -1,15 +1,14 @@
 package com.michel.core.data.di
 
-import android.content.Context
-import com.michel.core.data.repository.LocalTodoItemsRepository
-import com.michel.core.data.repository.RemoteTodoItemsRepository
-import com.michel.core.data.repository.TokenRepository
-import com.michel.database.data.TodoItemsDatabase
-import com.michel.network.api.backend.TodoItemsApi
+import com.michel.core.data.repository.local.LocalTodoItemsRepository
+import com.michel.core.data.repository.local.LocalTodoItemsRepositoryImpl
+import com.michel.core.data.repository.remote.RemoteTodoItemsRepository
+import com.michel.core.data.repository.remote.RemoteTodoItemsRepositoryImpl
+import com.michel.database.TodoItemsDatabase
+import com.michel.network.api.TodoItemsApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -21,19 +20,17 @@ import javax.inject.Singleton
 class DataModule {
 
     @Provides
-    @Singleton
     fun provideRemoteRepository(
         api: TodoItemsApi,
-        tokenRepo: TokenRepository
     ): RemoteTodoItemsRepository {
-        return RemoteTodoItemsRepository(api = api, tokenRepo = tokenRepo)
+        return RemoteTodoItemsRepositoryImpl(api)
     }
 
     @Provides
-    @Singleton
-    fun provideLocalRepository(@ApplicationContext context: Context): LocalTodoItemsRepository {
-        val db = TodoItemsDatabase.createDataBase(context)
-        return LocalTodoItemsRepository(db)
+    fun provideLocalRepository(
+        db: TodoItemsDatabase,
+    ): LocalTodoItemsRepository {
+        return LocalTodoItemsRepositoryImpl(db)
     }
 
 }
