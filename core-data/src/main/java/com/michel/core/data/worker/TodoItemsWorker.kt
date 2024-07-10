@@ -1,7 +1,6 @@
-package com.michel.core.data.utils
+package com.michel.core.data.worker
 
 import android.content.Context
-import android.util.Log
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.NetworkType
@@ -10,7 +9,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkerParameters
-import com.michel.core.data.interactor.TodoItemsInteractor
+import com.michel.core.data.interactor.WorkerInteractor
 import java.util.concurrent.TimeUnit
 
 /**
@@ -19,12 +18,12 @@ import java.util.concurrent.TimeUnit
 class TodoItemsWorker(
     appContext: Context,
     params: WorkerParameters,
-    private val interactor: TodoItemsInteractor,
+    private val interactor: WorkerInteractor,
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result {
-        val result = interactor.synchronizeData()
-        result.onFailure { return Result.retry() }
+        val result = interactor.synchronize()
+        result.onFailure { return Result.failure() }
         return Result.success()
     }
 

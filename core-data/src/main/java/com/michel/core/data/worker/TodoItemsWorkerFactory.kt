@@ -1,14 +1,14 @@
-package com.michel.core.data.utils
+package com.michel.core.data.worker
 
 import android.content.Context
 import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
-import com.michel.core.data.interactor.TodoItemsInteractor
+import com.michel.core.data.interactor.WorkerInteractor
 import javax.inject.Inject
 
 class TodoItemsWorkerFactory @Inject constructor(
-    private val interactor: TodoItemsInteractor
+    private val interactor: WorkerInteractor
 ) : WorkerFactory() {
 
     override fun createWorker(

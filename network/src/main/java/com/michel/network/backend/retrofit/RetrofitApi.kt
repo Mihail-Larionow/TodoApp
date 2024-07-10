@@ -1,7 +1,7 @@
-package com.michel.network.api.backend.retrofit
+package com.michel.network.backend.retrofit
 
-import com.michel.network.api.wrappers.ItemWrapper
-import com.michel.network.api.wrappers.ListWrapper
+import com.michel.network.wrappers.ItemWrapper
+import com.michel.network.wrappers.ListWrapper
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE

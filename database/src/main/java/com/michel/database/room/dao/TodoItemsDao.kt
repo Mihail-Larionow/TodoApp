@@ -1,20 +1,23 @@
-package com.michel.database.dao
+package com.michel.database.room.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Query
 import androidx.room.Upsert
-import com.michel.database.data.TodoItemEntity
+import com.michel.database.room.models.TodoItemEntity
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Database interface
+ * Database interface to work with todo items table
  */
 @Dao
-interface TodoItemDao {
+internal interface TodoItemsDao {
 
     @Query("SELECT * FROM todo_item_table")
-    fun getAllItems(): Flow<List<TodoItemEntity>>
+    fun getAllItemsFlow(): Flow<List<TodoItemEntity>>
+
+    @Query("SELECT * FROM todo_item_table")
+    suspend fun getAllItems(): List<TodoItemEntity>
 
     @Query("SELECT * FROM todo_item_table WHERE id = :itemId LIMIT 1")
     suspend fun getItem(itemId: String): TodoItemEntity

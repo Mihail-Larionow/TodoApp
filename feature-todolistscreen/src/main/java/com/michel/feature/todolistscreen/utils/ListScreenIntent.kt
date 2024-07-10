@@ -8,6 +8,7 @@ import com.michel.core.ui.viewmodel.ScreenIntent
  */
 internal sealed interface ListScreenIntent : ScreenIntent {
     data object GetItemsIntent : ListScreenIntent
+    data object StartLoadingIntent : ListScreenIntent
     data class DeleteItemIntent(val item: TodoItem) : ListScreenIntent
     data class ChangeVisibilityIntent(val isNotVisible: Boolean) : ListScreenIntent
     data class ToItemScreenIntent(val id: String) : ListScreenIntent

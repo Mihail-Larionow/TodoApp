@@ -3,15 +3,15 @@ package com.michel.feature.todoitemscreen
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import com.michel.core.data.interactor.TodoItemsInteractor
+import com.michel.core.data.interactor.TodoItemsInteractorImpl
 import com.michel.core.data.models.Importance
 import com.michel.core.data.models.TodoItem
 import com.michel.core.data.models.emptyTodoItem
 import com.michel.core.ui.extensions.toDateText
 import com.michel.core.ui.viewmodel.ScreenIntent
 import com.michel.core.ui.viewmodel.ViewModelBase
-import com.michel.feature.todoitemscreen.utils.ItemScreenIntent
 import com.michel.feature.todoitemscreen.utils.ItemScreenEffect
+import com.michel.feature.todoitemscreen.utils.ItemScreenIntent
 import com.michel.feature.todoitemscreen.utils.ItemScreenState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -26,7 +26,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 internal class TodoItemScreenViewModel @Inject constructor(
-    private val interactor: TodoItemsInteractor,
+    private val interactor: TodoItemsInteractorImpl,
     savedStateHandle: SavedStateHandle
 ) : ViewModelBase<ItemScreenState, ItemScreenIntent, ItemScreenEffect>(ItemScreenState()) {
 
@@ -38,19 +38,16 @@ internal class TodoItemScreenViewModel @Inject constructor(
     }
 
     init {
-        Log.i("ui","created")
         if (todoItemId != "none") {
-            handleIntent(ItemScreenIntent.GetItemInfoIntent)
-            setState {
-                copy(deleteButtonEnabled = true)
-            }
+            loadItemInfo()
+            setState { copy(deleteButtonEnabled = true) }
         }
     }
 
     // Обрабатывает приходящие интенты
     override fun handleIntent(intent: ScreenIntent) {
         when (intent) {
-            ItemScreenIntent.GetItemInfoIntent -> getItem()
+            ItemScreenIntent.GetItemInfoIntent -> loadItemInfo()
             is ItemScreenIntent.DeleteIntent -> delete()
             is ItemScreenIntent.SaveIntent -> saveItem()
             is ItemScreenIntent.SetDeadlineDateIntent -> updateDeadline(intent.deadline)
@@ -64,70 +61,60 @@ internal class TodoItemScreenViewModel @Inject constructor(
     }
 
     // Получение информации о TodoItem
-    private fun getItem() {
+    private fun loadItemInfo() {
         setState { copy(loading = true, enabled = false) }
         scope.launch(Dispatchers.IO) {
-            val result = interactor.loadTodoItem(todoItemId)
-            result.onFailure { onFail(state.value.errorMessage) }
-            result.onSuccess { updateInfo(it) }
+            val item = interactor.getTodoItem(todoItemId)
+            updateInfo(item)
         }
     }
 
     // Сохраняет таску в репозиторий
     private fun saveItem() {
         setState { copy(enabled = false) }
-        scope.launch(Dispatchers.IO) {
-            val deadline = if (state.value.hasDeadline) {
-                state.value.deadline
-            } else null
+        val deadline = if (state.value.hasDeadline) {
+            state.value.deadline
+        } else null
 
-            val newTodoItem = TodoItem(
-                id = todoItemId,
-                text = state.value.text,
-                importance = state.value.importance,
-                deadline = deadline,
-                isDone = todoItem.isDone,
-                createdAt = todoItem.createdAt,
-                changedAt = Date().time
-            )
+        val newTodoItem = TodoItem(
+            id = todoItemId,
+            text = state.value.text,
+            importance = state.value.importance,
+            deadline = deadline,
+            isDone = todoItem.isDone,
+            createdAt = todoItem.createdAt,
+            changedAt = Date().time
+        )
 
-            if (todoItemId != "none") {
-                updateItem(newTodoItem)
-            } else {
-                addNewItem(newTodoItem)
-            }
+        if (todoItemId != "none") {
+            updateItem(newTodoItem)
+        } else {
+            addNewItem(newTodoItem)
         }
     }
 
     // Добавление TodoItem
-    private suspend fun addNewItem(todoItem: TodoItem) {
-        val result = interactor.addTodoItem(todoItem)
-        result.onFailure { onFail("Не удалось сохранить на сервере") }
+    private fun addNewItem(todoItem: TodoItem) {
+        interactor.addTodoItem(todoItem)
         setEffect { ItemScreenEffect.LeaveScreenEffect }
     }
 
     // Обновление TodoItem
-    private suspend fun updateItem(todoItem: TodoItem) {
-        val result = interactor.updateTodoItem(todoItem)
-        result.onFailure { onFail("Не удалось сохранить на сервере") }
+    private fun updateItem(todoItem: TodoItem) {
+        interactor.updateTodoItem(todoItem)
         setEffect { ItemScreenEffect.LeaveScreenEffect }
     }
 
     // Удаляет таску из репозитория
     private fun delete() {
         setState { copy(enabled = false) }
-        scope.launch(Dispatchers.IO) {
-            val result = interactor.deleteTodoItem(todoItem)
-            result.onFailure { onFail("Не удалось удалить на сервере") }
-            setEffect{ ItemScreenEffect.LeaveScreenEffect }
-        }
+        interactor.deleteTodoItem(todoItem)
+        setEffect { ItemScreenEffect.LeaveScreenEffect }
     }
 
     // Переход на главный экран
     private fun leaveScreen() {
-        scope.launch(Dispatchers.IO) {
-            setEffect{ ItemScreenEffect.LeaveScreenEffect }
-        }
+        setEffect { ItemScreenEffect.LeaveScreenEffect }
     }
 
     private fun updateText(text: String) {
@@ -157,12 +144,6 @@ internal class TodoItemScreenViewModel @Inject constructor(
 
     private fun updateDatePickerState(isExpanded: Boolean) {
         setState { copy(datePickerExpanded = isExpanded) }
-    }
-
-    // Обработка ошибки
-    private fun onFail(message: String) {
-        setState { copy(loading = false, enabled = false) }
-        setEffect{ ItemScreenEffect.ShowSnackBarEffect(message) }
     }
 
     // Обновление информации TodoItem

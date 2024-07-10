@@ -26,8 +26,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -35,6 +36,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,6 +52,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.michel.core.data.models.Importance
 import com.michel.core.data.models.TodoItem
 import com.michel.core.ui.custom.CustomPullToRefreshItem
+import com.michel.core.ui.custom.CustomSnackBarHost
 import com.michel.core.ui.custom.ImageCheckbox
 import com.michel.core.ui.custom.SwipeItem
 import com.michel.core.ui.extensions.bottomShadow
@@ -57,9 +60,12 @@ import com.michel.core.ui.theme.TodoAppTheme
 import com.michel.feature.todolistscreen.utils.ListScreenEffect
 import com.michel.feature.todolistscreen.utils.ListScreenIntent
 import com.michel.feature.todolistscreen.utils.ListScreenState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 private val COLLAPSED_TOP_BAR_HEIGHT = 56.dp
 private val EXPANDED_TOP_BAR_HEIGHT = 200.dp
+private const val SNACKBAR_DURATION = 2000L
 
 /**
  * Contains UI implementation of items list screen
@@ -92,21 +98,28 @@ fun TodoListScreen(navigate: (String) -> Unit) {
         }
     }
 
+    val scope = rememberCoroutineScope()
+
     LaunchedEffect(Unit) {
         collectSideEffects(
-            viewModel,
+            coroutineScope = scope,
+            viewModel = viewModel,
             snackBarHostState = snackBarHostState,
-            navigate = navigate
+            navigate = navigate,
+            onEvent = viewModel::handleIntent
         )
     }
 
-    Scaffold(snackbarHost = { SnackbarHost(snackBarHostState) }, topBar = {
-        CollapsedToolBar(
-            isCollapsed = isTopBarCollapsed,
-            screenState = screenState,
-            onEvent = viewModel::handleIntent,
-        )
-    }, modifier = Modifier.fillMaxSize()
+    Scaffold(
+        snackbarHost = {
+            CustomSnackBarHost(snackBarHostState)
+        }, topBar = {
+            CollapsedToolBar(
+                isCollapsed = isTopBarCollapsed,
+                screenState = screenState,
+                onEvent = viewModel::handleIntent,
+            )
+        }, modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
         val paddings = innerPadding
         Content(
@@ -131,8 +144,11 @@ private fun Content(
             .background(color = TodoAppTheme.color.backPrimary)
     ) {
         CustomPullToRefreshItem(
-            isRefreshing = screenState.isLoading,
-            onRefresh = { onEvent(ListScreenIntent.GetItemsIntent) }
+            isRefreshing = screenState.isRefreshing,
+            onRefresh = {
+                onEvent(ListScreenIntent.StartLoadingIntent)
+                onEvent(ListScreenIntent.GetItemsIntent)
+            }
         ) {
             Body(
                 listState = listState,
@@ -153,7 +169,7 @@ private fun Content(
                 .padding(end = 16.dp, bottom = 16.dp)
         )
         AnimatedVisibility(
-            visible = !screenState.isLoading && screenState.failed && screenState.todoItems.isEmpty(),
+            visible = !screenState.isRefreshing && screenState.failed && screenState.todoItems.isEmpty(),
             enter = scaleIn(),
             exit = scaleOut(),
             modifier = Modifier.align(Alignment.Center)
@@ -406,7 +422,9 @@ private fun CollapsedToolBar(
 
     val shadow = if (isCollapsed) 4.dp else 0.dp
 
-    AnimatedVisibility(visible = isCollapsed) {
+    AnimatedVisibility(
+        visible = isCollapsed
+    ) {
         Box(
             modifier = modifier
                 .fillMaxWidth()
@@ -483,14 +501,61 @@ private fun VisibilityCheckBox(
 
 // Собирает сайд эффекты
 private suspend fun collectSideEffects(
+    coroutineScope: CoroutineScope,
     viewModel: TodoListScreenViewModel,
     snackBarHostState: SnackbarHostState,
-    navigate: (String) -> Unit
+    navigate: (String) -> Unit,
+    onEvent: (ListScreenIntent) -> Unit
 ) {
     viewModel.effect.collect { effect ->
         when (effect) {
             is ListScreenEffect.LeaveScreenEffect -> navigate(effect.id)
-            is ListScreenEffect.ShowSnackBarEffect -> snackBarHostState.showSnackbar(effect.message)
+            is ListScreenEffect.ShowSimpleSnackBarEffect -> showSimpleSnackBar(
+                coroutineScope = coroutineScope,
+                snackBarHostState = snackBarHostState,
+                message = effect.message
+            )
+
+            is ListScreenEffect.ShowButtonSnackBarEffect -> showButtonSnackBar(
+                coroutineScope = coroutineScope,
+                snackBarHostState = snackBarHostState,
+                message = effect.message,
+                buttonText = effect.actionText,
+                onClick = { onEvent(ListScreenIntent.GetItemsIntent) }
+            )
+        }
+    }
+}
+
+private fun showSimpleSnackBar(
+    coroutineScope: CoroutineScope,
+    snackBarHostState: SnackbarHostState,
+    message: String
+) {
+    coroutineScope.launch {
+        snackBarHostState.showSnackbar(
+            message = message,
+            duration = SnackbarDuration.Short
+        )
+    }
+}
+
+private fun showButtonSnackBar(
+    coroutineScope: CoroutineScope,
+    snackBarHostState: SnackbarHostState,
+    message: String,
+    buttonText: String,
+    onClick: () -> Unit
+) {
+    coroutineScope.launch {
+        val result = snackBarHostState.showSnackbar(
+            message = message,
+            actionLabel = buttonText,
+            duration = SnackbarDuration.Short,
+        )
+        when (result) {
+            SnackbarResult.Dismissed -> {}
+            SnackbarResult.ActionPerformed -> onClick()
         }
     }
 }
@@ -528,7 +593,7 @@ private fun TodoListScreenPreview() {
         doneItemsHide = false,
         doneItemsCount = 1,
         failed = false,
-        isLoading = false,
+        isRefreshing = false,
         enabled = false,
         errorMessage = ""
     )

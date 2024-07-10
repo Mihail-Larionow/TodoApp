@@ -24,20 +24,24 @@ android {
             useSupportLibrary = true
         }
 
+        buildFeatures {
+            buildConfig = true
+        }
+
         // May be replaced by String (ex. val clientId = "your_client_id")
-        val clientId = project.properties["CLIENT_ID"].toString()
+        val clientId = (project.properties["CLIENT_ID"] ?: "none").toString()
         manifestPlaceholders["YANDEX_CLIENT_ID"] = clientId
 
         // May be replaced by String (ex. val clientId = "your_bearer_token")
-        val tokenBearer = project.properties["TOKEN_BEARER"].toString()
+        val tokenBearer = (project.properties["TOKEN_BEARER"] ?: "none").toString()
         buildConfigField("String", "TOKEN_BEARER", tokenBearer)
 
         // May be replaced by String (ex. val tokenOAuth = "your_oauth_token")
-        val tokenOAuth = project.properties["TOKEN_OAUTH"].toString()
+        val tokenOAuth = (project.properties["TOKEN_OAUTH"] ?: "none").toString()
         buildConfigField("String", "TOKEN_OAUTH", tokenOAuth)
 
         // May be replaced by String (ex. val baseUrl = "https://www.google.com/")
-        val baseUrl = project.properties["BASE_URL"].toString()
+        val baseUrl = (project.properties["BASE_URL"] ?: "none").toString()
         buildConfigField("String", "BASE_URL", baseUrl)
 
     }
@@ -51,9 +55,6 @@ android {
             )
             signingConfig = signingConfigs.getByName("debug")
         }
-    }
-    buildFeatures {
-        buildConfig = true
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8

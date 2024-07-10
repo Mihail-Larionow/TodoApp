@@ -8,8 +8,8 @@ import android.util.Log
 import androidx.work.Configuration
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.WorkManager
-import com.michel.core.data.utils.TodoItemsWorker
-import com.michel.core.data.utils.TodoItemsWorkerFactory
+import com.michel.core.data.worker.TodoItemsWorker
+import com.michel.core.data.worker.TodoItemsWorkerFactory
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 

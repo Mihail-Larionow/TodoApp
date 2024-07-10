@@ -1,12 +1,15 @@
-package com.michel.network.api.backend
+package com.michel.network.api
 
-import com.michel.network.api.backend.interceptors.HeaderInterceptor
-import com.michel.network.api.backend.retrofit.RetrofitApi
-import com.michel.network.api.dto.TodoItemDto
-import com.michel.network.api.wrappers.ItemWrapper
-import com.michel.network.api.wrappers.ListWrapper
+import android.content.Context
+import com.michel.network.R
+import com.michel.network.backend.interceptors.HeaderInterceptor
+import com.michel.network.backend.retrofit.RetrofitApi
+import com.michel.network.dto.TodoItemDto
+import com.michel.network.wrappers.ItemWrapper
+import com.michel.network.wrappers.ListWrapper
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
+import okhttp3.ConnectionPool
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.HttpException
@@ -16,30 +19,40 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.io.IOException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
-import javax.inject.Named
 import kotlin.coroutines.cancellation.CancellationException
 
-const val MAX_RETRIES_COUNT = 2
-const val RETRY_INTERVAL = 2000L
 
 /**
  * Implements logic to work with a server
  */
-class TodoItemsApi @Inject constructor(
-    @Named("URL") private val baseUrl: String
-) {
+class TodoItemsApiImpl @Inject constructor(
+    private val context: Context,
+    baseUrl: String,
+    token: String
+) : TodoItemsApi {
 
-    private lateinit var api: RetrofitApi
-    private val revision: AtomicInteger = AtomicInteger(0)
+    private val api: RetrofitApi
+    private val revision: AtomicInteger = AtomicInteger(-1)
 
-    // Установка токена
-    fun setToken(token: String) {
+
+    init {
         val loggingInterceptor = HttpLoggingInterceptor()
             .setLevel(HttpLoggingInterceptor.Level.BODY)
 
         val client = OkHttpClient.Builder()
+            .connectTimeout(CONNECTION_TIMEOUT, TimeUnit.MILLISECONDS)
+            .readTimeout(READ_WRITE_TIMEOUT, TimeUnit.MILLISECONDS)
+            .writeTimeout(READ_WRITE_TIMEOUT, TimeUnit.MILLISECONDS)
+            .connectionPool(
+                ConnectionPool(
+                    maxIdleConnections = MAX_IDLE_CONNECTIONS_COUNT,
+                    keepAliveDuration = KEEP_ALIVE_DURATION_MINUTES,
+                    timeUnit = TimeUnit.MINUTES
+                )
+            )
             .addInterceptor(loggingInterceptor)
             .addInterceptor(HeaderInterceptor(token))
             .build()
@@ -52,29 +65,37 @@ class TodoItemsApi @Inject constructor(
         api = retrofit.create(RetrofitApi::class.java)
     }
 
+    // Возвращает значение ревизии c бекенда
+    override fun getRevision(): Int? {
+        return revision.get().let {
+            if (it == -1) null
+            else it
+        }
+    }
+
     // Получить все таски с бекенда
-    suspend fun getAll(): List<TodoItemDto> {
+    override suspend fun getAll(): List<TodoItemDto> {
         val response = makeRequest { api.getItemsList() }
         updateRevision(response.revision)
         return response.list
     }
 
     // Получить одну таску по айди
-    suspend fun getItem(id: String): TodoItemDto {
+    override suspend fun getItem(id: String): TodoItemDto {
         val response = makeRequest { api.getItem(id) }
         updateRevision(response.revision)
         return response.element
     }
 
     // Удалить таску
-    suspend fun deleteItem(id: String): TodoItemDto {
+    override suspend fun deleteItem(id: String): TodoItemDto {
         val response = makeRequest { api.deleteItem(id = id, revision = revision.get()) }
         updateRevision(response.revision)
         return response.element
     }
 
     // Обновить таску
-    suspend fun updateItem(todoItem: TodoItemDto): TodoItemDto {
+    override suspend fun updateItem(todoItem: TodoItemDto): TodoItemDto {
         val response = makeRequest {
             api.updateItem(
                 element = ItemWrapper(element = todoItem),
@@ -87,7 +108,7 @@ class TodoItemsApi @Inject constructor(
     }
 
     // Добавить таску
-    suspend fun addItem(todoItem: TodoItemDto): TodoItemDto {
+    override suspend fun addItem(todoItem: TodoItemDto): TodoItemDto {
         val response = makeRequest {
             api.addItem(element = ItemWrapper(element = todoItem), revision = revision.get())
         }
@@ -96,7 +117,7 @@ class TodoItemsApi @Inject constructor(
     }
 
     // Добавить таску
-    suspend fun updateAll(todoItems: List<TodoItemDto>): List<TodoItemDto> {
+    override suspend fun updateAll(todoItems: List<TodoItemDto>): List<TodoItemDto> {
         val response = makeRequest {
             api.updateItemsList(list = ListWrapper(list = todoItems), revision = revision.get())
         }
@@ -104,6 +125,7 @@ class TodoItemsApi @Inject constructor(
         return response.list
     }
 
+    // Выполняет запрос с надстройками
     private suspend fun <T> makeRequest(request: suspend () -> Response<T>): T {
         try {
             return makeRetryingRequest(
@@ -111,20 +133,23 @@ class TodoItemsApi @Inject constructor(
                 retriesCount = MAX_RETRIES_COUNT,
                 interval = RETRY_INTERVAL
             ).body()!!
+        } catch (_: TimeoutCancellationException) {
+            throw Exception(context.getString(R.string.exception_socket))
         } catch (cancellationException: CancellationException) {
             throw cancellationException
         } catch (httpException: HttpException) {
             handleClientExceptions(httpException)
-        } catch (socketException: SocketTimeoutException) {
-            throw socketException
-        } catch (unknownHostException: UnknownHostException) {
-            throw unknownHostException
-        } catch (ioException: IOException) {
-            throw ioException
+        } catch (_: SocketTimeoutException) {
+            throw SocketTimeoutException(context.getString(R.string.exception_socket))
+        } catch (_: UnknownHostException) {
+            throw UnknownHostException(context.getString(R.string.exception_no_host))
+        } catch (_: IOException) {
+            throw IOException(context.getString(R.string.exception_io))
         }
-        throw Exception("unknown")
+        throw Exception(context.getString(R.string.exception_unknown))
     }
 
+    // Выполняет запрос с возможность ретрая (например, при неверной ревизии или при ошибки на сервере)
     private suspend fun <T> makeRetryingRequest(
         request: suspend () -> Response<T>,
         retriesCount: Int,
@@ -135,35 +160,42 @@ class TodoItemsApi @Inject constructor(
                 val response = withTimeout(interval) {
                     request.invoke()
                 }
+
                 if (response.isSuccessful) return response
+                else {
+                    throw HttpException(response)
+                }
             } catch (httpException: HttpException) {
-                handleServerExceptions(httpException)
-            } catch (_: SocketTimeoutException) {
-                throw SocketTimeoutException()
-            } catch (_: TimeoutCancellationException) {
-                throw SocketTimeoutException()
+                val isLastRetry = it + 1 == MAX_RETRIES_COUNT
+                handleHttpExceptions(exception = httpException, isLastRetry = isLastRetry)
             }
         }
         throw SocketTimeoutException()
     }
 
-    private fun handleServerExceptions(httpException: HttpException) {
-        when (httpException.code()) {
+    private suspend fun handleHttpExceptions(exception: HttpException, isLastRetry: Boolean) {
+        when (exception.code()) {
             500 -> {
-
+                if (isLastRetry) throw exception
             }
 
-            else -> throw httpException
+            400 -> {
+                if (isLastRetry) throw exception
+                updateRevision(api.getItemsList().body()?.revision)
+            }
+
+            else -> throw exception
         }
     }
 
     private fun handleClientExceptions(httpException: HttpException) {
         val exceptionCode = httpException.code()
         throw when (exceptionCode) {
-            400 -> Exception("400")
-            401 -> Exception("401")
-            404 -> Exception("404")
-            else -> Exception("unknown exception")
+            400 -> Exception(context.getString(R.string.exception_400))
+            401 -> Exception(context.getString(R.string.exception_401))
+            404 -> Exception(context.getString(R.string.exception_404))
+            500 -> Exception(context.getString(R.string.exception_500))
+            else -> Exception(context.getString(R.string.exception_unknown))
         }
     }
 

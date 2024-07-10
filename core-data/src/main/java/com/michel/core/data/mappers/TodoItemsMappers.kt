@@ -2,8 +2,8 @@ package com.michel.core.data.mappers
 
 import com.michel.core.data.models.Importance
 import com.michel.core.data.models.TodoItem
-import com.michel.database.data.TodoItemEntity
-import com.michel.network.api.dto.TodoItemDto
+import com.michel.database.room.models.TodoItemEntity
+import com.michel.network.dto.TodoItemDto
 
 // Преобразовывает TodoItemDto в TodoItem
 fun TodoItemDto.toTodoItem(): TodoItem {

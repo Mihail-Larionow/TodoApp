@@ -2,7 +2,7 @@ package com.michel.feature.todolistscreen
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
-import com.michel.core.data.interactor.TodoItemsInteractor
+import com.michel.core.data.interactor.TodoItemsInteractorImpl
 import com.michel.core.data.models.TodoItem
 import com.michel.core.ui.viewmodel.ScreenIntent
 import com.michel.core.ui.viewmodel.ViewModelBase
@@ -13,6 +13,7 @@ import com.michel.feature.todolistscreen.utils.ListScreenState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
@@ -23,24 +24,23 @@ import javax.inject.Inject
  */
 @HiltViewModel
 internal class TodoListScreenViewModel @Inject constructor(
-    private val interactor: TodoItemsInteractor
+    private val interactor: TodoItemsInteractorImpl
 ) : ViewModelBase<ListScreenState, ListScreenIntent, ListScreenEffect>(ListScreenState()) {
-
-    private var todoItems: MutableList<TodoItem> = mutableListOf()
 
     private val scope = viewModelScope + CoroutineExceptionHandler { _, throwable ->
         Log.i("ui", "${throwable.message}")
     }
 
     init {
-        Log.i("ui","created")
         startDataObserving()
+        startErrorsObserving()
     }
 
     // Обработка поступившего интента
     override fun handleIntent(intent: ScreenIntent) {
         when (intent) {
             ListScreenIntent.GetItemsIntent -> loadItems()
+            ListScreenIntent.StartLoadingIntent -> startRefreshing()
             is ListScreenIntent.ChangeVisibilityIntent -> updateVisibility(intent.isNotVisible)
             is ListScreenIntent.DeleteItemIntent -> deleteItem(intent.item)
             is ListScreenIntent.UpdateItemIntent -> updateItem(intent.item)
@@ -52,24 +52,29 @@ internal class TodoListScreenViewModel @Inject constructor(
     // Запуск отслеживания данных
     private fun startDataObserving() {
         scope.launch(Dispatchers.IO) {
-            combine(state, interactor.todoItemsList) { state, list ->
+            combine(state, interactor.getTodoItemsFlow()) { state, list ->
                 ListScreenState(
                     doneItemsHide = state.doneItemsHide,
                     doneItemsCount = list.count { it.isDone },
                     todoItems = list,
-                    isLoading = state.isLoading
+                    isRefreshing = state.isRefreshing
                 )
             }.collect {
                 setState { it }
             }
-            updateCounter()
         }
     }
 
-    // Обновляет счетчик выполненных тасок
-    private fun updateCounter() {
-        val doneItemsCount = todoItems.count { it.isDone }
-        setState { copy(doneItemsCount = doneItemsCount) }
+    // Запуск отслеживания ошибок
+    private fun startErrorsObserving() {
+        scope.launch {
+            interactor.errors.collectLatest { throwable -> showSnackBar("${throwable.message}") }
+        }
+    }
+
+    // Запускает рефреш данных
+    private fun startRefreshing() {
+        setState { copy(isRefreshing = true) }
     }
 
     // Обновляет состояние чекбокса глазика
@@ -79,57 +84,32 @@ internal class TodoListScreenViewModel @Inject constructor(
 
     // Достает все таски
     private fun loadItems() {
-        setState {
-            copy(
-                isLoading = true,
-                enabled = false,
-                failed = false
-            )
-        }
-
         scope.launch(Dispatchers.IO) {
-            val result = interactor.loadTodoItems()
-            result.onFailure { onGetAllFail("Не удалось получить данные") }
-            result.onSuccess { onGetAllSuccess() }
+            setState { copy(failed = false) }
+            val result = interactor.synchronizeDataWithResult()
+
+            result.onSuccess {
+                onLoadSuccess()
+            }
+            result.onFailure { throwable ->
+                onLoadFailure("${throwable.message}")
+            }
         }
     }
 
     // Обновляет состояние таски
     private fun updateItem(updatedItem: TodoItem) {
-        setState { copy(enabled = false) }
-        scope.launch(Dispatchers.IO) {
-            val result = interactor.updateTodoItem(updatedItem)
-            updateCounter()
-            result.onFailure {
-                showSnackBar("Не удалось сохранить на сервере")
-            }
-            setState { copy(enabled = true) }
-        }
+        interactor.updateTodoItem(updatedItem)
     }
 
     // Удаляет таску
     private fun deleteItem(deletedItem: TodoItem) {
-        setState { copy(enabled = false) }
-        updateCounter()
-        scope.launch(Dispatchers.IO) {
-            val result = interactor.deleteTodoItem(deletedItem)
-            result.onFailure {
-                showSnackBar("Не удалось удалить на сервере")
-            }
-            setState { copy(enabled = true) }
-        }
+        interactor.deleteTodoItem(deletedItem)
     }
 
     // Обновление всех тасок
     private fun updateItems(items: List<TodoItem>) {
-        scope.launch(Dispatchers.IO) {
-            val result = interactor.updateAllTodoItems(items)
-            result.onFailure {
-                updateCounter()
-                showSnackBar("Синхронизация не удалась")
-            }
-            result.onSuccess { setState { copy(enabled = true, failed = false) } }
-        }
+        interactor.sendTodoItems(items)
     }
 
     // Перейти на экрана TodoItem с id
@@ -138,31 +118,29 @@ internal class TodoListScreenViewModel @Inject constructor(
     }
 
     private fun showSnackBar(message: String) {
-        setEffect { ListScreenEffect.ShowSnackBarEffect(message) }
+        setEffect { ListScreenEffect.ShowSimpleSnackBarEffect(message) }
     }
 
     // Обработка ошбики при получении списка
-    private fun onGetAllFail(message: String) {
+    private fun onLoadFailure(message: String) {
         setState {
             copy(
-                isLoading = false,
+                isRefreshing = false,
                 failed = true,
-                enabled = false,
                 errorMessage = message
             )
         }
+        setEffect { ListScreenEffect.ShowButtonSnackBarEffect(message, "ПОВТОРИТЬ") }
     }
 
     // Обработка удачного получения списка
-    private fun onGetAllSuccess() {
+    private fun onLoadSuccess() {
         setState {
             copy(
-                isLoading = false,
-                enabled = true,
+                isRefreshing = false,
                 failed = false
             )
         }
-        updateCounter()
     }
 
 }

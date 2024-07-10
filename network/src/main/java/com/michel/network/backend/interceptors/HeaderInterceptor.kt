@@ -1,4 +1,4 @@
-package com.michel.network.api.backend.interceptors
+package com.michel.network.backend.interceptors
 
 import okhttp3.Interceptor
 import okhttp3.Response

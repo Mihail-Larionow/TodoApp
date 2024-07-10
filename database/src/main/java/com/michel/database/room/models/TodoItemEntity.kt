@@ -1,4 +1,4 @@
-package com.michel.database.data
+package com.michel.database.room.models
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

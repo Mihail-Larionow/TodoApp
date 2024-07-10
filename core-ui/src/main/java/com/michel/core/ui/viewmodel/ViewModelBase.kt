@@ -22,8 +22,8 @@ abstract class ViewModelBase<S : ScreenState, I : ScreenIntent, E : ScreenEffect
     private val _state: MutableStateFlow<S> = MutableStateFlow(initialState)
     val state = _state.asStateFlow()
 
-    private val _event: MutableSharedFlow<I> = MutableSharedFlow()
-    val intent = _event.asSharedFlow()
+    private val _intent: MutableSharedFlow<I> = MutableSharedFlow()
+    val intent = _intent.asSharedFlow()
 
     private val _effect: Channel<E> = Channel()
     val effect = _effect.receiveAsFlow()
@@ -39,7 +39,7 @@ abstract class ViewModelBase<S : ScreenState, I : ScreenIntent, E : ScreenEffect
     fun setIntent(intent: I) {
         val newEvent = intent
         viewModelScope.launch {
-            _event.emit(newEvent)
+            _intent.emit(newEvent)
         }
     }
 

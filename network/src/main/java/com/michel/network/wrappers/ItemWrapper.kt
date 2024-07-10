@@ -1,7 +1,7 @@
-package com.michel.network.api.wrappers
+package com.michel.network.wrappers
 
 import com.google.gson.annotations.SerializedName
-import com.michel.network.api.dto.TodoItemDto
+import com.michel.network.dto.TodoItemDto
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

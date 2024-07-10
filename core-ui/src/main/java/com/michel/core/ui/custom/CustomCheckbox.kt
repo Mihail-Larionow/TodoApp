@@ -4,8 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -67,12 +65,12 @@ private fun Content(
     checked: Boolean,
     enabled: Boolean,
 ) {
-    val uncheckedTint = animateColorAsState(
-        targetValue = if(enabled) uncheckedTint else disabledTint
+    val animatedUncheckedTint = animateColorAsState(
+        targetValue = if (enabled) uncheckedTint else disabledTint, label = ""
     )
 
-    val checkedTint = animateColorAsState(
-        targetValue = if(enabled) checkedTint else disabledTint
+    val animatedCheckedTint = animateColorAsState(
+        targetValue = if (enabled) checkedTint else disabledTint, label = ""
     )
 
     AnimatedVisibility(
@@ -84,7 +82,7 @@ private fun Content(
         Icon(
             painter = uncheckedIcon,
             contentDescription = stringResource(R.string.unchecked),
-            tint = uncheckedTint.value,
+            tint = animatedUncheckedTint.value,
             modifier = modifier
         )
     }
@@ -97,7 +95,7 @@ private fun Content(
         Icon(
             painter = checkedIcon,
             contentDescription = stringResource(R.string.checked),
-            tint = checkedTint.value,
+            tint = animatedCheckedTint.value,
             modifier = modifier
         )
     }

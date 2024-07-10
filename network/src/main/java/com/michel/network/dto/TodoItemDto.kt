@@ -1,4 +1,4 @@
-package com.michel.network.api.dto
+package com.michel.network.dto
 
 import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.SerialName

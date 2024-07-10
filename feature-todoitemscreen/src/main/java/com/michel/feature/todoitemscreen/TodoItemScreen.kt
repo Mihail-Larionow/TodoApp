@@ -21,6 +21,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -49,8 +50,8 @@ import com.michel.core.ui.custom.TodoDivider
 import com.michel.core.ui.extensions.bottomShadow
 import com.michel.core.ui.extensions.toDateText
 import com.michel.core.ui.theme.TodoAppTheme
-import com.michel.feature.todoitemscreen.utils.ItemScreenIntent
 import com.michel.feature.todoitemscreen.utils.ItemScreenEffect
+import com.michel.feature.todoitemscreen.utils.ItemScreenIntent
 import com.michel.feature.todoitemscreen.utils.ItemScreenState
 import java.util.Date
 
@@ -162,19 +163,18 @@ private fun Header(
             .height(TOP_BAR_HEIGHT)
             .padding(start = 8.dp, end = 8.dp)
     ) {
-        Icon(
-            painter = painterResource(com.michel.core.ui.R.drawable.ic_exit),
-            contentDescription = stringResource(com.michel.core.ui.R.string.cancelUpperCase),
-            tint = TodoAppTheme.color.primary,
-            modifier = Modifier
-                .size(TodoAppTheme.size.standardIcon)
-                .clickable { onEvent(ItemScreenIntent.ToListScreenIntent) }
-                .align(Alignment.CenterVertically)
-        )
-        Spacer(
-            modifier = Modifier.weight(1f)
-        )
-
+        IconButton(
+            onClick = { onEvent(ItemScreenIntent.ToListScreenIntent) },
+            modifier = Modifier.align(Alignment.CenterVertically)
+        ) {
+            Icon(
+                painter = painterResource(com.michel.core.ui.R.drawable.ic_exit),
+                contentDescription = stringResource(com.michel.core.ui.R.string.cancelUpperCase),
+                tint = TodoAppTheme.color.primary,
+                modifier = Modifier.size(TodoAppTheme.size.standardIcon)
+            )
+        }
+        Spacer(modifier = Modifier.weight(1f))
         TextButton(
             enabled = screenState.text != "" && screenState.enabled,
             onClick = { onEvent(ItemScreenIntent.SaveIntent) },

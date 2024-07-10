@@ -11,8 +11,7 @@ data class ListScreenState(
     val doneItemsHide: Boolean = false,
     val doneItemsCount: Int = 0,
     val failed: Boolean = false,
-    val isLoading: Boolean = false,
-    val isRefreshing: Boolean = false,
-    val enabled: Boolean = true,
+    val isRefreshing: Boolean = true,
     val errorMessage: String = "",
+    val enabled: Boolean = true
 ) : ScreenState
