@@ -82,7 +82,7 @@ private val typography = TodoAppTypography(
 )
 
 private val shape = TodoAppShape(
-    container = RoundedCornerShape(16.dp)
+    container = RoundedCornerShape(8.dp)
 )
 
 private val size = TodoAppSize(

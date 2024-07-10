@@ -51,7 +51,7 @@ android {
 dependencies {
 
     implementation(project(":core-ui"))
-    implementation(project(":core-data"))
+    api(project(":core-data"))
 
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.hilt.android)

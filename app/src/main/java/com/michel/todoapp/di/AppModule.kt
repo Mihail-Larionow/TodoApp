@@ -18,12 +18,17 @@ class AppModule {
 
     @Provides
     @Singleton
-    @Named("TOKEN")
-    fun provideToken(): String = BuildConfig.TODOAPP_TOKEN
+    @Named("TOKEN_OAUTH")
+    fun provideOAuthToken(): String = BuildConfig.TOKEN_OAUTH
+
+    @Provides
+    @Singleton
+    @Named("TOKEN_BEARER")
+    fun provideBearerToken(): String = BuildConfig.TOKEN_BEARER
 
     @Provides
     @Singleton
     @Named("URL")
-    fun provideBaseUrl(): String = BuildConfig.TODOAPP_BASE_URL
+    fun provideBaseUrl(): String = BuildConfig.BASE_URL
 
 }

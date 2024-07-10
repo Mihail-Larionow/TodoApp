@@ -20,7 +20,7 @@ fun emptyTodoItem(): TodoItem {
     return TodoItem(
         id = "",
         text = "",
-        importance = Importance.Standard,
+        importance = Importance.Basic,
         isDone = false,
         createdAt = Date().time
     )

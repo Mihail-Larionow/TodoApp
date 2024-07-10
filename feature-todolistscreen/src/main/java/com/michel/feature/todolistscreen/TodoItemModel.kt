@@ -1,6 +1,5 @@
 package com.michel.feature.todolistscreen
 
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
@@ -30,6 +29,7 @@ import com.michel.core.ui.custom.ImageCheckbox
 import com.michel.core.ui.extensions.toDateText
 import com.michel.core.ui.theme.TodoAppTheme
 import com.michel.feature.todolistscreen.utils.ListScreenIntent
+import java.util.Date
 
 /**
  * UI model of TodoItem
@@ -54,10 +54,7 @@ internal fun TodoItemModel(
             .fillMaxWidth()
             .clickable(
                 enabled = enabled,
-                onClick = {
-                    Log.i("ui", todoItem.id)
-                    onEvent(ListScreenIntent.ToItemScreenIntent(todoItem.id))
-                },
+                onClick = { onEvent(ListScreenIntent.ToItemScreenIntent(todoItem.id)) },
             )
             .background(color = backgroundColor.value)
             .padding(all = 16.dp)
@@ -67,9 +64,16 @@ internal fun TodoItemModel(
             checked = checked,
             enabled = enabled,
             onCheckChanged = {
-                onEvent(ListScreenIntent.UpdateItemIntent(todoItem.copy(isDone = it)))
+                onEvent(
+                    ListScreenIntent.UpdateItemIntent(
+                        todoItem.copy(
+                            isDone = it,
+                            changedAt = Date().time
+                        )
+                    )
+                )
             },
-            modifier = Modifier.size(TodoAppTheme.size.smallIcon)
+            modifier = Modifier.size(TodoAppTheme.size.standardIcon)
         )
         Spacer(modifier = Modifier.width(12.dp))
         AnimatedImportance(
@@ -89,7 +93,7 @@ internal fun TodoItemModel(
             painter = painterResource(R.drawable.ic_info),
             contentDescription = stringResource(R.string.infoIconContentDescription),
             tint = TodoAppTheme.color.tertiary,
-            modifier = Modifier.size(TodoAppTheme.size.smallIcon),
+            modifier = Modifier.size(TodoAppTheme.size.standardIcon),
         )
     }
 }
@@ -161,16 +165,23 @@ private fun TodoCheckbox(
     modifier: Modifier = Modifier
 ) {
     val checkedIcon = painterResource(R.drawable.ic_checked)
-    val uncheckedIcon = if (todoImportance == Importance.High) {
-        painterResource(R.drawable.ic_unchecked_high)
+    val uncheckedIcon = painterResource(R.drawable.ic_unchecked)
+
+
+    val unCheckedTint = if (todoImportance == Importance.High) {
+        TodoAppTheme.color.red
     } else {
-        painterResource(R.drawable.ic_unchecked)
+        TodoAppTheme.color.tertiary
     }
+
     ImageCheckbox(
         checked = checked,
         onCheckedChange = { onCheckChanged(it) },
         checkedIcon = checkedIcon,
+        checkedTint = TodoAppTheme.color.green,
         uncheckedIcon = uncheckedIcon,
+        uncheckedTint = unCheckedTint,
+        disabledTint = TodoAppTheme.color.disable,
         enabled = enabled,
         modifier = modifier
     )
@@ -185,7 +196,7 @@ private fun AnimatedImportance(
     AnimatedVisibility(visible = visible) {
         when (importance) {
             Importance.High -> HighImportance(modifier = modifier)
-            Importance.Standard -> {}
+            Importance.Basic -> {}
             Importance.Low -> LowImportance(modifier = modifier)
         }
     }

@@ -21,6 +21,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -49,9 +50,9 @@ import com.michel.core.ui.custom.TodoDivider
 import com.michel.core.ui.extensions.bottomShadow
 import com.michel.core.ui.extensions.toDateText
 import com.michel.core.ui.theme.TodoAppTheme
+import com.michel.feature.todoitemscreen.utils.ItemScreenEffect
 import com.michel.feature.todoitemscreen.utils.ItemScreenIntent
-import com.michel.feature.todoitemscreen.utils.ItemScreenSideEffect
-import com.michel.feature.todoitemscreen.utils.TodoItemScreenState
+import com.michel.feature.todoitemscreen.utils.ItemScreenState
 import java.util.Date
 
 private val TOP_BAR_HEIGHT = 56.dp
@@ -88,13 +89,11 @@ fun TodoItemScreen(navigate: () -> Unit) {
         topBar = {
             Header(
                 screenState = screenState,
-                onEvent = { viewModel.onEvent(it) },
+                onEvent = viewModel::handleIntent,
                 modifier = Modifier
                     .height(TodoAppTheme.size.toolBar)
                     .bottomShadow(shadow = headerShadow)
-                    .background(
-                        color = TodoAppTheme.color.backPrimary
-                    )
+                    .background(color = TodoAppTheme.color.backPrimary)
                     .padding(
                         start = 16.dp,
                         end = 12.dp,
@@ -110,7 +109,7 @@ fun TodoItemScreen(navigate: () -> Unit) {
         Content(
             screenState = screenState,
             listState = listState,
-            onEvent = { viewModel.onEvent(it) },
+            onEvent = viewModel::handleIntent,
             modifier = Modifier.padding(paddingValues = innerPadding)
         )
     }
@@ -119,7 +118,7 @@ fun TodoItemScreen(navigate: () -> Unit) {
 @Composable
 private fun Content(
     modifier: Modifier = Modifier,
-    screenState: TodoItemScreenState,
+    screenState: ItemScreenState,
     listState: LazyListState,
     onEvent: (ItemScreenIntent) -> Unit,
 ) {
@@ -146,34 +145,36 @@ private fun Content(
 @Composable
 private fun Header(
     modifier: Modifier = Modifier,
-    screenState: TodoItemScreenState,
+    screenState: ItemScreenState,
     onEvent: (ItemScreenIntent) -> Unit
 ) {
+    val textColor = animateColorAsState(
+        targetValue =
+        if (screenState.text == "" || !screenState.enabled) {
+            TodoAppTheme.color.disable
+        } else {
+            TodoAppTheme.color.blue
+        }, label = ""
+    )
+
     Row(
         modifier = modifier
             .fillMaxWidth()
             .height(TOP_BAR_HEIGHT)
             .padding(start = 8.dp, end = 8.dp)
     ) {
-        Icon(
-            painter = painterResource(com.michel.core.ui.R.drawable.ic_exit),
-            contentDescription = stringResource(com.michel.core.ui.R.string.cancelUpperCase),
-            tint = TodoAppTheme.color.primary,
-            modifier = Modifier
-                .size(TodoAppTheme.size.standardIcon)
-                .clickable { onEvent(ItemScreenIntent.ToListScreenIntent) }
-                .align(Alignment.CenterVertically)
-        )
-        Spacer(
-            modifier = Modifier.weight(1f)
-        )
-
-        val textColor = if (screenState.text == "" || !screenState.enabled) {
-            TodoAppTheme.color.disable
-        } else {
-            TodoAppTheme.color.blue
+        IconButton(
+            onClick = { onEvent(ItemScreenIntent.ToListScreenIntent) },
+            modifier = Modifier.align(Alignment.CenterVertically)
+        ) {
+            Icon(
+                painter = painterResource(com.michel.core.ui.R.drawable.ic_exit),
+                contentDescription = stringResource(com.michel.core.ui.R.string.cancelUpperCase),
+                tint = TodoAppTheme.color.primary,
+                modifier = Modifier.size(TodoAppTheme.size.standardIcon)
+            )
         }
-
+        Spacer(modifier = Modifier.weight(1f))
         TextButton(
             enabled = screenState.text != "" && screenState.enabled,
             onClick = { onEvent(ItemScreenIntent.SaveIntent) },
@@ -181,7 +182,7 @@ private fun Header(
         ) {
             Text(
                 text = stringResource(com.michel.core.ui.R.string.saveUpperCase),
-                color = textColor,
+                color = textColor.value,
                 style = TodoAppTheme.typography.button
             )
         }
@@ -192,7 +193,7 @@ private fun Header(
 private fun Body(
     modifier: Modifier = Modifier,
     listState: LazyListState,
-    screenState: TodoItemScreenState,
+    screenState: ItemScreenState,
     onEvent: (ItemScreenIntent) -> Unit
 ) {
     LazyColumn(
@@ -241,7 +242,7 @@ private fun Body(
 
 @Composable
 private fun ErrorContent(
-    screenState: TodoItemScreenState,
+    screenState: ItemScreenState,
     onEvent: (ItemScreenIntent) -> Unit
 ) {
     Column {
@@ -298,11 +299,11 @@ private fun TodoDatePicker(
 @Composable
 private fun ImportanceField(
     modifier: Modifier = Modifier,
-    screenState: TodoItemScreenState,
+    screenState: ItemScreenState,
     onEvent: (ItemScreenIntent) -> Unit
 ) {
     val options = listOf(
-        Importance.Standard,
+        Importance.Basic,
         Importance.Low,
         Importance.High
     )
@@ -390,7 +391,7 @@ private fun ImportanceItems(
 @Composable
 private fun DeadlineField(
     modifier: Modifier = Modifier,
-    screenState: TodoItemScreenState,
+    screenState: ItemScreenState,
     onEvent: (ItemScreenIntent) -> Unit
 ) {
     Row(
@@ -413,7 +414,7 @@ private fun DeadlineField(
 
 @Composable
 private fun DeadlineColumn(
-    screenState: TodoItemScreenState,
+    screenState: ItemScreenState,
     onEvent: (ItemScreenIntent) -> Unit
 ) {
     val headColor = animateColorAsState(
@@ -438,7 +439,7 @@ private fun DeadlineColumn(
 
 @Composable
 private fun AnimatedDeadlineText(
-    screenState: TodoItemScreenState,
+    screenState: ItemScreenState,
     onEvent: (ItemScreenIntent) -> Unit
 ) {
     val subheadColor = animateColorAsState(
@@ -448,10 +449,10 @@ private fun AnimatedDeadlineText(
             TodoAppTheme.color.disable
         }, label = ""
     )
+    Spacer(
+        modifier = Modifier.height(4.dp)
+    )
     AnimatedVisibility(visible = screenState.hasDeadline) {
-        Spacer(
-            modifier = Modifier.height(4.dp)
-        )
         Text(
             text = screenState.deadlineDateText,
             color = subheadColor.value,
@@ -466,7 +467,7 @@ private fun AnimatedDeadlineText(
 
 @Composable
 private fun DeleteButton(
-    screenState: TodoItemScreenState,
+    screenState: ItemScreenState,
     onClick: (ItemScreenIntent) -> Unit
 ) {
     Row(
@@ -510,8 +511,8 @@ private suspend fun collectSideEffects(
 ) {
     viewModel.effect.collect { effect ->
         when (effect) {
-            is ItemScreenSideEffect.ShowSnackBarSideEffect -> snackBarHostState.showSnackbar(effect.message)
-            ItemScreenSideEffect.LeaveScreenSideEffect -> navigate()
+            is ItemScreenEffect.ShowSnackBarEffect -> snackBarHostState.showSnackbar(effect.message)
+            ItemScreenEffect.LeaveScreenEffect -> navigate()
         }
     }
 }
@@ -521,7 +522,7 @@ private suspend fun collectSideEffects(
 @Composable
 private fun TodoItemScreenPreview() {
     val date = Date().time
-    val previewState = TodoItemScreenState(
+    val previewState = ItemScreenState(
         text = "Пожалуйста, поставьте максимальный балл",
         importance = Importance.High,
         hasDeadline = true,
@@ -531,7 +532,7 @@ private fun TodoItemScreenPreview() {
         priorityMenuExpanded = false,
         loading = false,
         failed = false,
-        enabled = false,
+        enabled = true,
         deleteButtonEnabled = true,
         errorMessage = ""
     )

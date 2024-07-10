@@ -17,11 +17,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
 
-        val properties = Properties()
-        properties.load(project.rootProject.file("gradle.properties").inputStream())
-        val baseUrl = properties.getProperty("TODOAPP_BASE_URL")
 
-        buildConfigField("String", "TODOAPP_BASE_URL","\"$baseUrl\"")
     }
 
     buildTypes {
