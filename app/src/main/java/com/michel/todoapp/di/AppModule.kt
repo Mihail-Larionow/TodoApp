@@ -17,17 +17,14 @@ import javax.inject.Singleton
 class AppModule {
 
     @Provides
-    @Singleton
     @Named("TOKEN_OAUTH")
     fun provideOAuthToken(): String = BuildConfig.TOKEN_OAUTH
 
     @Provides
-    @Singleton
     @Named("TOKEN_BEARER")
     fun provideBearerToken(): String = BuildConfig.TOKEN_BEARER
 
     @Provides
-    @Singleton
     @Named("URL")
     fun provideBaseUrl(): String = BuildConfig.BASE_URL
 
