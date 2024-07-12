@@ -45,12 +45,6 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-
             signingConfig = signingConfigs.create("release").apply {
                 storeFile = File("$projectDir/release/keystore/keys.jks")
                 keyAlias = providers.environmentVariable("SIGNING_KEY_ALIAS").get()
