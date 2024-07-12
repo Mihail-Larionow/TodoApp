@@ -47,7 +47,7 @@ captures/
 *.swp
 
 # Keystore files
-*.jks
+# *.jks
 *.keystore
 
 # Google Services (e.g. APIs or Firebase)
@@ -129,5 +129,3 @@ fabric.properties
 ### AndroidStudio Patch ###
 
 !/gradle/wrapper/gradle-wrapper.jar
-
-gradle.properties
