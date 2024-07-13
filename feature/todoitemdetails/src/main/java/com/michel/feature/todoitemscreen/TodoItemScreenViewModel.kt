@@ -3,10 +3,10 @@ package com.michel.feature.todoitemscreen
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import com.michel.core.data.interactor.TodoItemsInteractorImpl
 import com.michel.core.data.models.Importance
 import com.michel.core.data.models.TodoItem
 import com.michel.core.data.models.emptyTodoItem
+import com.michel.core.data.repository.TodoItemsRepository
 import com.michel.core.ui.extensions.toDateText
 import com.michel.core.ui.viewmodel.ScreenIntent
 import com.michel.core.ui.viewmodel.ViewModelBase
@@ -26,7 +26,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 internal class TodoItemScreenViewModel @Inject constructor(
-    private val interactor: TodoItemsInteractorImpl,
+    private val repository: TodoItemsRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModelBase<ItemScreenState, ItemScreenIntent, ItemScreenEffect>(ItemScreenState()) {
 
@@ -64,7 +64,7 @@ internal class TodoItemScreenViewModel @Inject constructor(
     private fun loadItemInfo() {
         setState { copy(loading = true, enabled = false) }
         scope.launch(Dispatchers.IO) {
-            val item = interactor.getTodoItem(todoItemId)
+            val item = repository.getTodoItem(todoItemId)
             updateInfo(item)
         }
     }
@@ -95,20 +95,20 @@ internal class TodoItemScreenViewModel @Inject constructor(
 
     // Добавление TodoItem
     private fun addNewItem(todoItem: TodoItem) {
-        interactor.addTodoItem(todoItem)
+        repository.addTodoItem(todoItem)
         setEffect { ItemScreenEffect.LeaveScreenEffect }
     }
 
     // Обновление TodoItem
     private fun updateItem(todoItem: TodoItem) {
-        interactor.updateTodoItem(todoItem)
+        repository.updateTodoItem(todoItem)
         setEffect { ItemScreenEffect.LeaveScreenEffect }
     }
 
     // Удаляет таску из репозитория
     private fun delete() {
         setState { copy(enabled = false) }
-        interactor.deleteTodoItem(todoItem)
+        repository.deleteTodoItem(todoItem)
         setEffect { ItemScreenEffect.LeaveScreenEffect }
     }
 

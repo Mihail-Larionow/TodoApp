@@ -27,3 +27,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
+include(":core:common")
+include(":feature:todoworker")

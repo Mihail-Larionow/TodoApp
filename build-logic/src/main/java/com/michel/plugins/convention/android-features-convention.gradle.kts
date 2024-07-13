@@ -1,3 +1,5 @@
+import gradle.kotlin.dsl.accessors._a937729d8a1f305b163059a48f19fa79.implementation
+
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
@@ -15,9 +17,15 @@ android {
 
 dependencies {
 
+    // Yandex Auth
+    implementation(libs.authsdk)
+
+    // Worker
+    implementation(libs.androidx.work.runtime.ktx)
+
+    implementation(libs.javax.inject)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
-
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
     testImplementation(libs.junit)

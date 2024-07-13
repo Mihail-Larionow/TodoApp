@@ -41,7 +41,7 @@ jobs:
         uses: actions/upload-artifact@v4.3.3
         with:
           name: LintReport.html
-          path: app/build/reports/lint-results-debug.html
+          path: app/build/reports/lint-results-release.html
 
   UNIT-TESTS:
     needs: [ LINT ]

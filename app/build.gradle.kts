@@ -58,7 +58,7 @@ android {
 dependencies {
     implementation(projects.feature.todoitemdetails)
     implementation(projects.feature.todoitemslist)
+    implementation(projects.feature.todoworker)
     implementation(projects.feature.auth)
-    implementation(projects.core.ui)
 }
 

@@ -10,8 +10,6 @@ import com.michel.feature.authscreen.utils.AuthScreenIntent
 import com.michel.feature.authscreen.utils.AuthScreenState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import javax.inject.Inject
 import javax.inject.Named
@@ -21,7 +19,7 @@ import javax.inject.Named
  */
 @HiltViewModel
 internal class AuthScreenViewModel @Inject constructor(
-    private val tokenRepository: TokenRepository,
+    private val repository: TokenRepository,
     @Named("TOKEN_OAUTH") private val gradleToken: String,
 ) : ViewModelBase<AuthScreenState, AuthScreenIntent, AuthScreenEffect>(AuthScreenState()) {
 
@@ -52,10 +50,8 @@ internal class AuthScreenViewModel @Inject constructor(
 
     // Сохраняет токен на устройстве
     private fun saveToken(token: String) {
-        scope.launch(Dispatchers.IO) {
-            tokenRepository.saveToken(token)
-            setEffect { AuthScreenEffect.LeaveScreenEffect }
-        }
+        repository.setToken(token)
+        setEffect { AuthScreenEffect.LeaveScreenEffect }
     }
 
     // Запускает сайд эффект, чтобы вывести снекбар об отмененной авторизации

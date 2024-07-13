@@ -2,8 +2,8 @@ package com.michel.feature.todolistscreen
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
-import com.michel.core.data.interactor.TodoItemsInteractorImpl
 import com.michel.core.data.models.TodoItem
+import com.michel.core.data.repository.TodoItemsRepository
 import com.michel.core.ui.viewmodel.ScreenIntent
 import com.michel.core.ui.viewmodel.ViewModelBase
 import com.michel.feature.todolistscreen.utils.ListScreenEffect
@@ -24,7 +24,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 internal class TodoListScreenViewModel @Inject constructor(
-    private val interactor: TodoItemsInteractorImpl
+    private val repository: TodoItemsRepository
 ) : ViewModelBase<ListScreenState, ListScreenIntent, ListScreenEffect>(ListScreenState()) {
 
     private val scope = viewModelScope + CoroutineExceptionHandler { _, throwable ->
@@ -51,8 +51,8 @@ internal class TodoListScreenViewModel @Inject constructor(
 
     // Запуск отслеживания данных
     private fun startDataObserving() {
-        scope.launch(Dispatchers.IO) {
-            combine(state, interactor.getTodoItemsFlow()) { state, list ->
+        scope.launch {
+            combine(state, repository.getTodoItemsFlow()) { state, list ->
                 ListScreenState(
                     doneItemsHide = state.doneItemsHide,
                     doneItemsCount = list.count { it.isDone },
@@ -68,7 +68,7 @@ internal class TodoListScreenViewModel @Inject constructor(
     // Запуск отслеживания ошибок
     private fun startErrorsObserving() {
         scope.launch {
-            interactor.errors.collectLatest { throwable -> showSnackBar("${throwable.message}") }
+            repository.errors.collectLatest { throwable -> showSnackBar("${throwable.message}") }
         }
     }
 
@@ -86,7 +86,7 @@ internal class TodoListScreenViewModel @Inject constructor(
     private fun loadItems() {
         scope.launch(Dispatchers.IO) {
             setState { copy(failed = false) }
-            val result = interactor.synchronizeDataWithResult()
+            val result = repository.synchronizeDataWithResult()
 
             result.onSuccess {
                 onLoadSuccess()
@@ -99,12 +99,12 @@ internal class TodoListScreenViewModel @Inject constructor(
 
     // Обновляет состояние таски
     private fun updateItem(updatedItem: TodoItem) {
-        interactor.updateTodoItem(updatedItem)
+        repository.updateTodoItem(updatedItem)
     }
 
     // Удаляет таску
     private fun deleteItem(deletedItem: TodoItem) {
-        interactor.deleteTodoItem(deletedItem)
+        repository.deleteTodoItem(deletedItem)
     }
 
     // Перейти на экрана TodoItem с id

@@ -10,5 +10,5 @@ android {
 
 dependencies {
     implementation(projects.core.ui)
-    api(projects.core.data)
+    implementation(projects.core.data)
 }

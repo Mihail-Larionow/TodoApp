@@ -4,9 +4,9 @@ import com.michel.todoapp.BuildConfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.components.ActivityComponent
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Named
-import javax.inject.Singleton
 
 
 /**
@@ -25,7 +25,7 @@ class AppModule {
     fun provideBearerToken(): String = BuildConfig.TOKEN_BEARER
 
     @Provides
-    @Named("URL")
+    @Named("BASE_URL")
     fun provideBaseUrl(): String = BuildConfig.BASE_URL
 
 }

@@ -9,9 +9,6 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.data)
-    implementation(projects.core.ui)
-
-    // Yandex Auth
-    implementation(libs.authsdk)
+    api(projects.core.data)
+    api(projects.core.ui)
 }

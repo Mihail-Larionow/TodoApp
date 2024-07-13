@@ -1,36 +1,53 @@
 package com.michel.core.data.di
 
-import com.michel.core.data.repository.local.LocalTodoItemsRepository
-import com.michel.core.data.repository.local.LocalTodoItemsRepositoryImpl
-import com.michel.core.data.repository.remote.RemoteTodoItemsRepository
-import com.michel.core.data.repository.remote.RemoteTodoItemsRepositoryImpl
-import com.michel.database.TodoItemsDatabase
-import com.michel.network.api.TodoItemsApi
+import com.michel.core.data.datasource.local.LocalDataSource
+import com.michel.core.data.datasource.local.LocalDataSourceImpl
+import com.michel.core.data.datasource.remote.RemoteDataSource
+import com.michel.core.data.datasource.remote.RemoteDataSourceImpl
+import com.michel.core.data.repository.TodoItemsRepository
+import com.michel.core.data.repository.TodoItemsRepositoryImpl
+import com.michel.core.data.repository.TokenRepository
+import com.michel.core.data.repository.TokenRepositoryImpl
+import com.michel.core.data.repository.WorkerRepository
+import com.michel.core.data.repository.WorkerRepositoryImpl
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
+import javax.inject.Named
 
 /**
  * Dependency Injection data module that provides repositories
  */
 @Module
 @InstallIn(SingletonComponent::class)
-class DataModule {
+abstract class DataModule {
 
-    @Provides
-    fun provideRemoteRepository(
-        api: TodoItemsApi,
-    ): RemoteTodoItemsRepository {
-        return RemoteTodoItemsRepositoryImpl(api)
-    }
+    @Binds
+    internal abstract fun bindsLocalDataSource(
+        localDataSource: LocalDataSourceImpl,
+    ): LocalDataSource
 
-    @Provides
-    fun provideLocalRepository(
-        db: TodoItemsDatabase,
-    ): LocalTodoItemsRepository {
-        return LocalTodoItemsRepositoryImpl(db)
-    }
+    @Binds
+    internal abstract fun bindsRemoteDataSource(
+        remoteDataSource: RemoteDataSourceImpl
+    ): RemoteDataSource
+
+    @Binds
+    internal abstract fun bindsTokenRepository(
+        tokenRepository: TokenRepositoryImpl
+    ): TokenRepository
+
+    @Binds
+    internal abstract fun bindsTodoItemsRepository(
+        todoItemsRepository: TodoItemsRepositoryImpl
+    ): TodoItemsRepository
+
+    @Binds
+    internal abstract fun bindsWorkerRepository(
+        workerRepository: WorkerRepositoryImpl
+    ): WorkerRepository
+
 
 }

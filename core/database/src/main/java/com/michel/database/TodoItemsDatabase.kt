@@ -1,35 +1,20 @@
 package com.michel.database
 
-import com.michel.database.room.models.TodoItemEntity
-import kotlinx.coroutines.flow.Flow
+import androidx.room.Database
+import androidx.room.RoomDatabase
+import com.michel.database.dao.RevisionDao
+import com.michel.database.dao.TodoItemsDao
+import com.michel.database.models.RevisionEntity
+import com.michel.database.models.TodoItemEntity
 
 /**
- * Database interface
+ * Implements room database
  */
-interface TodoItemsDatabase {
-
-    // Возвращает значение ревизии из бд
-    fun getRevision(): Int?
-
-    // Устанавливает новое значение ревизии в бд
-    fun setRevision(value: Int)
-
-    // Возвращает флоу со списком тасок
-    fun getAllItemsFlow(): Flow<List<TodoItemEntity>>
-
-    // Возвращает список тасок
-    suspend fun getAllItems(): List<TodoItemEntity>
-
-    // Возвращает одну таску
-    suspend fun getItem(entityId: String): TodoItemEntity
-
-    // Добавляет или изменяет таску
-    suspend fun upsertItem(entity: TodoItemEntity)
-
-    // Удаляет таску
-    suspend fun deleteItem(entity: TodoItemEntity)
-
-    // Удаляет все таски
-    suspend fun deleteAllItems()
-
+@Database(
+    entities = [TodoItemEntity::class, RevisionEntity::class],
+    version = 1
+)
+internal abstract class TodoItemsDatabase : RoomDatabase() {
+    abstract val todoItemsDao: TodoItemsDao
+    abstract val revisionDao: RevisionDao
 }
