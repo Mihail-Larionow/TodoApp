@@ -29,3 +29,4 @@ dependencyResolutionManagement {
 }
 include(":core:common")
 include(":feature:todoworker")
+include(":feature:settings")

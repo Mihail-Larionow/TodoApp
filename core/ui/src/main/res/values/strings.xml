@@ -10,6 +10,7 @@
     <string name="priority">Важность</string>
     <string name="do_before">Сделать до</string>
     <string name="titleText">Мои дела</string>
+    <string name="settingsContentDescription">Настройки</string>
     <string name="subtitleText">Выполнено - 0</string>
     <string name="shortText">Some short text</string>
     <string name="longText" tools:ignore="Typos">Some very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very long text</string>

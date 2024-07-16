@@ -5,8 +5,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface TodoItemsRepository {
 
-    val errors: Flow<Throwable>
-
     // Загружает одну таску из интернета в локальную бд
     suspend fun getTodoItem(todoItemId: String): TodoItem
 
