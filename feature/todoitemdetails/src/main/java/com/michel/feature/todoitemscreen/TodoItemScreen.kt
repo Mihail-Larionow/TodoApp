@@ -3,8 +3,11 @@ package com.michel.feature.todoitemscreen
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,8 +20,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,14 +36,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.michel.core.data.models.Importance
+import com.michel.core.ui.custom.CustomBottomSheet
 import com.michel.core.ui.custom.CustomDatePicker
 import com.michel.core.ui.custom.CustomSwitch
 import com.michel.core.ui.custom.CustomTextField
@@ -129,6 +131,14 @@ private fun Content(
         modifier = modifier
     )
 
+    AnimatedVisibility(
+        visible = screenState.priorityMenuExpanded,
+        enter = expandVertically(expandFrom = Alignment.Bottom),
+        exit = shrinkVertically(shrinkTowards = Alignment.Bottom)
+    ) {
+        ImportanceBottomSheet(onEvent = onEvent)
+    }
+
     AnimatedVisibility(visible = screenState.failed) {
         ErrorContent(
             screenState = screenState,
@@ -136,10 +146,12 @@ private fun Content(
         )
     }
 
-    if (screenState.datePickerExpanded) TodoDatePicker(
-        date = screenState.deadline,
-        onEvent = onEvent
-    )
+    AnimatedVisibility(visible = screenState.datePickerExpanded) {
+        TodoDatePicker(
+            date = screenState.deadline,
+            onEvent = onEvent
+        )
+    }
 }
 
 @Composable
@@ -217,11 +229,9 @@ private fun Body(
             ImportanceField(
                 screenState = screenState,
                 onEvent = onEvent,
-                modifier = Modifier.padding(
-                    all = 16.dp
-                )
+                modifier = Modifier
             )
-            TodoDivider(modifier = Modifier.padding(all = 16.dp))
+            TodoDivider(modifier = Modifier.padding(start = 16.dp, end = 16.dp))
         }
         item {
             DeadlineField(
@@ -237,6 +247,61 @@ private fun Body(
                 onClick = onEvent
             )
         }
+    }
+}
+
+@Composable
+private fun ImportanceBottomSheet(
+    onEvent: (ItemScreenIntent) -> Unit
+) {
+    val options = listOf(
+        Importance.High,
+        Importance.Basic,
+        Importance.Low
+    )
+
+    CustomBottomSheet(
+        onDismiss = { onEvent(ItemScreenIntent.SetPriorityMenuStateIntent(false)) }
+    ) {
+        TodoDivider()
+        options.forEach {
+            ImportanceItem(
+                importance = it,
+                onClick = {
+                    onEvent(ItemScreenIntent.SetPriorityIntent(it))
+                    onEvent(ItemScreenIntent.SetPriorityMenuStateIntent(false))
+                }
+            )
+            TodoDivider()
+        }
+        Spacer(modifier = Modifier.height(TodoAppTheme.size.toolBar))
+    }
+}
+
+@Composable
+private fun ImportanceItem(
+    importance: Importance,
+    onClick: () -> Unit,
+) {
+    val textColor = if (importance == Importance.High) {
+        TodoAppTheme.color.red
+    } else {
+        TodoAppTheme.color.secondary
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(16.dp)
+    ) {
+        Text(
+            text = importance.text,
+            style = TodoAppTheme.typography.title,
+            color = textColor,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.align(Alignment.Center)
+        )
     }
 }
 
@@ -302,11 +367,6 @@ private fun ImportanceField(
     screenState: ItemScreenState,
     onEvent: (ItemScreenIntent) -> Unit
 ) {
-    val options = listOf(
-        Importance.Basic,
-        Importance.Low,
-        Importance.High
-    )
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -314,23 +374,17 @@ private fun ImportanceField(
                 enabled = screenState.enabled,
                 onClick = { onEvent(ItemScreenIntent.SetPriorityMenuStateIntent(true)) }
             )
+            .padding(all = 16.dp)
+
     ) {
-        val headColor = animateColorAsState(
+        val headColor by animateColorAsState(
             targetValue = if (screenState.enabled) {
                 TodoAppTheme.color.primary
             } else {
                 TodoAppTheme.color.disable
             }, label = ""
         )
-        Text(
-            text = stringResource(com.michel.core.ui.R.string.priority),
-            color = headColor.value,
-            style = TodoAppTheme.typography.body
-        )
-        Spacer(
-            modifier = Modifier.height(4.dp)
-        )
-        val importanceColor = animateColorAsState(
+        val importanceColor by animateColorAsState(
             targetValue = if (!screenState.enabled) {
                 TodoAppTheme.color.disable
             } else if (screenState.importance == Importance.High) {
@@ -339,51 +393,19 @@ private fun ImportanceField(
                 TodoAppTheme.color.tertiary
             }, label = ""
         )
+
         Text(
-            text = screenState.importance.text,
-            color = importanceColor.value,
+            text = stringResource(com.michel.core.ui.R.string.priority),
+            color = headColor,
             style = TodoAppTheme.typography.body
         )
-        DropdownMenu(
-            expanded = screenState.priorityMenuExpanded,
-            onDismissRequest = { onEvent(ItemScreenIntent.SetPriorityMenuStateIntent(false)) },
-            modifier = Modifier.background(
-                shape = RectangleShape,
-                color = TodoAppTheme.color.elevated
-            )
-        ) {
-            ImportanceItems(
-                options = options,
-                onEvent = onEvent
-            )
-        }
-    }
-}
-
-@Composable
-private fun ImportanceItems(
-    options: List<Importance>,
-    onEvent: (ItemScreenIntent) -> Unit
-) {
-    options.forEach {
-        val optionTextColor = if (it == Importance.High) {
-            TodoAppTheme.color.red
-        } else {
-            TodoAppTheme.color.primary
-        }
-
-        DropdownMenuItem(
-            text = {
-                Text(
-                    text = it.text,
-                    color = optionTextColor,
-                    style = TodoAppTheme.typography.body
-                )
-            },
-            onClick = {
-                onEvent(ItemScreenIntent.SetPriorityIntent(it))
-                onEvent(ItemScreenIntent.SetPriorityMenuStateIntent(false))
-            }
+        Spacer(
+            modifier = Modifier.height(4.dp)
+        )
+        Text(
+            text = screenState.importance.text,
+            color = importanceColor,
+            style = TodoAppTheme.typography.body
         )
     }
 }
