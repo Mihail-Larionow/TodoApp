@@ -1,6 +1,7 @@
 package com.michel.core.data.repository
 
 import com.michel.common.di.ApplicationScope
+import com.michel.common.utils.ErrorData
 import com.michel.core.data.datasource.local.LocalDataSource
 import com.michel.core.data.datasource.remote.RemoteDataSource
 import com.michel.core.data.models.TodoItem
@@ -8,8 +9,6 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import java.net.SocketTimeoutException
@@ -23,13 +22,11 @@ import javax.inject.Inject
 internal class TodoItemsRepositoryImpl @Inject constructor(
     private val remote: RemoteDataSource,
     private val local: LocalDataSource,
+    private val error: ErrorData,
     @ApplicationScope appScope: CoroutineScope,
 ) : TodoItemsRepository {
 
-    private val _errors = MutableSharedFlow<Throwable>(replay = 1)
-    override val errors: Flow<Throwable> get() = _errors.asSharedFlow()
-
-    private val handler = CoroutineExceptionHandler { _, throwable -> _errors.tryEmit(throwable) }
+    private val handler = CoroutineExceptionHandler { _, throwable -> error.emitError(throwable) }
 
     private val scope = appScope + handler
 

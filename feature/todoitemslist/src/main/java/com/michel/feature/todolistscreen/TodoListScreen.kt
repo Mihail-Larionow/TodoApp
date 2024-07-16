@@ -5,13 +5,16 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,6 +28,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
@@ -43,6 +47,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -51,6 +56,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.michel.core.data.models.Importance
 import com.michel.core.data.models.TodoItem
+import com.michel.core.ui.custom.CustomCollapsingLabel
 import com.michel.core.ui.custom.CustomPullToRefreshItem
 import com.michel.core.ui.custom.CustomSnackBarHost
 import com.michel.core.ui.custom.ImageCheckbox
@@ -65,7 +71,6 @@ import kotlinx.coroutines.launch
 
 private val COLLAPSED_TOP_BAR_HEIGHT = 56.dp
 private val EXPANDED_TOP_BAR_HEIGHT = 200.dp
-private const val SNACKBAR_DURATION = 2000L
 
 /**
  * Contains UI implementation of items list screen
@@ -168,6 +173,13 @@ private fun Content(
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp, bottom = 16.dp)
         )
+        AnimatedSettingsIcon(
+            onEvent = onEvent,
+            isCollapsing = isCollapsing,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(end = 8.dp, top = 8.dp)
+        )
         AnimatedVisibility(
             visible = !screenState.isRefreshing && screenState.failed && screenState.todoItems.isEmpty(),
             enter = scaleIn(),
@@ -182,7 +194,31 @@ private fun Content(
     }
 }
 
-// Основное тело с тасками
+@Composable
+private fun AnimatedSettingsIcon(
+    modifier: Modifier = Modifier,
+    onEvent: (ListScreenIntent) -> Unit,
+    isCollapsing: Boolean,
+) {
+    AnimatedVisibility(
+        visible = !isCollapsing,
+        exit = scaleOut(),
+        enter = scaleIn(),
+        modifier = modifier,
+    ) {
+        IconButton(onClick = { onEvent(ListScreenIntent.ToItemScreenIntent("none")) }) {
+            Icon(
+                tint = TodoAppTheme.color.tertiary,
+                painter = painterResource(id = com.michel.core.ui.R.drawable.ic_settings),
+                contentDescription = stringResource(id = com.michel.core.ui.R.string.settingsContentDescription)
+            )
+        }
+    }
+}
+
+/**
+ * The main body of the screen.
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun Body(
@@ -358,6 +394,7 @@ private fun ExpandedToolBar(
     ) {
         TodoText(
             isCollapsing = isCollapsing,
+            screenState = screenState,
             itemCount = screenState.doneItemsCount,
             modifier = Modifier.align(Alignment.BottomStart)
         )
@@ -375,6 +412,7 @@ private fun ExpandedToolBar(
 @Composable
 private fun TodoText(
     modifier: Modifier = Modifier,
+    screenState: ListScreenState,
     isCollapsing: Boolean,
     itemCount: Int
 ) {
@@ -386,14 +424,23 @@ private fun TodoText(
             label = "Animated font size"
         )
 
-        Text(
-            text = stringResource(com.michel.core.ui.R.string.todolist_screen_title),
-            fontSize = fontSize.sp,
-            fontWeight = FontWeight.Bold,
-            color = TodoAppTheme.color.primary,
-            modifier = Modifier
-        )
-        AnimatedVisibility(visible = !isCollapsing) {
+        Row {
+            Text(
+                text = stringResource(com.michel.core.ui.R.string.todolist_screen_title),
+                fontSize = fontSize.sp,
+                fontWeight = FontWeight.Bold,
+                color = TodoAppTheme.color.primary,
+                modifier = Modifier.align(Alignment.CenterVertically)
+            )
+            AnimatedNetworkLabel(
+                screenState = screenState,
+                isCollapsing = isCollapsing
+            )
+        }
+
+        AnimatedVisibility(
+            visible = !isCollapsing,
+        ) {
             val countText =
                 stringResource(com.michel.core.ui.R.string.todolist_screen_subtitle) + " $itemCount"
             Text(
@@ -406,7 +453,42 @@ private fun TodoText(
     }
 }
 
-// Топ бар, когда он сжат
+@Composable
+private fun AnimatedNetworkLabel(
+    screenState: ListScreenState,
+    isCollapsing: Boolean,
+) {
+    val labelColor by animateColorAsState(
+        targetValue = if (screenState.isConnected) {
+            TodoAppTheme.color.green
+        } else {
+            TodoAppTheme.color.red
+        },
+        label = "Animated color"
+    )
+
+    val text = if (screenState.isConnected) "online" else "offline"
+
+    AnimatedVisibility(
+        visible = !isCollapsing,
+        exit = shrinkHorizontally(shrinkTowards = Alignment.Start),
+        enter = expandHorizontally(expandFrom = Alignment.Start)
+    ) {
+        CustomCollapsingLabel(
+            containerColor = labelColor,
+            containerShape = TodoAppTheme.shape.container,
+            textStyle = TextStyle(fontSize = 10.sp),
+            textColor = TodoAppTheme.color.white,
+            state = screenState.isConnected,
+            text = text,
+            size = 12.dp
+        )
+    }
+}
+
+/**
+ * Top Bar when it's collapsed.
+ */
 @Composable
 private fun CollapsedToolBar(
     modifier: Modifier = Modifier,
@@ -422,9 +504,7 @@ private fun CollapsedToolBar(
 
     val shadow = if (isCollapsed) 4.dp else 0.dp
 
-    AnimatedVisibility(
-        visible = isCollapsed
-    ) {
+    if (isCollapsed) {
         Box(
             modifier = modifier
                 .fillMaxWidth()
@@ -450,7 +530,9 @@ private fun CollapsedToolBar(
     }
 }
 
-// Кнопка
+/**
+ * Floating App Button.
+ */
 @Composable
 private fun FloatingButton(
     modifier: Modifier = Modifier,
@@ -476,7 +558,9 @@ private fun FloatingButton(
     }
 }
 
-// Чекбокс глаз
+/**
+ * Visibility checkbox.
+ */
 @Composable
 private fun VisibilityCheckBox(
     modifier: Modifier = Modifier,
@@ -499,7 +583,9 @@ private fun VisibilityCheckBox(
     )
 }
 
-// Собирает сайд эффекты
+/**
+ * Handles side effects.
+ */
 private suspend fun collectSideEffects(
     coroutineScope: CoroutineScope,
     viewModel: TodoListScreenViewModel,

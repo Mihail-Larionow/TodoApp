@@ -149,7 +149,9 @@ private fun AuthButton(
     }
 }
 
-// Собирает сайд эффекты
+/**
+ * Handles side effects.
+ */
 private suspend fun collectSideEffects(
     viewModel: AuthScreenViewModel,
     snackBarHostState: SnackbarHostState,
@@ -166,7 +168,9 @@ private suspend fun collectSideEffects(
     }
 }
 
-// Обрабатывет результат авторизации
+/**
+ * Handles uth result.
+ */
 private fun handleResult(
     result: YandexAuthResult,
     onEvent: (AuthScreenIntent) -> Unit

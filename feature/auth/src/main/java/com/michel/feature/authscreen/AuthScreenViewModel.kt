@@ -15,7 +15,7 @@ import javax.inject.Inject
 import javax.inject.Named
 
 /**
- * ViewModel for auth screen
+ * ViewModel for auth screen.
  */
 @HiltViewModel
 internal class AuthScreenViewModel @Inject constructor(
@@ -27,7 +27,15 @@ internal class AuthScreenViewModel @Inject constructor(
         Log.i("ui", "${throwable.message}")
     }
 
-    // Обрабатывает приходящие интенты
+    init {
+        if(repository.getToken() != null) setEffect { AuthScreenEffect.LeaveScreenEffect }
+    }
+
+    /**
+     * Handles intents.
+     *
+     * @param intent - the intent need to be hadled.
+     */
     override fun handleIntent(intent: ScreenIntent) {
         when (intent) {
             AuthScreenIntent.StartAuthIntent -> startAuth()
@@ -38,28 +46,42 @@ internal class AuthScreenViewModel @Inject constructor(
         }
     }
 
-    // Начинает авторизацию
+    /**
+     * Launch side effect to start yandex auth.
+     */
     private fun startAuth() {
         setEffect { AuthScreenEffect.StartAuthEffect }
     }
 
-    // Сохраняет токен из gradle.properties
+    /**
+    * Saves gradle token.
+    */
     private fun saveGradleToken() {
         saveToken(gradleToken)
     }
 
-    // Сохраняет токен на устройстве
+    /**
+     * Saves token.
+     *
+     * @param token - that token needed to save.
+     */
     private fun saveToken(token: String) {
         repository.setToken(token)
         setEffect { AuthScreenEffect.LeaveScreenEffect }
     }
 
-    // Запускает сайд эффект, чтобы вывести снекбар об отмененной авторизации
+    /**
+     * Starts when auth is cancelled.
+     * Sends side effect.
+     */
     private fun onAuthCancelled() {
         setEffect { AuthScreenEffect.ShowSnackBarEffect("Отмена авторизации") }
     }
 
-    // Запускает сайд эффект, чтобы вывести снекбар о неудачной авторизации
+    /**
+     * Starts when auth is failed.
+     * Sends side effect.
+     */
     private fun onAuthFailed() {
         setEffect { AuthScreenEffect.ShowSnackBarEffect("Ошибка во время авторизации") }
     }
