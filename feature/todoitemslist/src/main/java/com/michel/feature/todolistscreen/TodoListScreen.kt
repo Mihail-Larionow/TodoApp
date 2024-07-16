@@ -76,7 +76,10 @@ private val EXPANDED_TOP_BAR_HEIGHT = 200.dp
  * Contains UI implementation of items list screen
  */
 @Composable
-fun TodoListScreen(navigate: (String) -> Unit) {
+fun TodoListScreen(
+    navigateToItem: (String) -> Unit,
+    navigateToSettings: () -> Unit,
+) {
     val viewModel: TodoListScreenViewModel = hiltViewModel()
     val snackBarHostState = remember { SnackbarHostState() }
     val screenState by viewModel.state.collectAsStateWithLifecycle()
@@ -110,7 +113,8 @@ fun TodoListScreen(navigate: (String) -> Unit) {
             coroutineScope = scope,
             viewModel = viewModel,
             snackBarHostState = snackBarHostState,
-            navigate = navigate,
+            navigateToItem = navigateToItem,
+            navigateToSettings = navigateToSettings,
             onEvent = viewModel::handleIntent
         )
     }
@@ -206,7 +210,7 @@ private fun AnimatedSettingsIcon(
         enter = scaleIn(),
         modifier = modifier,
     ) {
-        IconButton(onClick = { onEvent(ListScreenIntent.ToItemScreenIntent("none")) }) {
+        IconButton(onClick = { onEvent(ListScreenIntent.ToSettingsScreenIntent) }) {
             Icon(
                 tint = TodoAppTheme.color.tertiary,
                 painter = painterResource(id = com.michel.core.ui.R.drawable.ic_settings),
@@ -590,12 +594,14 @@ private suspend fun collectSideEffects(
     coroutineScope: CoroutineScope,
     viewModel: TodoListScreenViewModel,
     snackBarHostState: SnackbarHostState,
-    navigate: (String) -> Unit,
+    navigateToItem: (String) -> Unit,
+    navigateToSettings: () -> Unit,
     onEvent: (ListScreenIntent) -> Unit
 ) {
     viewModel.effect.collect { effect ->
         when (effect) {
-            is ListScreenEffect.LeaveScreenEffect -> navigate(effect.id)
+            is ListScreenEffect.LeaveScreenToItemEffect -> navigateToItem(effect.id)
+            ListScreenEffect.LeaveScreenToSettingsEffect -> navigateToSettings()
             is ListScreenEffect.ShowSimpleSnackBarEffect -> showSimpleSnackBar(
                 coroutineScope = coroutineScope,
                 snackBarHostState = snackBarHostState,

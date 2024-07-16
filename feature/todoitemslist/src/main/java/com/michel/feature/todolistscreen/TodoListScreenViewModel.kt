@@ -54,7 +54,8 @@ internal class TodoListScreenViewModel @Inject constructor(
             is ListScreenIntent.DeleteItemIntent -> deleteItem(intent.item)
             is ListScreenIntent.UpdateItemIntent -> updateItem(intent.item)
             is ListScreenIntent.UpdateItemsIntent -> syncItems()
-            is ToItemScreenIntent -> leaveScreen(intent.id)
+            is ToItemScreenIntent -> leaveToItemScreen(intent.id)
+            ListScreenIntent.ToSettingsScreenIntent -> leaveToSettingsScreen()
         }
     }
 
@@ -159,8 +160,15 @@ internal class TodoListScreenViewModel @Inject constructor(
      *
      * @param itemId - id of the needed item.
      */
-    private fun leaveScreen(itemId: String) {
-        setEffect { ListScreenEffect.LeaveScreenEffect(itemId) }
+    private fun leaveToItemScreen(itemId: String) {
+        setEffect { ListScreenEffect.LeaveScreenToItemEffect(itemId) }
+    }
+
+    /**
+     * Starts side effect that navigates to the settings screen.
+     */
+    private fun leaveToSettingsScreen() {
+        setEffect { ListScreenEffect.LeaveScreenToSettingsEffect }
     }
 
     /**

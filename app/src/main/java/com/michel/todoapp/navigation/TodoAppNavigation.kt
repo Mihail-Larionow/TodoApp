@@ -10,6 +10,7 @@ import androidx.navigation.navArgument
 import com.michel.feature.authscreen.AuthScreen
 import com.michel.feature.todoitemscreen.TodoItemScreen
 import com.michel.feature.todolistscreen.TodoListScreen
+import com.michel.settings.SettingsScreen
 
 /**
  * Contains logic for navigating between screens
@@ -27,8 +28,17 @@ internal fun TodoAppNavigation() {
             AuthScreen(navigate = { navigateToTodoList(navController) })
         }
 
+        composable(
+            route = Destination.SettingsScreen.route,
+        ) {
+            SettingsScreen(navigate = { navigateToTodoList(navController) })
+        }
+
         composable(route = Destination.TodoListScreen.route) {
-            TodoListScreen(navigate = { navigateToTodoItem(navController, it) })
+            TodoListScreen(
+                navigateToItem = { navigateToTodoItem(navController, it) },
+                navigateToSettings = { navigateToSettings(navController) }
+            )
         }
 
         composable(
@@ -44,6 +54,10 @@ private fun navigateToTodoList(navController: NavHostController) {
     navController.navigate(Destination.TodoListScreen.route) {
         popUpTo(Destination.TodoListScreen.route) { inclusive = true }
     }
+}
+
+private fun navigateToSettings(navController: NavHostController) {
+    navController.navigate(Destination.SettingsScreen.route)
 }
 
 private fun navigateToTodoItem(navController: NavHostController, id: String) {

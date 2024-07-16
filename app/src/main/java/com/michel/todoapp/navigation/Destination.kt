@@ -5,6 +5,7 @@ package com.michel.todoapp.navigation
  */
 sealed class Destination(val route: String) {
     data object AuthScreen : Destination("auth")
+    data object SettingsScreen : Destination("settings")
     data object TodoListScreen : Destination("todolist")
     data object TodoItemScreen : Destination("todoitem")
 

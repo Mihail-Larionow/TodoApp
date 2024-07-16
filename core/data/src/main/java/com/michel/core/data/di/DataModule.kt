@@ -4,6 +4,8 @@ import com.michel.core.data.datasource.local.LocalDataSource
 import com.michel.core.data.datasource.local.LocalDataSourceImpl
 import com.michel.core.data.datasource.remote.RemoteDataSource
 import com.michel.core.data.datasource.remote.RemoteDataSourceImpl
+import com.michel.core.data.repository.SettingsRepository
+import com.michel.core.data.repository.SettingsRepositoryImpl
 import com.michel.core.data.repository.TodoItemsRepository
 import com.michel.core.data.repository.TodoItemsRepositoryImpl
 import com.michel.core.data.repository.TokenRepository
@@ -49,5 +51,9 @@ abstract class DataModule {
         workerRepository: WorkerRepositoryImpl
     ): WorkerRepository
 
+    @Binds
+    internal abstract fun bindsSettingsRepository(
+        settingsRepository: SettingsRepositoryImpl
+    ): SettingsRepository
 
 }
