@@ -5,20 +5,22 @@
       "items": [
         {
           "type": "text",
-          "font_size": 21,
+          "font_size": 24,
           "font_weight": "bold",
           "margins": {
             "bottom": 16
           },
-          "$text": "title"
+          "$text": "title",
+          "text_color": "@{dark_theme ? '@{primary_dark}' : '@{primary_light}'}"
         },
         {
           "type": "text",
-          "font_size": 16,
+          "font_size": 18,
           "margins": {
             "bottom": 16
           },
-          "$text": "body"
+          "$text": "body",
+          "text_color": "@{dark_theme ? '@{primary_dark}' : '@{primary_light}'}"
         },
         {
           "type": "container",
@@ -42,7 +44,7 @@
         "$url": "link",
         "$log_id": "log"
       },
-      "font_size": 14,
+      "font_size": 16,
       "margins": {
         "bottom": 2
       },
@@ -65,7 +67,7 @@
         "bottom": 16
       },
       "margins": {
-        "top": 60,
+        "top": 20,
         "left": 24,
         "right": 24
       },
@@ -75,14 +77,14 @@
       "background": [
         {
           "type": "solid",
-          "color": "#0E000000"
+          "color": "@{dark_theme ? '@{back_secondary_dark}' : '@{back_secondary_light}'}"
         }
       ],
-      "font_size": 14,
+      "font_size": 16,
       "font_weight": "medium",
       "text_alignment_vertical": "center",
       "text_alignment_horizontal": "center",
-      "text_color": "#000000"
+      "text_color": "@{dark_theme ? '@{primary_dark}' : '@{primary_light}'}"
     },
     "icon": {
       "type": "text",
@@ -99,19 +101,66 @@
         "bottom": 16
       },
       "margins": {
-        "top": 60,
-        "left": 24,
-        "right": 24
+        "top": 20,
+        "left": 16,
+        "right": 16
       },
-      "font_size": 18,
+      "font_size": 24,
       "font_weight": "medium",
       "text_alignment_vertical": "center",
       "text_alignment_horizontal": "center",
-      "text_color": "#000000"
+      "text_color": "@{dark_theme ? '@{primary_dark}' : '@{primary_light}'}"
     }
   },
   "card": {
     "log_id": "div2_sample_card",
+    "variables": [
+      {
+        "name": "dark_theme",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "name": "primary_dark",
+        "type": "color",
+        "value": "#FFFFFF"
+      },
+      {
+        "name": "primary_light",
+        "type": "color",
+        "value": "#000000"
+      },
+      {
+        "name": "back_primary_dark",
+        "type": "color",
+        "value": "#161618"
+      },
+      {
+        "name": "back_primary_light",
+        "type": "color",
+        "value": "#F7F6F2"
+      },
+      {
+        "name": "secondary_dark",
+        "type": "color",
+        "value": "#99FFFF"
+      },
+      {
+        "name": "secondary_light",
+        "type": "color",
+        "value": "#99000000"
+      },
+      {
+        "name": "back_secondary_dark",
+        "type": "color",
+        "value": "#252528"
+      },
+      {
+        "name": "back_secondary_light",
+        "type": "color",
+        "value": "#FFFFFF"
+      }
+    ],
     "states": [
       {
         "state_id": 0,
@@ -137,7 +186,7 @@
               "type": "image",
               "image_url": "https://svgshare.com/i/18No.svg",
               "margins": {
-                "top": 60,
+                "top": 10,
                 "right": 60,
                 "bottom": 10,
                 "left": 60
@@ -187,9 +236,9 @@
               "type": "image",
               "image_url": "https://svgshare.com/i/18No.svg",
               "margins": {
-                "top": 60,
+                "top": 10,
                 "right": 60,
-                "bottom": 30,
+                "bottom": 10,
                 "left": 60
               }
             },

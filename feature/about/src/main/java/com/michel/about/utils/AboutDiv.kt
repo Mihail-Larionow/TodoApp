@@ -1,8 +1,10 @@
-package com.michel.about
+package com.michel.about.utils
 
 import android.content.Context
 import android.view.ContextThemeWrapper
 import android.view.View
+import androidx.lifecycle.LifecycleOwner
+import com.michel.about.R
 import com.michel.about.handlers.LeaveDivActionHandler
 import com.yandex.div.DivDataTag
 import com.yandex.div.core.Div2Context
@@ -14,13 +16,15 @@ import com.yandex.div.picasso.PicassoDivImageLoader
 import com.yandex.div2.DivData
 import org.json.JSONObject
 
-class AboutDiv(
-    context: Context,
-    onEvent: () -> Unit,
-) {
-    private val view: View
+internal object AboutDiv {
 
-    init {
+    fun getView(
+        context: Context,
+        lifecycleOwner: LifecycleOwner,
+        darkTheme: Boolean,
+        onEvent: () -> Unit,
+    ): View {
+        val view: View
         val json = context.assets.open("data.json").bufferedReader().readText().trimIndent()
 
         val contextThemeWrapper = ContextThemeWrapper(context, R.style.Theme_TodoApp)
@@ -30,12 +34,18 @@ class AboutDiv(
             .build()
 
         val divData = JSONObject(json).getDivData()
-        view = Div2View(Div2Context(contextThemeWrapper, configuration, lifecycleOwner = null))
+
+        view = Div2View(
+            Div2Context(
+                contextThemeWrapper,
+                configuration,
+                lifecycleOwner = lifecycleOwner
+            )
+        )
 
         view.setData(divData, DivDataTag("your_unique_tag_here"))
-    }
+        view.setVariable("dark_theme", "$darkTheme")
 
-    fun getView(): View {
         return view
     }
 
