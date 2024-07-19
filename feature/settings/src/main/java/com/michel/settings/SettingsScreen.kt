@@ -5,12 +5,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
@@ -42,18 +40,19 @@ import com.michel.settings.utils.SettingsScreenState
  */
 @Composable
 fun SettingsScreen(
-    navigate: () -> Unit,
+    snackBarHostState: SnackbarHostState,
+    navigateToListScreen: () -> Unit,
+    navigateToAboutScreen: () -> Unit,
 ) {
     val viewModel: SettingsScreenViewModel = hiltViewModel()
     val screenState by viewModel.state.collectAsStateWithLifecycle()
-
-    val snackBarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
         collectSideEffects(
             viewModel = viewModel,
             snackBarHostState = snackBarHostState,
-            navigate = navigate
+            navigateToListScreen = navigateToListScreen,
+            navigateToAboutScreen = navigateToAboutScreen,
         )
     }
 
@@ -67,6 +66,7 @@ fun SettingsScreen(
             modifier = Modifier.padding(innerPadding)
         )
     }
+
 }
 
 @Composable
@@ -77,24 +77,36 @@ private fun Content(
 ) {
     Box(
         modifier = modifier
+            .background(TodoAppTheme.color.backPrimary)
             .fillMaxSize()
-            .padding(8.dp)
-            .background(TodoAppTheme.color.backSecondary)
+            .padding(16.dp)
     ) {
         Body(
             screenState = screenState,
             onEvent = onEvent,
-            modifier = modifier,
+            modifier = modifier.padding(top = TodoAppTheme.size.toolBar),
         )
 
         IconButton(
-            onClick = { onEvent(SettingsScreenIntent.LeaveScreenIntent) },
+            onClick = { onEvent(SettingsScreenIntent.LeaveToListScreenIntent) },
             modifier = Modifier.align(Alignment.TopStart)
         ) {
             Icon(
                 painter = painterResource(com.michel.core.ui.R.drawable.ic_exit),
                 contentDescription = stringResource(com.michel.core.ui.R.string.cancelUpperCase),
                 tint = TodoAppTheme.color.primary,
+                modifier = Modifier.size(TodoAppTheme.size.standardIcon)
+            )
+        }
+
+        IconButton(
+            onClick = { onEvent(SettingsScreenIntent.LeaveToAboutScreenIntent) },
+            modifier = Modifier.align(Alignment.TopEnd)
+        ) {
+            Icon(
+                painter = painterResource(com.michel.core.ui.R.drawable.ic_info),
+                contentDescription = stringResource(com.michel.core.ui.R.string.cancelUpperCase),
+                tint = TodoAppTheme.color.secondary,
                 modifier = Modifier.size(TodoAppTheme.size.standardIcon)
             )
         }
@@ -113,22 +125,23 @@ private fun Body(
         ApplicationTheme.System
     )
 
-    Column(
+    Row(
         modifier = modifier.fillMaxWidth()
     ) {
         Text(
             text = stringResource(id = com.michel.core.ui.R.string.themeOfTheApplicationText),
             style = TodoAppTheme.typography.title,
-            color = TodoAppTheme.color.primary
+            color = TodoAppTheme.color.primary,
+            modifier = Modifier.align(Alignment.CenterVertically)
         )
         Spacer(
-            modifier = Modifier.height(4.dp)
+            modifier = Modifier.weight(1f)
         )
         ThemeRadioButtons(
             options = options,
             selectedTheme = screenState.applicationTheme,
             onEvent = onEvent,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
+            modifier = Modifier.align(Alignment.CenterVertically)
         )
     }
 }
@@ -141,7 +154,7 @@ private fun ThemeRadioButtons(
     onEvent: (SettingsScreenIntent) -> Unit,
 ) {
     Row(
-        modifier = modifier.padding(8.dp)
+        modifier = modifier.padding(start = 8.dp, end = 4.dp)
     ) {
         options.forEach {
             ThemeButton(
@@ -159,13 +172,13 @@ private fun ThemeButton(
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
-    val textColor by animateColorAsState(
+    val contentColor by animateColorAsState(
         targetValue = if (isSelected) {
             TodoAppTheme.color.white
         } else {
             TodoAppTheme.color.tertiary
         },
-        label = ""
+        label = "Content animated color"
     )
 
     val containerColor by animateColorAsState(
@@ -174,15 +187,27 @@ private fun ThemeButton(
         } else {
             TodoAppTheme.color.disable
         },
-        label = ""
+        label = "Container animated color"
     )
+
+    val painterResource = when (theme) {
+        ApplicationTheme.Dark -> painterResource(id = com.michel.core.ui.R.drawable.ic_moon)
+        ApplicationTheme.Light -> painterResource(id = com.michel.core.ui.R.drawable.ic_sun)
+        ApplicationTheme.System -> painterResource(id = com.michel.core.ui.R.drawable.ic_phone)
+    }
+
+    val contentDescription = when (theme) {
+        ApplicationTheme.Dark -> "Dark Theme"
+        ApplicationTheme.Light -> "Light Theme"
+        ApplicationTheme.System -> "System Theme"
+    }
 
     Box(
         modifier = Modifier
             .clickable { onClick() }
             .padding(4.dp)
             .border(
-                width = 1.dp,
+                width = 2.dp,
                 color = containerColor,
                 shape = TodoAppTheme.shape.container
             )
@@ -191,11 +216,13 @@ private fun ThemeButton(
                 shape = TodoAppTheme.shape.container
             )
     ) {
-        Text(
-            text = theme.name,
-            style = TodoAppTheme.typography.body,
-            color = textColor,
-            modifier = Modifier.padding(16.dp)
+        Icon(
+            painter = painterResource,
+            contentDescription = contentDescription,
+            tint = contentColor,
+            modifier = Modifier
+                .padding(8.dp)
+                .size(TodoAppTheme.size.standardIcon)
         )
     }
 }
@@ -206,11 +233,13 @@ private fun ThemeButton(
 private suspend fun collectSideEffects(
     viewModel: SettingsScreenViewModel,
     snackBarHostState: SnackbarHostState,
-    navigate: () -> Unit
+    navigateToListScreen: () -> Unit,
+    navigateToAboutScreen: () -> Unit,
 ) {
     viewModel.effect.collect { effect ->
         when (effect) {
-            SettingsScreenEffect.LeaveScreenEffect -> navigate()
+            SettingsScreenEffect.LeaveToListScreenEffect -> navigateToListScreen()
+            SettingsScreenEffect.LeaveToAboutScreenEffect -> navigateToAboutScreen()
             is SettingsScreenEffect.ShowSnackBarEffect -> snackBarHostState.showSnackbar(effect.message)
         }
     }

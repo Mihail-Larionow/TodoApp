@@ -67,6 +67,7 @@ import com.michel.feature.todolistscreen.utils.ListScreenEffect
 import com.michel.feature.todolistscreen.utils.ListScreenIntent
 import com.michel.feature.todolistscreen.utils.ListScreenState
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private val COLLAPSED_TOP_BAR_HEIGHT = 56.dp
@@ -77,11 +78,12 @@ private val EXPANDED_TOP_BAR_HEIGHT = 200.dp
  */
 @Composable
 fun TodoListScreen(
+    snackBarHostState: SnackbarHostState,
+    snackBarHost: @Composable () -> Unit,
     navigateToItem: (String) -> Unit,
     navigateToSettings: () -> Unit,
 ) {
     val viewModel: TodoListScreenViewModel = hiltViewModel()
-    val snackBarHostState = remember { SnackbarHostState() }
     val screenState by viewModel.state.collectAsStateWithLifecycle()
 
     val listState = rememberLazyListState()
@@ -120,9 +122,8 @@ fun TodoListScreen(
     }
 
     Scaffold(
-        snackbarHost = {
-            CustomSnackBarHost(snackBarHostState)
-        }, topBar = {
+        snackbarHost = snackBarHost,
+        topBar = {
             CollapsedToolBar(
                 isCollapsed = isTopBarCollapsed,
                 screenState = screenState,
@@ -601,7 +602,9 @@ private suspend fun collectSideEffects(
     viewModel.effect.collect { effect ->
         when (effect) {
             is ListScreenEffect.LeaveScreenToItemEffect -> navigateToItem(effect.id)
+
             ListScreenEffect.LeaveScreenToSettingsEffect -> navigateToSettings()
+
             is ListScreenEffect.ShowSimpleSnackBarEffect -> showSimpleSnackBar(
                 coroutineScope = coroutineScope,
                 snackBarHostState = snackBarHostState,
@@ -615,6 +618,14 @@ private suspend fun collectSideEffects(
                 buttonText = effect.actionText,
                 onClick = { onEvent(ListScreenIntent.GetItemsIntent) }
             )
+
+            is ListScreenEffect.ShowTimerSnackBarEffect -> showTimerSnackBar(
+                coroutineScope = coroutineScope,
+                snackBarHostState = snackBarHostState,
+                message = "Удален: " + effect.message,
+                buttonText = effect.actionText,
+                onClick = { onEvent(ListScreenIntent.AddItemIntent(effect.item)) }
+            )
         }
     }
 }
@@ -625,10 +636,14 @@ private fun showSimpleSnackBar(
     message: String
 ) {
     coroutineScope.launch {
-        snackBarHostState.showSnackbar(
-            message = message,
-            duration = SnackbarDuration.Short
-        )
+        val snackBarJob = launch {
+            snackBarHostState.showSnackbar(
+                message = message,
+                duration = SnackbarDuration.Indefinite
+            )
+        }
+        delay(2000)
+        snackBarJob.cancel()
     }
 }
 
@@ -640,15 +655,44 @@ private fun showButtonSnackBar(
     onClick: () -> Unit
 ) {
     coroutineScope.launch {
-        val result = snackBarHostState.showSnackbar(
-            message = message,
-            actionLabel = buttonText,
-            duration = SnackbarDuration.Short,
-        )
-        when (result) {
-            SnackbarResult.Dismissed -> {}
-            SnackbarResult.ActionPerformed -> onClick()
+        val snackBarJob = launch {
+            val result = snackBarHostState.showSnackbar(
+                message = message,
+                actionLabel = buttonText,
+                duration = SnackbarDuration.Short,
+            )
+            when (result) {
+                SnackbarResult.Dismissed -> {}
+                SnackbarResult.ActionPerformed -> onClick()
+            }
         }
+        delay(2000)
+        snackBarJob.cancel()
+    }
+}
+
+private fun showTimerSnackBar(
+    coroutineScope: CoroutineScope,
+    snackBarHostState: SnackbarHostState,
+    message: String,
+    buttonText: String,
+    onClick: () -> Unit
+) {
+    coroutineScope.launch {
+        val snackBarJob = launch {
+            val result = snackBarHostState.showSnackbar(
+                message = message,
+                actionLabel = buttonText,
+                withDismissAction = true,
+                duration = SnackbarDuration.Indefinite,
+            )
+            when (result) {
+                SnackbarResult.Dismissed -> {}
+                SnackbarResult.ActionPerformed -> onClick()
+            }
+        }
+        delay(5000)
+        snackBarJob.cancel()
     }
 }
 

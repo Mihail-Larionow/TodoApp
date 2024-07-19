@@ -56,6 +56,7 @@ internal class TodoListScreenViewModel @Inject constructor(
             is ListScreenIntent.UpdateItemsIntent -> syncItems()
             is ToItemScreenIntent -> leaveToItemScreen(intent.id)
             ListScreenIntent.ToSettingsScreenIntent -> leaveToSettingsScreen()
+            is ListScreenIntent.AddItemIntent -> addItem(intent.item)
         }
     }
 
@@ -152,7 +153,23 @@ internal class TodoListScreenViewModel @Inject constructor(
      * @param deletedItem - the item that need to be deleted.
      */
     private fun deleteItem(deletedItem: TodoItem) {
+        setEffect {
+            ListScreenEffect.ShowTimerSnackBarEffect(
+                item = deletedItem.copy(),
+                message = deletedItem.text,
+                actionText = "ОТМЕНИТЬ"
+            )
+        }
         repository.deleteTodoItem(deletedItem)
+    }
+
+    /**
+     * Adds one item.
+     *
+     * @param addedItem - the item that need to be deleted.
+     */
+    private fun addItem(addedItem: TodoItem) {
+        repository.addTodoItem(addedItem)
     }
 
     /**

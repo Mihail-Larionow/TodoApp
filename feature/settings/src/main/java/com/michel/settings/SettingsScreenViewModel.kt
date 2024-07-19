@@ -10,14 +10,19 @@ import com.michel.settings.utils.SettingsScreenState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
+/**
+ * ViewModel of the settings screen.
+ */
 @HiltViewModel
 internal class SettingsScreenViewModel @Inject constructor(
     private val repository: SettingsRepository,
-) : ViewModelBase<SettingsScreenState, SettingsScreenIntent, SettingsScreenEffect>(SettingsScreenState()) {
+) : ViewModelBase<SettingsScreenState, SettingsScreenIntent, SettingsScreenEffect>(
+    SettingsScreenState()
+) {
 
-    init{
+    init {
         val theme = repository.getTheme()
-        changeApplicationTheme(theme)
+        setApplicationTheme(theme)
     }
 
     /**
@@ -26,27 +31,35 @@ internal class SettingsScreenViewModel @Inject constructor(
      * @param intent - the intent need to be handled.
      */
     override fun handleIntent(intent: ScreenIntent) {
-        when(intent) {
-            is SettingsScreenIntent.ChangeThemeIntent -> changeApplicationTheme(intent.theme)
-            SettingsScreenIntent.LeaveScreenIntent -> leaveScreen()
+        when (intent) {
+            is SettingsScreenIntent.ChangeThemeIntent -> setApplicationTheme(intent.theme)
+            SettingsScreenIntent.LeaveToListScreenIntent -> leaveToListScreen()
+            SettingsScreenIntent.LeaveToAboutScreenIntent -> leaveToAboutScreen()
         }
     }
 
     /**
-     * Updates application theme.
+     * Sets application theme.
      *
-     * @param theme - theme needed to save.
+     * @param newTheme - theme needed to set.
      */
-    private fun changeApplicationTheme(theme: ApplicationTheme) {
-        setState { copy(applicationTheme = theme) }
-        repository.saveTheme(theme)
+    private fun setApplicationTheme(newTheme: ApplicationTheme) {
+        setState { copy(applicationTheme = newTheme) }
+        repository.saveTheme(newTheme)
     }
 
     /**
      * Starts side effect that navigates to the items list screen.
      */
-    private fun leaveScreen() {
-        setEffect { SettingsScreenEffect.LeaveScreenEffect }
+    private fun leaveToListScreen() {
+        setEffect { SettingsScreenEffect.LeaveToListScreenEffect }
+    }
+
+    /**
+     * Starts side effect that navigates to the about app screen.
+     */
+    private fun leaveToAboutScreen() {
+        setEffect { SettingsScreenEffect.LeaveToAboutScreenEffect }
     }
 
 }

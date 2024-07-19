@@ -8,5 +8,6 @@ import com.michel.core.ui.viewmodel.ScreenEffect
  */
 sealed interface SettingsScreenEffect : ScreenEffect {
     data class ShowSnackBarEffect(val message: String) : SettingsScreenEffect
-    data object LeaveScreenEffect : SettingsScreenEffect
+    data object LeaveToListScreenEffect : SettingsScreenEffect
+    data object LeaveToAboutScreenEffect : SettingsScreenEffect
 }

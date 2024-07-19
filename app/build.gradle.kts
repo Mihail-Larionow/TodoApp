@@ -60,6 +60,7 @@ dependencies {
     implementation(projects.feature.todoitemslist)
     implementation(projects.feature.todoworker)
     implementation(projects.feature.settings)
+    implementation(projects.feature.about)
     implementation(projects.feature.auth)
 }
 
