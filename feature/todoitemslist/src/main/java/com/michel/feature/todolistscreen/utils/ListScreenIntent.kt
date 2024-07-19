@@ -15,4 +15,5 @@ internal sealed interface ListScreenIntent : ScreenIntent {
     data object ToSettingsScreenIntent : ListScreenIntent
     data class UpdateItemIntent(val item: TodoItem) : ListScreenIntent
     data class UpdateItemsIntent(val items: List<TodoItem>) : ListScreenIntent
+    data class AddItemIntent(val item: TodoItem) : ListScreenIntent
 }
