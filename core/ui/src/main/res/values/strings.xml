@@ -34,4 +34,5 @@
     <string name="or">или</string>
     <string name="checked">включено</string>
     <string name="unchecked">выключено</string>
+    <string name="item_is_deleted">Удален: </string>
 </resources>

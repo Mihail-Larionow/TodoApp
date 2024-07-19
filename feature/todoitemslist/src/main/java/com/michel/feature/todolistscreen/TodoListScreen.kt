@@ -58,7 +58,6 @@ import com.michel.core.data.models.Importance
 import com.michel.core.data.models.TodoItem
 import com.michel.core.ui.custom.CustomCollapsingLabel
 import com.michel.core.ui.custom.CustomPullToRefreshItem
-import com.michel.core.ui.custom.CustomSnackBarHost
 import com.michel.core.ui.custom.ImageCheckbox
 import com.michel.core.ui.custom.SwipeItem
 import com.michel.core.ui.extensions.bottomShadow
