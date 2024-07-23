@@ -5,6 +5,7 @@ import com.michel.network.backend.OAuthHeaderInterceptor
 import com.michel.network.backend.TodoItemsApi
 import com.michel.network.service.TodoItemsService
 import com.michel.network.service.TodoItemsServiceImpl
+import com.michel.network.ssl.SSLSocket
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -73,7 +74,9 @@ abstract class NetworkModule {
         internal fun providesHttpClient(
             loggingInterceptor: HttpLoggingInterceptor,
             oauthInterceptor: OAuthHeaderInterceptor,
+            sslSocket: SSLSocket,
         ): OkHttpClient = OkHttpClient.Builder()
+            .sslSocketFactory(sslSocket.getFactory(), sslSocket.x509TrustManager)
             .connectTimeout(CONNECTION_TIMEOUT, TimeUnit.MILLISECONDS)
             .readTimeout(READ_WRITE_TIMEOUT, TimeUnit.MILLISECONDS)
             .writeTimeout(READ_WRITE_TIMEOUT, TimeUnit.MILLISECONDS)
