@@ -19,11 +19,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -93,7 +96,7 @@ private fun Content(
         ) {
             Icon(
                 painter = painterResource(com.michel.core.ui.R.drawable.ic_exit),
-                contentDescription = stringResource(com.michel.core.ui.R.string.cancelUpperCase),
+                contentDescription = stringResource(com.michel.core.ui.R.string.exit),
                 tint = TodoAppTheme.color.primary,
                 modifier = Modifier.size(TodoAppTheme.size.standardIcon)
             )
@@ -105,7 +108,7 @@ private fun Content(
         ) {
             Icon(
                 painter = painterResource(com.michel.core.ui.R.drawable.ic_info),
-                contentDescription = stringResource(com.michel.core.ui.R.string.cancelUpperCase),
+                contentDescription = stringResource(com.michel.core.ui.R.string.about_app),
                 tint = TodoAppTheme.color.secondary,
                 modifier = Modifier.size(TodoAppTheme.size.standardIcon)
             )
@@ -197,9 +200,9 @@ private fun ThemeButton(
     }
 
     val contentDescription = when (theme) {
-        ApplicationTheme.Dark -> "Dark Theme"
-        ApplicationTheme.Light -> "Light Theme"
-        ApplicationTheme.System -> "System Theme"
+        ApplicationTheme.Dark -> stringResource(com.michel.core.ui.R.string.dark_theme)
+        ApplicationTheme.Light -> stringResource(com.michel.core.ui.R.string.light_theme)
+        ApplicationTheme.System -> stringResource(com.michel.core.ui.R.string.system_theme)
     }
 
     Box(
@@ -223,6 +226,10 @@ private fun ThemeButton(
             modifier = Modifier
                 .padding(8.dp)
                 .size(TodoAppTheme.size.standardIcon)
+                .semantics {
+                    role = Role.RadioButton
+                    selected = isSelected
+                }
         )
     }
 }

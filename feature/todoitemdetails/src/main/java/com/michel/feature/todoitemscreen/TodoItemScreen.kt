@@ -25,7 +25,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -40,6 +39,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -58,6 +66,7 @@ import com.michel.core.ui.theme.TodoAppTheme
 import com.michel.feature.todoitemscreen.utils.ItemScreenEffect
 import com.michel.feature.todoitemscreen.utils.ItemScreenIntent
 import com.michel.feature.todoitemscreen.utils.ItemScreenState
+import com.michel.todoitemdetails.R
 import java.util.Date
 
 private val TOP_BAR_HEIGHT = 56.dp
@@ -142,7 +151,10 @@ private fun Content(
         enter = expandVertically(expandFrom = Alignment.Bottom),
         exit = shrinkVertically(shrinkTowards = Alignment.Bottom)
     ) {
-        ImportanceBottomSheet(onEvent = onEvent)
+        ImportanceBottomSheet(
+            screenState = screenState,
+            onEvent = onEvent
+        )
     }
 
     AnimatedVisibility(visible = screenState.failed) {
@@ -187,7 +199,7 @@ private fun Header(
         ) {
             Icon(
                 painter = painterResource(com.michel.core.ui.R.drawable.ic_exit),
-                contentDescription = stringResource(com.michel.core.ui.R.string.cancelUpperCase),
+                contentDescription = stringResource(com.michel.core.ui.R.string.exit),
                 tint = TodoAppTheme.color.primary,
                 modifier = Modifier.size(TodoAppTheme.size.standardIcon)
             )
@@ -258,6 +270,7 @@ private fun Body(
 
 @Composable
 private fun ImportanceBottomSheet(
+    screenState: ItemScreenState,
     onEvent: (ItemScreenIntent) -> Unit
 ) {
     val options = listOf(
@@ -272,6 +285,7 @@ private fun ImportanceBottomSheet(
         TodoDivider()
         options.forEach {
             ImportanceItem(
+                isSelected = screenState.importance == it,
                 importance = it,
                 onClick = {
                     onEvent(ItemScreenIntent.SetPriorityIntent(it))
@@ -286,6 +300,7 @@ private fun ImportanceBottomSheet(
 
 @Composable
 private fun ImportanceItem(
+    isSelected: Boolean,
     importance: Importance,
     onClick: () -> Unit,
 ) {
@@ -307,6 +322,10 @@ private fun ImportanceItem(
                 .fillMaxWidth()
                 .clickable(onClick = onClick)
                 .padding(16.dp)
+                .clearAndSetSemantics {
+                    role = Role.RadioButton
+                    selected = isSelected
+                }
         ) {
             Text(
                 text = importance.text,
@@ -430,6 +449,12 @@ private fun DeadlineField(
     screenState: ItemScreenState,
     onEvent: (ItemScreenIntent) -> Unit
 ) {
+    val state = if(screenState.hasDeadline) {
+        ToggleableState.On
+    } else {
+        ToggleableState.Off
+    }
+
     Row(
         modifier = modifier
     ) {
@@ -443,7 +468,11 @@ private fun DeadlineField(
         CustomSwitch(
             hasDeadline = screenState.hasDeadline,
             enabled = screenState.enabled,
-            onCheckChange = { onEvent(ItemScreenIntent.SetDeadlineStateIntent(it)) }
+            onCheckChange = { onEvent(ItemScreenIntent.SetDeadlineStateIntent(it)) },
+            modifier = Modifier.semantics {
+                role = Role.Switch
+                toggleableState = state
+            }
         )
     }
 }
@@ -485,6 +514,9 @@ private fun AnimatedDeadlineText(
             TodoAppTheme.color.disable
         }, label = ""
     )
+
+    val buttonContentDescription = stringResource(com.michel.core.ui.R.string.date_content_description)
+
     Spacer(
         modifier = Modifier.height(4.dp)
     )
@@ -493,10 +525,16 @@ private fun AnimatedDeadlineText(
             text = screenState.deadlineDateText,
             color = subheadColor.value,
             style = TodoAppTheme.typography.subhead,
-            modifier = Modifier.clickable(
-                enabled = screenState.enabled,
-                onClick = { onEvent(ItemScreenIntent.SetDatePickerStateIntent(true)) }
-            )
+            modifier = Modifier
+                .clickable(
+                    enabled = screenState.enabled,
+                    onClick = { onEvent(ItemScreenIntent.SetDatePickerStateIntent(true)) }
+                )
+                .semantics {
+                    role = Role.Button
+                    stateDescription = screenState.deadlineDateText
+                    contentDescription = buttonContentDescription
+                }
         )
     }
 }
@@ -506,6 +544,8 @@ private fun DeleteButton(
     screenState: ItemScreenState,
     onClick: (ItemScreenIntent) -> Unit
 ) {
+    val buttonContentDescription =
+        stringResource(com.michel.core.ui.R.string.deleteContentDescription)
     CompositionLocalProvider(LocalRippleTheme provides ColoredRippleTheme(TodoAppTheme.color.red)) {
         Row(
             modifier = Modifier
@@ -515,6 +555,10 @@ private fun DeleteButton(
                     onClick = { onClick(ItemScreenIntent.DeleteIntent) }
                 )
                 .padding(all = 16.dp)
+                .clearAndSetSemantics {
+                    role = Role.Button
+                    contentDescription = buttonContentDescription
+                }
         ) {
             val buttonColor =
                 if (screenState.text == "" || !screenState.enabled || !screenState.deleteButtonEnabled) {
@@ -525,7 +569,7 @@ private fun DeleteButton(
             Icon(
                 painter = painterResource(com.michel.core.ui.R.drawable.ic_delete),
                 tint = buttonColor,
-                contentDescription = stringResource(com.michel.core.ui.R.string.deleteContentDescription),
+                contentDescription = buttonContentDescription,
                 modifier = Modifier
                     .size(TodoAppTheme.size.standardIcon)
                     .align(Alignment.CenterVertically)

@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="unknownError">Неизвестная ошибка</string>
-    <string name="infoIconContentDescription">Детали</string>
+    <string name="info_content_description">Задание</string>
     <string name="priorityIconContentDescription">Приоритет</string>
     <string name="floatingButtonContentDescription">Добавить задание</string>
     <string name="deleteContentDescription">Удалить задание</string>
     <string name="app_name">ToDoApp</string>
     <string name="new_task">Новое</string>
     <string name="priority">Важность</string>
+    <string name="high_priority">Высокий приоритет</string>
+    <string name="low_priority">Низкий приоритет</string>
     <string name="do_before">Сделать до</string>
     <string name="titleText">Мои дела</string>
     <string name="settingsContentDescription">Настройки</string>
@@ -17,13 +19,13 @@
     <string name="longText" tools:ignore="Typos">Some very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very long text</string>
     <string name="todolist_screen_title">Мои дела</string>
     <string name="todolist_screen_subtitle">Выполнено - </string>
-    <string name="exitIconContentDescription">Назад</string>
     <string name="acceptUpperCase">ГОТОВО</string>
     <string name="cancelUpperCase">ОТМЕНА</string>
     <string name="deleteUpperCase">УДАЛИТЬ</string>
     <string name="retryUpperCase">ПОВТОРИТЬ</string>
     <string name="saveUpperCase">СОХРАНИТЬ</string>
     <string name="done">Выполнено</string>
+    <string name="not_done">Не выполнено</string>
     <string name="delete">Удалить</string>
     <string name="placeholder">Что мне надо сделать…</string>
     <string name="delete_problems">Не удалось удалить</string>
@@ -32,7 +34,15 @@
     <string name="with_gradle_token">Войти со своим\nтокеном</string>
     <string name="with_yandex_passport">Войти через\nЯндекс.ID</string>
     <string name="or">или</string>
-    <string name="checked">включено</string>
-    <string name="unchecked">выключено</string>
+    <string name="checked">Включено</string>
+    <string name="unchecked">Выключено</string>
     <string name="item_is_deleted">Удален: </string>
+    <string name="done_items_are_hidden">Выполненные задания скрыты</string>
+    <string name="done_items_are_shown">Выполненные задания показаны</string>
+    <string name="dark_theme">Темная тема</string>
+    <string name="light_theme">Светлая тема</string>
+    <string name="system_theme">Системная тема</string>
+    <string name="about_app">О приложении</string>
+    <string name="exit">Назад</string>
+    <string name="date_content_description">Дата</string>
 </resources>
