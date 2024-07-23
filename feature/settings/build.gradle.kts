@@ -9,6 +9,6 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.data)
+    api(projects.core.data)
     implementation(projects.core.ui)
 }

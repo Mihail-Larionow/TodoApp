@@ -3,8 +3,11 @@ package com.michel.feature.todoitemscreen
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,8 +20,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material.ripple.LocalRippleTheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,26 +31,29 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.michel.core.data.models.Importance
+import com.michel.core.ui.custom.CustomBottomSheet
 import com.michel.core.ui.custom.CustomDatePicker
 import com.michel.core.ui.custom.CustomSwitch
 import com.michel.core.ui.custom.CustomTextField
 import com.michel.core.ui.custom.TodoDivider
 import com.michel.core.ui.extensions.bottomShadow
 import com.michel.core.ui.extensions.toDateText
+import com.michel.core.ui.ripple.ColoredRippleTheme
 import com.michel.core.ui.theme.TodoAppTheme
 import com.michel.feature.todoitemscreen.utils.ItemScreenEffect
 import com.michel.feature.todoitemscreen.utils.ItemScreenIntent
@@ -61,9 +66,12 @@ private val TOP_BAR_HEIGHT = 56.dp
  * Contains UI implementation of item screen
  */
 @Composable
-fun TodoItemScreen(navigate: () -> Unit) {
+fun TodoItemScreen(
+    snackBarHostState: SnackbarHostState,
+    snackBarHost: @Composable () -> Unit,
+    navigate: () -> Unit
+) {
     val viewModel: TodoItemScreenViewModel = hiltViewModel()
-    val snackBarHostState = remember { SnackbarHostState() }
     val screenState by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
@@ -85,7 +93,7 @@ fun TodoItemScreen(navigate: () -> Unit) {
     val headerShadow = if (showShadow) 4.dp else 0.dp
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackBarHostState) },
+        snackbarHost = snackBarHost,
         topBar = {
             Header(
                 screenState = screenState,
@@ -129,6 +137,14 @@ private fun Content(
         modifier = modifier
     )
 
+    AnimatedVisibility(
+        visible = screenState.priorityMenuExpanded,
+        enter = expandVertically(expandFrom = Alignment.Bottom),
+        exit = shrinkVertically(shrinkTowards = Alignment.Bottom)
+    ) {
+        ImportanceBottomSheet(onEvent = onEvent)
+    }
+
     AnimatedVisibility(visible = screenState.failed) {
         ErrorContent(
             screenState = screenState,
@@ -136,10 +152,12 @@ private fun Content(
         )
     }
 
-    if (screenState.datePickerExpanded) TodoDatePicker(
-        date = screenState.deadline,
-        onEvent = onEvent
-    )
+    AnimatedVisibility(visible = screenState.datePickerExpanded) {
+        TodoDatePicker(
+            date = screenState.deadline,
+            onEvent = onEvent
+        )
+    }
 }
 
 @Composable
@@ -217,11 +235,9 @@ private fun Body(
             ImportanceField(
                 screenState = screenState,
                 onEvent = onEvent,
-                modifier = Modifier.padding(
-                    all = 16.dp
-                )
+                modifier = Modifier
             )
-            TodoDivider(modifier = Modifier.padding(all = 16.dp))
+            TodoDivider(modifier = Modifier.padding(start = 16.dp, end = 16.dp))
         }
         item {
             DeadlineField(
@@ -235,6 +251,69 @@ private fun Body(
             DeleteButton(
                 screenState = screenState,
                 onClick = onEvent
+            )
+        }
+    }
+}
+
+@Composable
+private fun ImportanceBottomSheet(
+    onEvent: (ItemScreenIntent) -> Unit
+) {
+    val options = listOf(
+        Importance.High,
+        Importance.Basic,
+        Importance.Low
+    )
+
+    CustomBottomSheet(
+        onDismiss = { onEvent(ItemScreenIntent.SetPriorityMenuStateIntent(false)) }
+    ) {
+        TodoDivider()
+        options.forEach {
+            ImportanceItem(
+                importance = it,
+                onClick = {
+                    onEvent(ItemScreenIntent.SetPriorityIntent(it))
+                    onEvent(ItemScreenIntent.SetPriorityMenuStateIntent(false))
+                }
+            )
+            TodoDivider()
+        }
+        Spacer(modifier = Modifier.height(TodoAppTheme.size.toolBar))
+    }
+}
+
+@Composable
+private fun ImportanceItem(
+    importance: Importance,
+    onClick: () -> Unit,
+) {
+    val textColor = if (importance == Importance.High) {
+        TodoAppTheme.color.red
+    } else {
+        TodoAppTheme.color.secondary
+    }
+
+    val rippleColor = if (importance == Importance.High) {
+        TodoAppTheme.color.red
+    } else {
+        TodoAppTheme.color.disable
+    }
+
+    CompositionLocalProvider(LocalRippleTheme provides ColoredRippleTheme(rippleColor)) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(16.dp)
+        ) {
+            Text(
+                text = importance.text,
+                style = TodoAppTheme.typography.title,
+                color = textColor,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.align(Alignment.Center)
             )
         }
     }
@@ -302,11 +381,6 @@ private fun ImportanceField(
     screenState: ItemScreenState,
     onEvent: (ItemScreenIntent) -> Unit
 ) {
-    val options = listOf(
-        Importance.Basic,
-        Importance.Low,
-        Importance.High
-    )
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -314,23 +388,17 @@ private fun ImportanceField(
                 enabled = screenState.enabled,
                 onClick = { onEvent(ItemScreenIntent.SetPriorityMenuStateIntent(true)) }
             )
+            .padding(all = 16.dp)
+
     ) {
-        val headColor = animateColorAsState(
+        val headColor by animateColorAsState(
             targetValue = if (screenState.enabled) {
                 TodoAppTheme.color.primary
             } else {
                 TodoAppTheme.color.disable
             }, label = ""
         )
-        Text(
-            text = stringResource(com.michel.core.ui.R.string.priority),
-            color = headColor.value,
-            style = TodoAppTheme.typography.body
-        )
-        Spacer(
-            modifier = Modifier.height(4.dp)
-        )
-        val importanceColor = animateColorAsState(
+        val importanceColor by animateColorAsState(
             targetValue = if (!screenState.enabled) {
                 TodoAppTheme.color.disable
             } else if (screenState.importance == Importance.High) {
@@ -339,51 +407,19 @@ private fun ImportanceField(
                 TodoAppTheme.color.tertiary
             }, label = ""
         )
+
         Text(
-            text = screenState.importance.text,
-            color = importanceColor.value,
+            text = stringResource(com.michel.core.ui.R.string.priority),
+            color = headColor,
             style = TodoAppTheme.typography.body
         )
-        DropdownMenu(
-            expanded = screenState.priorityMenuExpanded,
-            onDismissRequest = { onEvent(ItemScreenIntent.SetPriorityMenuStateIntent(false)) },
-            modifier = Modifier.background(
-                shape = RectangleShape,
-                color = TodoAppTheme.color.elevated
-            )
-        ) {
-            ImportanceItems(
-                options = options,
-                onEvent = onEvent
-            )
-        }
-    }
-}
-
-@Composable
-private fun ImportanceItems(
-    options: List<Importance>,
-    onEvent: (ItemScreenIntent) -> Unit
-) {
-    options.forEach {
-        val optionTextColor = if (it == Importance.High) {
-            TodoAppTheme.color.red
-        } else {
-            TodoAppTheme.color.primary
-        }
-
-        DropdownMenuItem(
-            text = {
-                Text(
-                    text = it.text,
-                    color = optionTextColor,
-                    style = TodoAppTheme.typography.body
-                )
-            },
-            onClick = {
-                onEvent(ItemScreenIntent.SetPriorityIntent(it))
-                onEvent(ItemScreenIntent.SetPriorityMenuStateIntent(false))
-            }
+        Spacer(
+            modifier = Modifier.height(4.dp)
+        )
+        Text(
+            text = screenState.importance.text,
+            color = importanceColor,
+            style = TodoAppTheme.typography.body
         )
     }
 }
@@ -470,36 +506,38 @@ private fun DeleteButton(
     screenState: ItemScreenState,
     onClick: (ItemScreenIntent) -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(
-                enabled = screenState.text != "" && screenState.enabled && screenState.deleteButtonEnabled,
-                onClick = { onClick(ItemScreenIntent.DeleteIntent) }
-            )
-            .padding(all = 16.dp)
-    ) {
-        val buttonColor =
-            if (screenState.text == "" || !screenState.enabled || !screenState.deleteButtonEnabled) {
-                TodoAppTheme.color.disable
-            } else {
-                TodoAppTheme.color.red
-            }
-        Icon(
-            painter = painterResource(com.michel.core.ui.R.drawable.ic_delete),
-            tint = buttonColor,
-            contentDescription = stringResource(com.michel.core.ui.R.string.deleteContentDescription),
+    CompositionLocalProvider(LocalRippleTheme provides ColoredRippleTheme(TodoAppTheme.color.red)) {
+        Row(
             modifier = Modifier
-                .size(TodoAppTheme.size.standardIcon)
-                .align(Alignment.CenterVertically)
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(
-            text = stringResource(com.michel.core.ui.R.string.deleteUpperCase),
-            color = buttonColor,
-            style = TodoAppTheme.typography.button,
-            modifier = Modifier.align(Alignment.CenterVertically)
-        )
+                .fillMaxWidth()
+                .clickable(
+                    enabled = screenState.text != "" && screenState.enabled && screenState.deleteButtonEnabled,
+                    onClick = { onClick(ItemScreenIntent.DeleteIntent) }
+                )
+                .padding(all = 16.dp)
+        ) {
+            val buttonColor =
+                if (screenState.text == "" || !screenState.enabled || !screenState.deleteButtonEnabled) {
+                    TodoAppTheme.color.disable
+                } else {
+                    TodoAppTheme.color.red
+                }
+            Icon(
+                painter = painterResource(com.michel.core.ui.R.drawable.ic_delete),
+                tint = buttonColor,
+                contentDescription = stringResource(com.michel.core.ui.R.string.deleteContentDescription),
+                modifier = Modifier
+                    .size(TodoAppTheme.size.standardIcon)
+                    .align(Alignment.CenterVertically)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text = stringResource(com.michel.core.ui.R.string.deleteUpperCase),
+                color = buttonColor,
+                style = TodoAppTheme.typography.button,
+                modifier = Modifier.align(Alignment.CenterVertically)
+            )
+        }
     }
 }
 

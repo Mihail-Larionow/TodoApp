@@ -9,12 +9,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.ripple.LocalRippleTheme
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -27,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.michel.core.ui.custom.CustomSnackBarHost
+import com.michel.core.ui.ripple.ColoredRippleTheme
 import com.michel.core.ui.theme.TodoAppTheme
 import com.michel.feature.authscreen.utils.AuthScreenEffect
 import com.michel.feature.authscreen.utils.AuthScreenIntent
@@ -41,12 +45,11 @@ import com.yandex.authsdk.YandexAuthSdk
  */
 @Composable
 fun AuthScreen(
+    snackBarHostState: SnackbarHostState,
     navigate: () -> Unit
 ) {
     val viewModel: AuthScreenViewModel = hiltViewModel()
     val screenState by viewModel.state.collectAsStateWithLifecycle()
-
-    val snackBarHostState = remember { SnackbarHostState() }
 
     val sdk = YandexAuthSdk.create(YandexAuthOptions(LocalContext.current))
     val authLauncher = rememberLauncherForActivityResult(contract = sdk.contract) { result ->
@@ -69,21 +72,22 @@ fun AuthScreen(
         snackbarHost = { CustomSnackBarHost(snackBarHostState) },
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
-        val padding = innerPadding
         Content(
             screenState = screenState,
-            onEvent = viewModel::handleIntent
+            onEvent = viewModel::handleIntent,
+            modifier = Modifier.padding(innerPadding)
         )
     }
 }
 
 @Composable
 private fun Content(
+    modifier: Modifier = Modifier,
     screenState: AuthScreenState,
     onEvent: (AuthScreenIntent) -> Unit
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(TodoAppTheme.color.backPrimary)
     ) {
@@ -131,21 +135,23 @@ private fun AuthButton(
     text: String,
     onClick: () -> Unit
 ) {
-    Button(
-        onClick = onClick,
-        colors = ButtonColors(
-            contentColor = TodoAppTheme.color.primary,
-            containerColor = TodoAppTheme.color.backSecondary,
-            disabledContentColor = TodoAppTheme.color.tertiary,
-            disabledContainerColor = TodoAppTheme.color.disable
-        ),
-        enabled = enabled,
-        modifier = modifier
-    ) {
-        Text(
-            text = text,
-            style = TodoAppTheme.typography.button
-        )
+    CompositionLocalProvider(LocalRippleTheme provides ColoredRippleTheme(TodoAppTheme.color.blue)) {
+        Button(
+            onClick = onClick,
+            colors = ButtonColors(
+                contentColor = TodoAppTheme.color.primary,
+                containerColor = TodoAppTheme.color.backSecondary,
+                disabledContentColor = TodoAppTheme.color.tertiary,
+                disabledContainerColor = TodoAppTheme.color.disable
+            ),
+            enabled = enabled,
+            modifier = modifier
+        ) {
+            Text(
+                text = text,
+                style = TodoAppTheme.typography.button
+            )
+        }
     }
 }
 

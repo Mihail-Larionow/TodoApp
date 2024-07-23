@@ -11,6 +11,7 @@
     <string name="do_before">Сделать до</string>
     <string name="titleText">Мои дела</string>
     <string name="settingsContentDescription">Настройки</string>
+    <string name="themeOfTheApplicationText">Тема:</string>
     <string name="subtitleText">Выполнено - 0</string>
     <string name="shortText">Some short text</string>
     <string name="longText" tools:ignore="Typos">Some very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very long text</string>
@@ -33,4 +34,5 @@
     <string name="or">или</string>
     <string name="checked">включено</string>
     <string name="unchecked">выключено</string>
+    <string name="item_is_deleted">Удален: </string>
 </resources>

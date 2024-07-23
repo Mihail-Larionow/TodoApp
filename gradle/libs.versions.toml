@@ -23,6 +23,7 @@ javaxInject = "1"
 roomCompilerVersion = "2.6.1"
 roomKtx = "2.6.1"
 roomRuntime = "2.6.1"
+divVersion = "30.9.0"
 workRuntimeKtx = "2.9.0"
 lifecycleRuntimeComposeAndroid = "2.8.3"
 hiltCommon = "1.2.0"
@@ -32,9 +33,13 @@ ktor = "2.3.7"
 
 ksp = "2.0.0-1.0.22"
 material3Android = "1.2.1"
+activity = "1.9.0"
+constraintlayout = "2.1.4"
+uiViewbinding = "1.6.8"
 
 [libraries]
 agp = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
+
 kotlin-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines"}
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomCompilerVersion" }
@@ -79,6 +84,14 @@ ktor-client-okhttp = { group = "io.ktor", name = "ktor-client-okhttp", version.r
 compose-gradle-plugin = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "kotlin"}
 ksp-gradle-plugin = { group = "com.google.devtools.ksp", name = "com.google.devtools.ksp.gradle.plugin", version.ref = "ksp"}
 androidx-material3-android = { group = "androidx.compose.material3", name = "material3-android", version.ref = "material3Android" }
+
+yandex-div = { module = "com.yandex.div:div", version.ref = "divVersion" }
+yandex-div-core = { module = "com.yandex.div:div-core", version.ref = "divVersion" }
+div-json = { module = "com.yandex.div:div-json", version.ref = "divVersion" }
+div-picasso = { module = "com.yandex.div:picasso", version.ref = "divVersion" }
+androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
+androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+androidx-ui-viewbinding = { group = "androidx.compose.ui", name = "ui-viewbinding", version.ref = "uiViewbinding" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

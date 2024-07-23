@@ -1,0 +1,273 @@
+{
+  "templates": {
+    "main": {
+      "type": "container",
+      "items": [
+        {
+          "type": "text",
+          "font_size": 24,
+          "font_weight": "bold",
+          "margins": {
+            "bottom": 16
+          },
+          "$text": "title",
+          "text_color": "@{dark_theme ? '@{primary_dark}' : '@{primary_light}'}"
+        },
+        {
+          "type": "text",
+          "font_size": 18,
+          "margins": {
+            "bottom": 16
+          },
+          "$text": "body",
+          "text_color": "@{dark_theme ? '@{primary_dark}' : '@{primary_light}'}"
+        },
+        {
+          "type": "container",
+          "$items": "links"
+        }
+      ],
+      "margins": {
+        "bottom": 6
+      },
+      "orientation": "vertical",
+      "paddings": {
+        "top": 10,
+        "bottom": 0,
+        "left": 30,
+        "right": 30
+      }
+    },
+    "link": {
+      "type": "text",
+      "action": {
+        "$url": "link",
+        "$log_id": "log"
+      },
+      "font_size": 16,
+      "margins": {
+        "bottom": 2
+      },
+      "text_color": "#0000ff",
+      "underline": "single",
+      "$text": "link_text"
+    },
+    "button": {
+      "type": "text",
+      "width": {
+        "type": "wrap_content"
+      },
+      "height": {
+        "type": "wrap_content"
+      },
+      "paddings": {
+        "left": 16,
+        "top": 16,
+        "right": 16,
+        "bottom": 16
+      },
+      "margins": {
+        "top": 20,
+        "left": 24,
+        "right": 24
+      },
+      "border": {
+        "corner_radius": 8
+      },
+      "background": [
+        {
+          "type": "solid",
+          "color": "@{dark_theme ? '@{back_secondary_dark}' : '@{back_secondary_light}'}"
+        }
+      ],
+      "font_size": 16,
+      "font_weight": "medium",
+      "text_alignment_vertical": "center",
+      "text_alignment_horizontal": "center",
+      "text_color": "@{dark_theme ? '@{primary_dark}' : '@{primary_light}'}"
+    },
+    "icon": {
+      "type": "text",
+      "width": {
+        "type": "wrap_content"
+      },
+      "height": {
+        "type": "wrap_content"
+      },
+      "paddings": {
+        "left": 16,
+        "top": 16,
+        "right": 16,
+        "bottom": 16
+      },
+      "margins": {
+        "top": 20,
+        "left": 16,
+        "right": 16
+      },
+      "font_size": 24,
+      "font_weight": "medium",
+      "text_alignment_vertical": "center",
+      "text_alignment_horizontal": "center",
+      "text_color": "@{dark_theme ? '@{primary_dark}' : '@{primary_light}'}"
+    }
+  },
+  "card": {
+    "log_id": "div2_sample_card",
+    "variables": [
+      {
+        "name": "dark_theme",
+        "type": "boolean",
+        "value": false
+      },
+      {
+        "name": "primary_dark",
+        "type": "color",
+        "value": "#FFFFFF"
+      },
+      {
+        "name": "primary_light",
+        "type": "color",
+        "value": "#000000"
+      },
+      {
+        "name": "back_primary_dark",
+        "type": "color",
+        "value": "#161618"
+      },
+      {
+        "name": "back_primary_light",
+        "type": "color",
+        "value": "#F7F6F2"
+      },
+      {
+        "name": "secondary_dark",
+        "type": "color",
+        "value": "#99FFFF"
+      },
+      {
+        "name": "secondary_light",
+        "type": "color",
+        "value": "#99000000"
+      },
+      {
+        "name": "back_secondary_dark",
+        "type": "color",
+        "value": "#252528"
+      },
+      {
+        "name": "back_secondary_light",
+        "type": "color",
+        "value": "#FFFFFF"
+      }
+    ],
+    "states": [
+      {
+        "state_id": 0,
+        "div": {
+          "type": "container",
+          "items": [
+            {
+              "type": "icon",
+              "alignment_horizontal": "left",
+              "text": "✖",
+              "margins": {
+                "top": 16,
+                "left": 16
+              },
+              "actions": [
+                {
+                  "log_id": "leave_screen",
+                  "url": "exit-action://settings?"
+                }
+              ]
+            },
+            {
+              "type": "image",
+              "image_url": "https://svgshare.com/i/18No.svg",
+              "margins": {
+                "top": 10,
+                "right": 60,
+                "bottom": 10,
+                "left": 60
+              }
+            },
+            {
+              "type": "main",
+              "title": "TodoApp",
+              "body": "TodoApp is a handy and stylish note-taking application inspired by the popular Todo system. It offers a wide range of features to organize and manage your to-dos, tasks and projects.\n\nThe main features of TodoApp include creating tasks, to-do lists, setting due dates and priorities, and assigning responsible executors.",
+              "links": []
+            },
+            {
+              "type": "button",
+              "alignment_horizontal": "right",
+              "text": "Next",
+              "actions": [
+                {
+                  "log_id": "set_next",
+                  "url": "div-action://set_state?state_id=1"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "state_id": 1,
+        "div": {
+          "type": "container",
+          "items": [
+            {
+              "type": "icon",
+              "alignment_horizontal": "left",
+              "text": "✖",
+              "margins": {
+                "top": 16,
+                "left": 16
+              },
+              "actions": [
+                {
+                  "log_id": "leave_screen",
+                  "url": "exit-action://settings?"
+                }
+              ]
+            },
+            {
+              "type": "image",
+              "image_url": "https://svgshare.com/i/18No.svg",
+              "margins": {
+                "top": 10,
+                "right": 60,
+                "bottom": 10,
+                "left": 60
+              }
+            },
+            {
+              "type": "main",
+              "body": "TodoApp supports synchronization of tasks between different devices, allowing you to stay on top of your to-do list and manage your time efficiently.\n\nTodoApp is not yet available for download on various platforms including Android, iOS and macOS.",
+              "links": [
+                {
+                  "type": "link",
+                  "link_text": "Telegram",
+                  "link": "https://t.me/larionowmeow",
+                  "log": "tg_ru_chat"
+                }
+              ]
+            },
+            {
+              "type": "button",
+              "alignment_horizontal": "left",
+              "text": "Previous",
+              "actions": [
+                {
+                  "log_id": "set_previous",
+                  "url": "div-action://set_state?state_id=0"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
