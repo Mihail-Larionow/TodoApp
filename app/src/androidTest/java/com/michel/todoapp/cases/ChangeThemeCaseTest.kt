@@ -31,7 +31,7 @@ import org.junit.Test
  */
 @HiltAndroidTest
 @LargeTest
-class ChangeThemeTestCase {
+class ChangeThemeCaseTest {
 
     @get:Rule(order = 0)
     val hilt = HiltAndroidRule(this)
