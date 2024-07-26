@@ -9,6 +9,6 @@ android {
 
 dependencies {
     api(projects.core.common)
-    implementation(projects.core.network)
-    implementation(projects.core.database)
+    api(projects.core.network)
+    api(projects.core.database)
 }
