@@ -45,4 +45,6 @@
     <string name="about_app">О приложении</string>
     <string name="exit">Назад</string>
     <string name="date_content_description">Дата</string>
+    <string name="deadline_switch_has_not_deadline">Дедлайн отсутствует</string>
+    <string name="deadline_switch_has_deadline">Дедлайн установлен</string>
 </resources>

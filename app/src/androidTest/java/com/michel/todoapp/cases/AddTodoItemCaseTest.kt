@@ -9,7 +9,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.filters.LargeTest
 import com.michel.core.ui.theme.TodoAppTheme
-import com.michel.todoapp.di.TestActivity
+import com.michel.todoapp.test.TestActivity
 import com.michel.todoapp.navigation.TodoAppNavigation
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -74,8 +74,7 @@ class AddTodoItemCaseTest {
     }
 
     private fun assertItemAddedFirst(text: String, testTag: String) {
-        compose
-            .onAllNodesWithTag(testTag, useUnmergedTree = true)
+        compose.onAllNodesWithTag(testTag, useUnmergedTree = true)
             .onFirst()
             .assertTextEquals(text)
     }

@@ -37,17 +37,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.semantics.toggleableState
-import androidx.compose.ui.state.ToggleableState
+import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -66,7 +67,6 @@ import com.michel.core.ui.theme.TodoAppTheme
 import com.michel.feature.todoitemscreen.utils.ItemScreenEffect
 import com.michel.feature.todoitemscreen.utils.ItemScreenIntent
 import com.michel.feature.todoitemscreen.utils.ItemScreenState
-import com.michel.todoitemdetails.R
 import java.util.Date
 
 private val TOP_BAR_HEIGHT = 56.dp
@@ -117,6 +117,9 @@ fun TodoItemScreen(
                         bottom = 4.dp,
                         top = 4.dp
                     )
+                    .semantics {
+                        isTraversalGroup = true
+                    }
             )
         },
         modifier = Modifier
@@ -195,7 +198,11 @@ private fun Header(
     ) {
         IconButton(
             onClick = { onEvent(ItemScreenIntent.ToListScreenIntent) },
-            modifier = Modifier.align(Alignment.CenterVertically)
+            modifier = Modifier
+                .align(Alignment.CenterVertically)
+                .semantics {
+                    traversalIndex = -1f
+                }
         ) {
             Icon(
                 painter = painterResource(com.michel.core.ui.R.drawable.ic_exit),
@@ -208,7 +215,9 @@ private fun Header(
         TextButton(
             enabled = screenState.text != "" && screenState.enabled,
             onClick = { onEvent(ItemScreenIntent.SaveIntent) },
-            modifier = Modifier.align(Alignment.CenterVertically)
+            modifier = Modifier
+                .align(Alignment.CenterVertically)
+                .testTag("save_task_button")
         ) {
             Text(
                 text = stringResource(com.michel.core.ui.R.string.saveUpperCase),
@@ -241,6 +250,7 @@ private fun Body(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(all = 16.dp)
+                    .testTag("task_text_field")
             )
         }
         item {
@@ -325,6 +335,7 @@ private fun ImportanceItem(
                 .clearAndSetSemantics {
                     role = Role.RadioButton
                     selected = isSelected
+                    contentDescription = importance.text
                 }
         ) {
             Text(
@@ -449,10 +460,10 @@ private fun DeadlineField(
     screenState: ItemScreenState,
     onEvent: (ItemScreenIntent) -> Unit
 ) {
-    val state = if(screenState.hasDeadline) {
-        ToggleableState.On
+    val switchStateDescription = if (screenState.hasDeadline) {
+        stringResource(com.michel.core.ui.R.string.deadline_switch_has_deadline)
     } else {
-        ToggleableState.Off
+        stringResource(com.michel.core.ui.R.string.deadline_switch_has_not_deadline)
     }
 
     Row(
@@ -471,7 +482,7 @@ private fun DeadlineField(
             onCheckChange = { onEvent(ItemScreenIntent.SetDeadlineStateIntent(it)) },
             modifier = Modifier.semantics {
                 role = Role.Switch
-                toggleableState = state
+                stateDescription = switchStateDescription
             }
         )
     }
@@ -515,7 +526,8 @@ private fun AnimatedDeadlineText(
         }, label = ""
     )
 
-    val buttonContentDescription = stringResource(com.michel.core.ui.R.string.date_content_description)
+    val buttonContentDescription =
+        stringResource(com.michel.core.ui.R.string.date_content_description)
 
     Spacer(
         modifier = Modifier.height(4.dp)

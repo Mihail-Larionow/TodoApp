@@ -15,7 +15,7 @@ import retrofit2.http.Path
 /**
  * Retrofit interface to make request on server
  */
-internal interface TodoItemsApi {
+interface TodoItemsApi {
 
     @GET("list")
     suspend fun getItemsList(): Response<ListWrapper>

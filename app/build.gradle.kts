@@ -2,7 +2,9 @@ plugins {
     id("android-app-convention")
     id("hilt-plugin")
     id("compose-plugin")
+    id("retrofit-plugin")
     id("telegram-reporter")
+    alias(libs.plugins.jetbrains.kotlin.android)
 }
 
 telegram {

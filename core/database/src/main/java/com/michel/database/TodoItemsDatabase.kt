@@ -14,7 +14,7 @@ import com.michel.database.models.TodoItemEntity
     entities = [TodoItemEntity::class, RevisionEntity::class],
     version = 1
 )
-internal abstract class TodoItemsDatabase : RoomDatabase() {
+abstract class TodoItemsDatabase : RoomDatabase() {
     abstract val todoItemsDao: TodoItemsDao
     abstract val revisionDao: RevisionDao
 }

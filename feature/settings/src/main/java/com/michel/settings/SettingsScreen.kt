@@ -21,12 +21,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -66,7 +69,11 @@ fun SettingsScreen(
         Content(
             screenState = screenState,
             onEvent = viewModel::handleIntent,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier
+                .padding(innerPadding)
+                .semantics {
+                    isTraversalGroup = true
+                }
         )
     }
 
@@ -92,7 +99,11 @@ private fun Content(
 
         IconButton(
             onClick = { onEvent(SettingsScreenIntent.LeaveToListScreenIntent) },
-            modifier = Modifier.align(Alignment.TopStart)
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .semantics {
+                    traversalIndex = -1f
+                }
         ) {
             Icon(
                 painter = painterResource(com.michel.core.ui.R.drawable.ic_exit),
@@ -102,17 +113,17 @@ private fun Content(
             )
         }
 
-        IconButton(
-            onClick = { onEvent(SettingsScreenIntent.LeaveToAboutScreenIntent) },
-            modifier = Modifier.align(Alignment.TopEnd)
-        ) {
-            Icon(
-                painter = painterResource(com.michel.core.ui.R.drawable.ic_info),
-                contentDescription = stringResource(com.michel.core.ui.R.string.about_app),
-                tint = TodoAppTheme.color.secondary,
-                modifier = Modifier.size(TodoAppTheme.size.standardIcon)
-            )
-        }
+//        IconButton(
+//            onClick = { onEvent(SettingsScreenIntent.LeaveToAboutScreenIntent) },
+//            modifier = Modifier.align(Alignment.TopEnd)
+//        ) {
+//            Icon(
+//                painter = painterResource(com.michel.core.ui.R.drawable.ic_info),
+//                contentDescription = stringResource(com.michel.core.ui.R.string.about_app),
+//                tint = TodoAppTheme.color.secondary,
+//                modifier = Modifier.size(TodoAppTheme.size.standardIcon)
+//            )
+//        }
     }
 }
 
@@ -205,6 +216,12 @@ private fun ThemeButton(
         ApplicationTheme.System -> stringResource(com.michel.core.ui.R.string.system_theme)
     }
 
+    val testTag = when (theme) {
+        ApplicationTheme.Dark -> "dark_theme_button"
+        ApplicationTheme.Light -> "light_theme_button"
+        ApplicationTheme.System -> "system_theme_button"
+    }
+
     Box(
         modifier = Modifier
             .clickable { onClick() }
@@ -230,6 +247,7 @@ private fun ThemeButton(
                     role = Role.RadioButton
                     selected = isSelected
                 }
+                .testTag(testTag)
         )
     }
 }

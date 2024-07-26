@@ -26,11 +26,18 @@ dependencies {
     // Worker
     implementation(libs.androidx.work.runtime.ktx)
 
+    // Testing
+    implementation(libs.androidx.runner)
     implementation(libs.androidx.core.ktx)
 
     testImplementation(libs.junit)
+    testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.mockwebserver)
 
     androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.mockito.kotlin)
+    androidTestImplementation(libs.androidx.runner)
+    androidTestImplementation(libs.mockwebserver)
     androidTestImplementation(libs.androidx.espresso.core)
 
 }

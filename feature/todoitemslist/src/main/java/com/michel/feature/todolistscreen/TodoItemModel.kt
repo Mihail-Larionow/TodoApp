@@ -16,6 +16,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -134,7 +135,9 @@ private fun TodoText(
                 style = TodoAppTheme.typography.body,
                 color = textColor.value,
                 textDecoration = textDecoration,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("todo_item_text")
             )
             Spacer(modifier = Modifier.height(4.dp))
             AnimatedDeadline(

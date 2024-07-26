@@ -1,4 +1,4 @@
-package com.michel.todoapp.di
+package com.michel.todoapp.test
 
 import androidx.activity.ComponentActivity
 import dagger.hilt.android.AndroidEntryPoint

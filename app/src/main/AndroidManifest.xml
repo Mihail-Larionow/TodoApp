@@ -19,7 +19,7 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
-            android:name=".di.TestActivity"
+            android:name=".test.TestActivity"
             android:exported="false" />
         <activity
             android:name=".TodoAppActivity"
