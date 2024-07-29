@@ -13,6 +13,8 @@ class AndroidApplicationHiltConventionPlugin : Plugin<Project> {
             dependencies {
                 add("ksp", versionCatalog.findLibrary("hilt.android.compiler").get())
                 add("implementation", versionCatalog.findLibrary("hilt.android").get())
+                add("kspAndroidTest", versionCatalog.findLibrary("hilt.android.compiler").get())
+                add("androidTestImplementation", versionCatalog.findLibrary("hilt.android.testing").get())
                 add("implementation", versionCatalog.findLibrary("androidx.hilt.navigation.compose").get())
             }
         }

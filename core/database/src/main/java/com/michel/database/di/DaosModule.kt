@@ -10,7 +10,7 @@ import dagger.hilt.components.SingletonComponent
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal object DaosModule {
+object DaosModule {
 
     @Provides
     fun providesTodoItemsDao(

@@ -20,11 +20,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.isTraversalGroup
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -105,11 +110,20 @@ private fun Body(
     screenState: AuthScreenState,
     onEvent: (AuthScreenIntent) -> Unit
 ) {
-    Column(modifier = modifier) {
+    Column(
+        modifier = modifier.semantics {
+            isTraversalGroup = true
+        }
+    ) {
         AuthButton(
             text = stringResource(com.michel.core.ui.R.string.with_yandex_passport),
             onClick = { onEvent(AuthScreenIntent.StartAuthIntent) },
-            modifier = Modifier.align(Alignment.CenterHorizontally)
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .semantics {
+                    role = Role.Button
+                    traversalIndex = -1f
+                }
         )
         Spacer(modifier = Modifier.height(32.dp))
         Text(
@@ -123,7 +137,12 @@ private fun Body(
             text = stringResource(com.michel.core.ui.R.string.with_gradle_token),
             enabled = screenState.hasGradleToken,
             onClick = { onEvent(AuthScreenIntent.SaveGradleTokenIntent) },
-            modifier = Modifier.align(Alignment.CenterHorizontally)
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .testTag("token_auth_button")
+                .semantics {
+                    role = Role.Button
+                }
         )
     }
 }

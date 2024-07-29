@@ -1,4 +1,5 @@
 import gradle.kotlin.dsl.accessors._a937729d8a1f305b163059a48f19fa79.implementation
+import gradle.kotlin.dsl.accessors._a937729d8a1f305b163059a48f19fa79.testImplementation
 
 plugins {
     id("com.android.library")
@@ -29,6 +30,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
     testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.kotlinx.coroutines.test)
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

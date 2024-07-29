@@ -22,7 +22,7 @@ class AndroidApplicationComposeConventionPlugin: Plugin<Project> {
                 add("implementation", versionCatalog.findLibrary("androidx-material3-android").get())
                 add("implementation", versionCatalog.findLibrary("androidx-navigation-compose").get())
                 add("implementation", versionCatalog.findLibrary("androidx-ui-tooling-preview").get())
-                add("debugImplementation", versionCatalog.findLibrary("androidx-ui-test-junit4").get())
+                add("androidTestImplementation", versionCatalog.findLibrary("androidx-ui-test-junit4").get())
                 add("debugImplementation", versionCatalog.findLibrary("androidx-ui-test-manifest").get())
                 add("implementation", versionCatalog.findLibrary("androidx-lifecycle-viewmodel-compose").get())
                 add("implementation", versionCatalog.findLibrary("androidx-lifecycle-runtime-compose-android").get())

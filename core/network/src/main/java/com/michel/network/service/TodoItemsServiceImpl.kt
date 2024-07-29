@@ -25,7 +25,7 @@ internal const val MAX_RETRIES_COUNT = 2
  * Implements logic to work with a server
  */
 @Singleton
-internal class TodoItemsServiceImpl @Inject constructor(
+class TodoItemsServiceImpl @Inject constructor(
     private val context: Context,
     private val api: TodoItemsApi,
 ) : TodoItemsService {

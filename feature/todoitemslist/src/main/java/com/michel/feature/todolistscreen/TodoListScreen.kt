@@ -45,8 +45,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.isTraversalGroup
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -128,7 +137,8 @@ fun TodoListScreen(
                 screenState = screenState,
                 onEvent = viewModel::handleIntent,
             )
-        }, modifier = Modifier.fillMaxSize()
+        },
+        modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
         val paddings = innerPadding
         Content(
@@ -181,8 +191,11 @@ private fun Content(
             onEvent = onEvent,
             isCollapsing = isCollapsing,
             modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(end = 8.dp, top = 8.dp)
+                .align(Alignment.TopStart)
+                .padding(start = 8.dp, top = 8.dp)
+                .semantics {
+                    traversalIndex = -1f
+                }
         )
         AnimatedVisibility(
             visible = !screenState.isRefreshing && screenState.failed && screenState.todoItems.isEmpty(),
@@ -210,7 +223,10 @@ private fun AnimatedSettingsIcon(
         enter = scaleIn(),
         modifier = modifier,
     ) {
-        IconButton(onClick = { onEvent(ListScreenIntent.ToSettingsScreenIntent) }) {
+        IconButton(
+            modifier = Modifier.testTag("settings_button"),
+            onClick = { onEvent(ListScreenIntent.ToSettingsScreenIntent) }
+        ) {
             Icon(
                 tint = TodoAppTheme.color.tertiary,
                 painter = painterResource(id = com.michel.core.ui.R.drawable.ic_settings),
@@ -247,7 +263,11 @@ private fun Body(
                 screenState = screenState,
                 isCollapsing = isTopBarCollapsing,
                 onEvent = onEvent,
-                modifier = Modifier.background(color = TodoAppTheme.color.backPrimary)
+                modifier = Modifier
+                    .background(color = TodoAppTheme.color.backPrimary)
+                    .semantics {
+                        isTraversalGroup = true
+                    }
             )
         }
 
@@ -259,7 +279,9 @@ private fun Body(
                 todoItem = item,
                 screenState = screenState,
                 onEvent = onEvent,
-                modifier = Modifier.animateItemPlacement()
+                modifier = Modifier
+                    .animateItemPlacement()
+                    .testTag("todo_item")
             )
         }
 
@@ -297,7 +319,7 @@ private fun TodoListItem(
             todoItem = todoItem,
             checked = todoItem.isDone,
             enabled = screenState.enabled,
-            onEvent = onEvent
+            onEvent = onEvent,
         )
     }
 }
@@ -315,6 +337,9 @@ private fun NewButton(
             TodoAppTheme.color.disable
         }, label = ""
     )
+
+    val buttonContentDescription =
+        stringResource(com.michel.core.ui.R.string.floatingButtonContentDescription)
 
     if (!screenState.failed) {
         Text(
@@ -334,6 +359,10 @@ private fun NewButton(
                     end = 16.dp,
                     bottom = 16.dp
                 )
+                .clearAndSetSemantics {
+                    role = Role.Button
+                    contentDescription = buttonContentDescription
+                }
         )
     }
 }
@@ -421,7 +450,7 @@ private fun TodoText(
     itemCount: Int
 ) {
     Column(
-        modifier = modifier
+        modifier = modifier.semantics(mergeDescendants = true) { }
     ) {
         val fontSize by animateIntAsState(
             targetValue = if (!isCollapsing) 32 else 20,
@@ -556,7 +585,9 @@ private fun FloatingButton(
             Icon(
                 painter = painterResource(com.michel.core.ui.R.drawable.ic_add),
                 contentDescription = stringResource(com.michel.core.ui.R.string.floatingButtonContentDescription),
-                modifier = Modifier.size(TodoAppTheme.size.standardIcon)
+                modifier = Modifier
+                    .size(TodoAppTheme.size.standardIcon)
+                    .testTag("add_task_button")
             )
         }
     }
@@ -574,6 +605,12 @@ private fun VisibilityCheckBox(
     val checkedIcon = painterResource(com.michel.core.ui.R.drawable.ic_visibility_off)
     val uncheckedIcon = painterResource(com.michel.core.ui.R.drawable.ic_visibility_on)
 
+    val checkBoxStateDescription = if (screenState.doneItemsHide) {
+        stringResource(com.michel.core.ui.R.string.done_items_are_hidden)
+    } else {
+        stringResource(com.michel.core.ui.R.string.done_items_are_shown)
+    }
+
     ImageCheckbox(
         checked = screenState.doneItemsHide,
         checkedIcon = checkedIcon,
@@ -583,7 +620,10 @@ private fun VisibilityCheckBox(
         disabledTint = TodoAppTheme.color.disable,
         onCheckedChange = { onCheckChange(it) },
         enabled = screenState.enabled,
-        modifier = modifier
+        modifier = modifier.clearAndSetSemantics {
+            role = Role.Checkbox
+            stateDescription = checkBoxStateDescription
+        }
     )
 }
 

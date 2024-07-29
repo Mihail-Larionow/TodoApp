@@ -12,11 +12,11 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal object DatabaseModule {
+object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideTodoItemsDatabase(
+    internal fun provideTodoItemsDatabase(
         @ApplicationContext context: Context
     ): TodoItemsDatabase = Room.databaseBuilder(
         context,

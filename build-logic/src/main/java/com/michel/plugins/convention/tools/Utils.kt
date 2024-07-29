@@ -12,7 +12,7 @@ fun BaseExtension.baseAndroidConfig() {
         versionCode = AndroidConst.VERSION_CODE
         versionName = AndroidConst.VERSION_NAME
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.michel.todoapp.Runner"
 
         vectorDrawables {
             useSupportLibrary = true

@@ -1,4 +1,3 @@
-import gradle.kotlin.dsl.accessors._a937729d8a1f305b163059a48f19fa79.implementation
 import org.gradle.kotlin.dsl.dependencies
 
 plugins {
@@ -15,6 +14,12 @@ dependencies {
     testImplementation(libs.junit)
     implementation(libs.javax.inject)
     implementation(libs.androidx.core.ktx)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.kotlinx.coroutines.test)
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
