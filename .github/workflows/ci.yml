@@ -2,10 +2,21 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main","dev" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main","dev" ]
   workflow_dispatch:
+
+env:
+  gradleFlags: --parallel --stacktrace --no-configuration-cache --no-daemon
+  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+  TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+  YANDEX_CLIENT_ID: ${{ secrets.YANDEX_CLIENT_ID }}
+  TOKEN_BEARER: ${{ secrets.TOKEN_BEARER }}
+  TOKEN_OAUTH: ${{ secrets.TOKEN_OAUTH }}
+  SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+  SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+  SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
 
 jobs:
   LINT:
@@ -19,21 +30,21 @@ jobs:
         with:
           java-version: 17
           distribution: "temurin"
-          
+
       - name: Get Permissions
         run: chmod +x ./gradlew
 
       - name: Lint
-        run: ./gradlew lintDebug
+        run: ./gradlew lintRelease
 
       - name: Upload Lint Report
         uses: actions/upload-artifact@v4.3.3
         with:
           name: LintReport.html
-          path: app/build/reports/lint-results-debug.html
-          
+          path: app/build/reports/lint-results-release.html
+
   UNIT-TESTS:
-    needs: [LINT]
+    needs: [ LINT ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -44,7 +55,7 @@ jobs:
         with:
           java-version: 17
           distribution: "temurin"
-          
+
       - name: Get Permissions
         run: chmod +x ./gradlew
 
@@ -56,4 +67,29 @@ jobs:
         with:
           name: UnitTestReport
           path: app/build/reports/tests/testDebugUnitTest/
-      
+
+  APK:
+    needs: [ UNIT-TESTS ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.7
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4.2.1
+        with:
+          java-version: 17
+          distribution: "temurin"
+          cache: gradle
+
+      - name: Get Permissions
+        run: chmod +x ./gradlew
+
+      - name: Build APK
+        run: ./gradlew :app:tgReportForRelease $gradleFlags
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4.3.3
+        with:
+          name: TodoApp-Release.apk
+          path: app/build/outputs/apk/release/app-release.apk

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="exception_401">401 Пользователь не авторизован</string>
+    <string name="exception_400">400 Некорректный запрос</string>
+    <string name="exception_404">404 Данные не найдены</string>
+    <string name="exception_500">500 Ошибка со стороны сервера</string>
+    <string name="exception_unknown">Неизвестная ошибка</string>
+    <string name="exception_no_host">Соединение с сервером отсутствует</string>
+    <string name="exception_io">Ошибка ввода</string>
+    <string name="exception_socket">Соединение потеряно</string>
+</resources>
